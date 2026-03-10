@@ -303,6 +303,30 @@ img {
   align-items: start;
 }
 
+.about-photo {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+  border: 2px solid var(--border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.about-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: grayscale(0.15);
+  transition: filter 0.5s;
+}
+
+.about-photo:hover img {
+  filter: grayscale(0);
+}
+
 .about-headline h2 {
   font-size: clamp(1.6rem, 3.5vw, 2.5rem);
   font-weight: 600;
