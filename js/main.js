@@ -1,33 +1,3 @@
-// ===== CUSTOM CURSOR =====
-const cursorDot  = document.querySelector('.cursor-dot');
-const cursorRing = document.querySelector('.cursor-ring');
-
-let mouseX = 0, mouseY = 0;
-let ringX  = 0, ringY  = 0;
-
-document.addEventListener('mousemove', (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-  cursorDot.style.left = mouseX + 'px';
-  cursorDot.style.top  = mouseY + 'px';
-});
-
-// Lag the ring for a trailing effect
-function animateCursor() {
-  ringX += (mouseX - ringX) * 0.12;
-  ringY += (mouseY - ringY) * 0.12;
-  cursorRing.style.left = ringX + 'px';
-  cursorRing.style.top  = ringY + 'px';
-  requestAnimationFrame(animateCursor);
-}
-animateCursor();
-
-// Hover state for interactive elements
-document.querySelectorAll('a, button, .glass-card, .tag').forEach((el) => {
-  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-});
-
 // ===== SCROLL REVEAL =====
 const revealObserver = new IntersectionObserver(
   (entries) => {
@@ -38,14 +8,14 @@ const revealObserver = new IntersectionObserver(
       }
     });
   },
-  { threshold: 0.12 }
+  { threshold: 0.1 }
 );
 
 document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
 
-// ===== ACTIVE NAV LINK =====
+// ===== NAV ACTIVE STATE =====
 const sections = document.querySelectorAll('section[id]');
-const navLinks  = document.querySelectorAll('.nav-links a');
+const navLinks = document.querySelectorAll('.nav-links a');
 
 const sectionObserver = new IntersectionObserver(
   (entries) => {
@@ -64,33 +34,28 @@ const sectionObserver = new IntersectionObserver(
 sections.forEach((s) => sectionObserver.observe(s));
 
 // ===== MOBILE NAV =====
-const navToggle   = document.querySelector('.nav-toggle');
+const navToggle = document.querySelector('.nav-toggle');
 const navLinksList = document.querySelector('.nav-links');
 
-navToggle.addEventListener('click', () => navLinksList.classList.toggle('open'));
-
-navLinksList.querySelectorAll('a').forEach((link) => {
-  link.addEventListener('click', () => navLinksList.classList.remove('open'));
+navToggle.addEventListener('click', () => {
+  navToggle.classList.toggle('open');
+  navLinksList.classList.toggle('open');
 });
 
-// ===== HERO PARALLAX ORBS =====
-const orbs = document.querySelectorAll('.orb');
-const grid = document.querySelector('.grid-overlay');
-
-window.addEventListener('mousemove', (e) => {
-  const cx = window.innerWidth  / 2;
-  const cy = window.innerHeight / 2;
-  const dx = (e.clientX - cx) / cx;
-  const dy = (e.clientY - cy) / cy;
-
-  orbs.forEach((orb, i) => {
-    const s = (i + 1) * 14;
-    orb.style.transform = `translate(${dx * s}px, ${dy * s}px)`;
+navLinksList.querySelectorAll('a').forEach((link) => {
+  link.addEventListener('click', () => {
+    navToggle.classList.remove('open');
+    navLinksList.classList.remove('open');
   });
+});
 
-  if (grid) {
-    grid.style.transform = `translate(${dx * 6}px, ${dy * 6}px)`;
-  }
+// ===== CARD MOUSE GLOW =====
+document.querySelectorAll('.research-card').forEach((card) => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+  });
 });
 
 // ===== CONTACT FORM =====
@@ -99,30 +64,37 @@ const contactForm = document.getElementById('contactForm');
 contactForm.addEventListener('submit', (e) => {
   e.preventDefault();
 
-  const btn = contactForm.querySelector('button[type="submit"]');
+  const btn = contactForm.querySelector('.btn-submit');
   const original = btn.textContent;
 
-  btn.textContent = 'Transmitting...';
+  btn.textContent = 'Sending...';
   btn.disabled = true;
+  btn.style.opacity = '0.6';
 
   setTimeout(() => {
-    btn.textContent = 'Message Sent ✓';
-    btn.style.borderColor = '#00ff88';
-    btn.style.color = '#00ff88';
-    btn.style.boxShadow = '0 0 20px rgba(0,255,136,0.2)';
+    btn.textContent = 'Sent';
+    btn.style.opacity = '1';
+    btn.style.background = 'var(--accent)';
     contactForm.reset();
 
     setTimeout(() => {
       btn.textContent = original;
       btn.disabled = false;
-      btn.style.borderColor = '';
-      btn.style.color = '';
-      btn.style.boxShadow = '';
-    }, 3500);
-  }, 1200);
+      btn.style.background = '';
+    }, 3000);
+  }, 1000);
 });
 
-// ===== PROJECT CARD NUMBERS =====
-document.querySelectorAll('.project-card').forEach((card, i) => {
-  card.setAttribute('data-num', `0${i + 1}`);
-});
+// ===== NAV BACKGROUND ON SCROLL =====
+const nav = document.querySelector('.nav');
+let lastScroll = 0;
+
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  if (y > 100) {
+    nav.style.borderBottomColor = 'rgba(255,255,255,0.08)';
+  } else {
+    nav.style.borderBottomColor = 'transparent';
+  }
+  lastScroll = y;
+}, { passive: true });
