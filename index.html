@@ -191,25 +191,30 @@
   </section>
 
   <!-- 3D VISUALIZATION -->
-  <section id="visualization" class="section">
+  <section id="visualization" class="section section-viz">
     <div class="container">
       <div class="section-label reveal">Interactive</div>
-      <h2 class="section-heading reveal">Axial Seamount in 3D.</h2>
-      <p class="viz-intro reveal reveal-d1">Explore the bathymetry and earthquake locations at Axial Seamount — an active submarine volcano on the Juan de Fuca Ridge. Rotate, zoom, and pan to investigate the caldera structure.</p>
-      <div class="viz-frame-wrap reveal reveal-d2">
-        <div class="viz-toolbar">
-          <span class="viz-toolbar-dot"></span>
-          <span class="viz-toolbar-dot"></span>
-          <span class="viz-toolbar-dot"></span>
-          <span class="viz-toolbar-title">axial_3d.html</span>
-          <a href="axial_3d.html" target="_blank" class="viz-expand" aria-label="Open fullscreen">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-              <path d="M3 12 L3 17 L8 17" /><path d="M17 8 L17 3 L12 3" /><path d="M3 17 L9 11" /><path d="M17 3 L11 9" />
-            </svg>
-          </a>
-        </div>
-        <iframe src="axial_3d.html" class="viz-iframe" loading="lazy" title="3D visualization of Axial Seamount bathymetry and seismicity"></iframe>
+      <h2 class="viz-title reveal">Axial Seamount<br class="hide-mobile" /> in 3D.</h2>
+      <p class="viz-intro reveal reveal-d1">Explore the bathymetry and earthquake locations at Axial Seamount — an active submarine volcano on the Juan de Fuca Ridge. Rotate, zoom, and pan to investigate the caldera structure. Use the timeline slider to see seismicity evolve.</p>
+      <div class="viz-controls reveal reveal-d1">
+        <span class="viz-hint">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 3v14M3 10l7 7 7-7" /></svg>
+          Drag to rotate
+        </span>
+        <span class="viz-hint">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg>
+          Scroll to zoom
+        </span>
+        <a href="axial_3d.html" target="_blank" class="viz-hint viz-hint-link">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <path d="M3 12 L3 17 L8 17" /><path d="M17 8 L17 3 L12 3" /><path d="M3 17 L9 11" /><path d="M17 3 L11 9" />
+          </svg>
+          Open fullscreen
+        </a>
       </div>
+    </div>
+    <div class="viz-embed reveal reveal-d2">
+      <iframe src="axial_3d.html" class="viz-iframe" loading="lazy" title="3D visualization of Axial Seamount bathymetry and seismicity"></iframe>
     </div>
   </section>
 
