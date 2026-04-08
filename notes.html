@@ -11,22 +11,17 @@
 <style>
 
 :root {
-  /* Surfaces */
-  --bg:           #06101c;
-  --bg2:          #0b1828;
-  --bg3:          #101f32;
-  --bg4:          #162840;
+  --bg:             #06101c;
+  --bg2:            #0b1828;
+  --bg3:            #101f32;
+  --bg4:            #162840;
+  --border:         #1c3050;
+  --border-2:       #2c4870;
 
-  /* Borders */
-  --border:       #1c3050;
-  --border-2:     #2c4870;
+  --accent:         #18cdd8;
+  --accent-dim:     #0b5a62;
+  --accent-glow:    rgba(24, 205, 216, 0.10);
 
-  /* Primary interactive accent — electric teal */
-  --accent:       #18cdd8;
-  --accent-dim:   #0b5a62;
-  --accent-glow:  rgba(24, 205, 216, 0.10);
-
-  /* Project accents */
   --coszo:          #f5a833;
   --coszo-dim:      #7a4c12;
   --coszo-glow:     rgba(245, 168, 51, 0.10);
@@ -37,19 +32,16 @@
   --earthnote-dim:  #186048;
   --earthnote-glow: rgba(56, 219, 160, 0.10);
 
-  /* Text */
   --text:       #ddeef8;
   --text-2:     #7a9ab8;
   --text-3:     #405870;
-  --text-muted: #628098;    /* alias used in JS inline styles */
+  --text-muted: #628098;
 
-  /* Layout */
   --sidebar-w: 304px;
   --header-h:  58px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { font-size: 16px; }
 
 body {
@@ -64,20 +56,19 @@ body {
   flex-direction: column;
 }
 
-/* ── Deep-ocean atmosphere ── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 90% 45% at 50% -5%, rgba(14, 100, 160, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 70% at 100% 100%, rgba(18, 205, 216, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 50% at 0% 60%, rgba(56, 219, 160, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 90% 45% at 50% -5%, rgba(14,100,160,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 70% at 100% 100%, rgba(18,205,216,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 50% at 0% 60%, rgba(56,219,160,0.03) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
 
-/* ── Top bar ── */
+/* ── Header ── */
 header {
   height: var(--header-h);
   background: var(--bg2);
@@ -85,7 +76,7 @@ header {
   display: flex;
   align-items: center;
   padding: 0 24px;
-  gap: 20px;
+  gap: 16px;
   position: relative;
   z-index: 10;
   flex-shrink: 0;
@@ -96,11 +87,7 @@ header::after {
   position: absolute;
   bottom: -1px; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    var(--accent) 25%,
-    var(--accent) 75%,
-    transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 25%, var(--accent) 75%, transparent 100%);
   opacity: 0.22;
 }
 
@@ -117,16 +104,23 @@ header::after {
 .wordmark .accent-dot { color: var(--accent); }
 
 .divider {
-  width: 1px;
-  height: 22px;
+  width: 1px; height: 22px;
   background: var(--border);
   flex-shrink: 0;
 }
 
 .project-tabs {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
   flex: 1;
+}
+
+.tab-sep {
+  width: 1px; height: 18px;
+  background: var(--border);
+  margin: 0 6px;
+  flex-shrink: 0;
 }
 
 .tab {
@@ -147,10 +141,12 @@ header::after {
   white-space: nowrap;
 }
 
-.tab:hover {
-  color: var(--text);
-  background: var(--bg3);
-  border-color: var(--border-2);
+.tab:hover { color: var(--text); background: var(--bg3); border-color: var(--border-2); }
+
+.tab[data-project="Dashboard"].active {
+  color: var(--accent);
+  background: var(--accent-glow);
+  border-color: var(--accent-dim);
 }
 
 .tab[data-project="COSZO"].active {
@@ -177,9 +173,11 @@ header::after {
   flex-shrink: 0;
 }
 
-.dot-coszo      { background: var(--coszo);      box-shadow: 0 0 7px var(--coszo); }
-.dot-bransfield { background: var(--bransfield);  box-shadow: 0 0 7px var(--bransfield); }
-.dot-earthnote  { background: var(--earthnote);   box-shadow: 0 0 7px var(--earthnote); }
+.dot-coszo      { background: var(--coszo);     box-shadow: 0 0 7px var(--coszo); }
+.dot-bransfield { background: var(--bransfield); box-shadow: 0 0 7px var(--bransfield); }
+.dot-earthnote  { background: var(--earthnote);  box-shadow: 0 0 7px var(--earthnote); }
+
+.tab-dash-icon { font-size: 15px; opacity: 0.8; }
 
 .back-link {
   font-family: 'IBM Plex Mono', monospace;
@@ -192,7 +190,7 @@ header::after {
 }
 .back-link:hover { color: var(--text-2); }
 
-/* ── Body layout ── */
+/* ── Layout ── */
 .layout {
   display: flex;
   flex: 1;
@@ -200,6 +198,8 @@ header::after {
   position: relative;
   z-index: 1;
 }
+
+.layout.dashboard-mode aside { display: none; }
 
 /* ── Sidebar ── */
 aside {
@@ -217,7 +217,6 @@ aside {
   border-bottom: 1px solid var(--border);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px;
-  font-weight: 400;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-3);
@@ -247,7 +246,6 @@ aside {
   color: var(--text);
   transition: color 0.12s;
   user-select: none;
-  letter-spacing: 0.01em;
 }
 
 .folder-label:hover { color: var(--accent); }
@@ -264,18 +262,9 @@ aside {
 
 .folder.open .chevron { transform: rotate(90deg); }
 
-.folder-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
+.folder-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-.file-list {
-  display: none;
-  padding-left: 16px;
-  padding-bottom: 6px;
-}
-
+.file-list { display: none; padding-left: 16px; padding-bottom: 6px; }
 .folder.open .file-list { display: block; }
 
 .file-item {
@@ -293,35 +282,16 @@ aside {
   line-height: 1.45;
 }
 
-.file-item:hover {
-  color: var(--text);
-  border-left-color: var(--border-2);
-  background: rgba(220, 235, 255, 0.03);
-  transform: translateX(2px);
-}
-
-.file-item.active {
-  color: var(--text);
-  border-left-color: var(--accent);
-  background: var(--accent-glow);
-}
-
-.file-icon {
-  color: var(--text-3);
-  font-size: 10px;
-  flex-shrink: 0;
-  margin-top: 3px;
-}
-
+.file-item:hover { color: var(--text); border-left-color: var(--border-2); background: rgba(220,235,255,0.03); transform: translateX(2px); }
+.file-item.active { color: var(--text); border-left-color: var(--accent); background: var(--accent-glow); }
+.file-icon { color: var(--text-3); font-size: 10px; flex-shrink: 0; margin-top: 3px; }
 .file-item.active .file-icon { color: var(--accent); }
 
-/* ── Main content ── */
-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* ── Main ── */
+main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+main.dashboard-active .content-header { display: none; }
+main.dashboard-active .content-scroll { padding: 0; overflow: hidden; }
 
 .content-header {
   padding: 11px 40px;
@@ -370,19 +340,10 @@ main {
   text-align: center;
 }
 
-.empty-glyph {
-  font-size: 40px;
-  opacity: 0.22;
-  margin-bottom: 8px;
-}
+.empty-glyph { font-size: 40px; opacity: 0.22; margin-bottom: 8px; }
+.empty-state p { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.07em; }
 
-.empty-state p {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.07em;
-}
-
-/* ── Project landing cards ── */
+/* ── Project landing ── */
 .project-landing {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
@@ -414,226 +375,339 @@ main {
 .project-card.bransfield::before { background: var(--bransfield); }
 .project-card.earthnote::before  { background: var(--earthnote); }
 
-.project-card:hover {
-  transform: translateY(-2px);
-}
+.project-card:hover { transform: translateY(-2px); }
+.project-card.coszo:hover      { border-color: var(--coszo-dim);      box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px var(--coszo-dim); }
+.project-card.bransfield:hover { border-color: var(--bransfield-dim); box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px var(--bransfield-dim); }
+.project-card.earthnote:hover  { border-color: var(--earthnote-dim);  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px var(--earthnote-dim); }
 
-.project-card.coszo:hover {
-  border-color: var(--coszo-dim);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px var(--coszo-dim);
-}
-.project-card.bransfield:hover {
-  border-color: var(--bransfield-dim);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px var(--bransfield-dim);
-}
-.project-card.earthnote:hover {
-  border-color: var(--earthnote-dim);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px var(--earthnote-dim);
-}
-
-.card-label {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
+.card-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 10px; }
 .card-label.coszo      { color: var(--coszo); }
 .card-label.bransfield { color: var(--bransfield); }
 .card-label.earthnote  { color: var(--earthnote); }
 
-.card-title {
-  font-family: 'Fraunces', serif;
-  font-size: 22px;
-  font-weight: 400;
-  color: var(--text);
-  margin-bottom: 10px;
-  line-height: 1.25;
+.card-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 400; color: var(--text); margin-bottom: 10px; line-height: 1.25; }
+.card-desc { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-2); line-height: 1.75; }
+.card-count { margin-top: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+
+/* ── Dashboard layout ── */
+.dashboard-layout {
+  display: flex;
+  height: 100%;
 }
 
-.card-desc {
+.cal-panel {
+  width: 340px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px 24px;
+  overflow-y: auto;
+  gap: 24px;
+}
+
+.cal-panel::-webkit-scrollbar { width: 3px; }
+.cal-panel::-webkit-scrollbar-track { background: transparent; }
+.cal-panel::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cal-month-label {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  text-align: center;
+  flex: 1;
+}
+
+.cal-nav-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1;
+  transition: all 0.14s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cal-nav-btn:hover { color: var(--text); border-color: var(--border-2); background: var(--bg4); }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  padding: 6px 2px 8px;
+  text-transform: uppercase;
+}
+
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: default;
+  transition: all 0.14s;
+  position: relative;
+  padding: 5px 2px 4px;
+  gap: 3px;
+  min-height: 38px;
+}
+
+.cal-day.clickable { cursor: pointer; }
+.cal-day.clickable:hover { background: var(--bg3); }
+
+.cal-day-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1;
+}
+
+.cal-day.other-month .cal-day-num { color: var(--text-3); opacity: 0.5; }
+.cal-day.today { background: var(--accent-glow); }
+.cal-day.today .cal-day-num { color: var(--accent); font-weight: 500; }
+
+.cal-day.selected {
+  background: var(--bg4) !important;
+  border: 1px solid var(--border-2);
+  box-shadow: 0 0 0 1px var(--border-2) inset;
+}
+
+.cal-day.selected .cal-day-num { color: var(--text) !important; }
+
+.cal-dots {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  min-height: 5px;
+}
+
+.cal-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cal-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   color: var(--text-2);
-  line-height: 1.75;
 }
 
-.card-count {
-  margin-top: 16px;
+/* ── Notes panel (right side of dashboard) ── */
+.notes-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notes-panel-header {
+  padding: 24px 32px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.notes-panel-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.notes-panel-sub {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   color: var(--text-3);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  margin-top: 5px;
+  letter-spacing: 0.05em;
 }
 
-/* ── Markdown body ── */
-.md-body {
-  max-width: 740px;
-  font-size: 16px;
-  line-height: 1.85;
+.notes-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 32px 40px;
 }
+
+.notes-panel-body::-webkit-scrollbar { width: 4px; }
+.notes-panel-body::-webkit-scrollbar-track { background: transparent; }
+.notes-panel-body::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+
+.note-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  background: var(--bg2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.note-entry:hover { border-color: var(--border-2); transform: translateX(3px); background: var(--bg3); }
+.note-entry.highlighted { border-color: var(--border-2); background: var(--bg3); }
+
+.note-date-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  min-width: 50px;
+  flex-shrink: 0;
+}
+
+.note-proj-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.note-filename {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-open-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+
+.note-entry:hover .note-open-hint { color: var(--accent); }
+
+.timeline-section-header {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 18px 0 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.timeline-section-header:first-child { padding-top: 0; }
+
+.no-notes-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 24px 0;
+  letter-spacing: 0.06em;
+}
+
+/* ── Markdown ── */
+.md-body { max-width: 740px; font-size: 16px; line-height: 1.85; }
 
 .md-body h1 {
   font-family: 'Fraunces', serif;
-  font-size: 34px;
-  font-weight: 400;
-  color: #eff0e8;
-  margin-bottom: 26px;
-  padding-bottom: 14px;
+  font-size: 34px; font-weight: 400;
+  color: #eff0e8; margin-bottom: 26px; padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
-  line-height: 1.22;
-  letter-spacing: -0.015em;
+  line-height: 1.22; letter-spacing: -0.015em;
 }
 
 .md-body h2 {
   font-family: 'Fraunces', serif;
-  font-size: 26px;
-  font-weight: 400;
-  color: #dddbd0;
-  margin: 44px 0 16px;
-  line-height: 1.28;
-  letter-spacing: -0.01em;
+  font-size: 26px; font-weight: 400;
+  color: #dddbd0; margin: 44px 0 16px;
+  line-height: 1.28; letter-spacing: -0.01em;
 }
 
 .md-body h3 {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 34px 0 12px;
-  font-weight: 400;
+  font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent); margin: 34px 0 12px; font-weight: 400;
 }
 
-.md-body h4 {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--text-2);
-  margin: 24px 0 10px;
-  letter-spacing: 0.05em;
-}
-
-.md-body p {
-  color: var(--text);
-  margin-bottom: 16px;
-  line-height: 1.85;
-  font-size: 16px;
-}
-
-.md-body ul, .md-body ol {
-  margin: 0 0 16px 22px;
-  color: var(--text);
-  line-height: 1.85;
-}
-
+.md-body h4 { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-2); margin: 24px 0 10px; letter-spacing: 0.05em; }
+.md-body p  { color: var(--text); margin-bottom: 16px; line-height: 1.85; font-size: 16px; }
+.md-body ul, .md-body ol { margin: 0 0 16px 22px; color: var(--text); line-height: 1.85; }
 .md-body li { margin-bottom: 5px; font-size: 16px; }
-
-.md-body li input[type="checkbox"] {
-  margin-right: 8px;
-  accent-color: var(--accent);
-}
+.md-body li input[type="checkbox"] { margin-right: 8px; accent-color: var(--accent); }
 
 .md-body code {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13.5px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  padding: 2px 6px;
-  border-radius: 3px;
-  color: #a8d8c0;
+  font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 2px 6px; border-radius: 3px; color: #a8d8c0;
 }
 
 .md-body pre {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent-dim);
-  padding: 20px 24px;
-  border-radius: 6px;
-  overflow-x: auto;
-  margin-bottom: 22px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-dim); padding: 20px 24px;
+  border-radius: 6px; overflow-x: auto; margin-bottom: 22px;
 }
 
-.md-body pre code {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 13.5px;
-  color: #c0d8c4;
-  line-height: 1.72;
-}
+.md-body pre code { background: none; border: none; padding: 0; font-size: 13.5px; color: #c0d8c4; line-height: 1.72; }
 
 .md-body blockquote {
-  border-left: 3px solid var(--accent-dim);
-  padding: 10px 20px;
-  margin: 0 0 16px;
-  color: var(--text-2);
-  font-style: italic;
-  background: var(--accent-glow);
-  border-radius: 0 6px 6px 0;
+  border-left: 3px solid var(--accent-dim); padding: 10px 20px; margin: 0 0 16px;
+  color: var(--text-2); font-style: italic;
+  background: var(--accent-glow); border-radius: 0 6px 6px 0;
 }
 
-.md-body table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 24px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13.5px;
-}
-
-.md-body th {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  padding: 10px 14px;
-  text-align: left;
-  color: var(--accent);
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  font-size: 11px;
-  text-transform: uppercase;
-}
-
-.md-body td {
-  border: 1px solid var(--border);
-  padding: 9px 14px;
-  color: var(--text);
-  line-height: 1.6;
-}
-
+.md-body table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; }
+.md-body th { background: var(--bg3); border: 1px solid var(--border); padding: 10px 14px; text-align: left; color: var(--accent); font-weight: 400; letter-spacing: 0.08em; font-size: 11px; text-transform: uppercase; }
+.md-body td { border: 1px solid var(--border); padding: 9px 14px; color: var(--text); line-height: 1.6; }
 .md-body tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-
-.md-body hr {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 36px 0;
-}
-
+.md-body hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
 .md-body a { color: var(--accent); text-decoration: none; }
 .md-body a:hover { text-decoration: underline; }
-
 .md-body strong { color: #f0ece0; font-weight: 600; }
 .md-body em { color: var(--text-2); }
 
 /* ── Loading ── */
-.loading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--text-2);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  padding: 52px 0;
-}
-
-.loading-dot {
-  width: 7px; height: 7px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: pulse 1.2s ease-in-out infinite;
-  box-shadow: 0 0 10px var(--accent);
-}
+.loading { display: flex; align-items: center; gap: 12px; color: var(--text-2); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 52px 0; }
+.loading-dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; box-shadow: 0 0 10px var(--accent); }
 
 @keyframes pulse {
   0%, 100% { opacity: 0.2; transform: scale(0.75); }
@@ -642,30 +716,16 @@ main {
 
 /* ── Status bar ── */
 .statusbar {
-  height: 26px;
-  background: var(--bg2);
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 20px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  color: var(--text-3);
-  flex-shrink: 0;
-  z-index: 10;
+  height: 26px; background: var(--bg2); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 20px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-3);
+  flex-shrink: 0; z-index: 10;
 }
 
 .status-item { display: flex; align-items: center; gap: 6px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--earthnote); box-shadow: 0 0 5px var(--earthnote); }
 
-.status-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--earthnote);
-  box-shadow: 0 0 5px var(--earthnote);
-}
-
-/* ── Entrance animation ── */
+/* ── Entrance ── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -684,6 +744,10 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
   <a href="index.html" class="wordmark">MK<span class="accent-dot"> · </span>Research</a>
   <div class="divider"></div>
   <nav class="project-tabs" id="project-tabs">
+    <button class="tab" data-project="Dashboard" onclick="selectProject('Dashboard', this)">
+      <span class="tab-dash-icon">⊞</span>Dashboard
+    </button>
+    <div class="tab-sep"></div>
     <button class="tab active" data-project="COSZO" onclick="selectProject('COSZO', this)">
       <span class="tab-dot dot-coszo"></span>COSZO
     </button>
@@ -765,6 +829,270 @@ const PROJECTS = {
 let activeProject = 'COSZO';
 let activeFile    = null;
 
+// ── Dashboard state ────────────────────────────────────────────────────────
+let calYear, calMonth;
+let selectedCalDate = null;
+
+// ── Date parsing ────────────────────────────────────────────────────────────
+// Matches "MM-DD-YY Notes.md" → { year, month (0-based), day, key }
+function parseNoteDate(filename) {
+  const m = filename.match(/^(\d{2})-(\d{2})-(\d{2})\s+Notes\.md$/i);
+  if (!m) return null;
+  const year  = 2000 + parseInt(m[3]);
+  const month = parseInt(m[1]) - 1;  // 0-based
+  const day   = parseInt(m[2]);
+  const key   = `${year}-${m[1]}-${m[2]}`;
+  return { year, month, day, key };
+}
+
+// ── Build date → notes map ─────────────────────────────────────────────────
+function buildDateMap() {
+  const map = {};
+  for (const [proj, cfg] of Object.entries(PROJECTS)) {
+    for (const fn of cfg.files) {
+      const d = parseNoteDate(fn);
+      if (!d) continue;
+      if (!map[d.key]) map[d.key] = [];
+      map[d.key].push({ project: proj, filename: fn, color: cfg.color });
+    }
+  }
+  return map;
+}
+
+// ── Show dashboard ─────────────────────────────────────────────────────────
+function showDashboard() {
+  document.querySelector('.layout').classList.add('dashboard-mode');
+  document.querySelector('main').classList.add('dashboard-active');
+  document.getElementById('status-text').textContent = 'Dashboard';
+
+  // Init calendar to month of most recent dated note, else today
+  if (calYear === undefined) {
+    const dateMap = buildDateMap();
+    const keys = Object.keys(dateMap).sort();
+    if (keys.length > 0) {
+      const [y, mm] = keys[keys.length - 1].split('-');
+      calYear = parseInt(y); calMonth = parseInt(mm) - 1;
+    } else {
+      const now = new Date();
+      calYear = now.getFullYear(); calMonth = now.getMonth();
+    }
+  }
+
+  const area = document.getElementById('content-area');
+  area.innerHTML = `
+    <div class="dashboard-layout">
+      <div class="cal-panel">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="shiftMonth(-1)">‹</button>
+          <span class="cal-month-label" id="cal-month-label"></span>
+          <button class="cal-nav-btn" onclick="shiftMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend" id="cal-legend"></div>
+      </div>
+      <div class="notes-panel">
+        <div class="notes-panel-header">
+          <div class="notes-panel-title" id="notes-panel-title">Research Journal</div>
+          <div class="notes-panel-sub"   id="notes-panel-sub">Select a highlighted date to view notes</div>
+        </div>
+        <div class="notes-panel-body" id="notes-panel-body"></div>
+      </div>
+    </div>
+  `;
+
+  renderCalendar();
+  renderAllNotes();  // populate right panel with full timeline initially
+}
+
+// ── Render calendar ─────────────────────────────────────────────────────────
+function renderCalendar() {
+  const dateMap = buildDateMap();
+  const MONTH_NAMES = ['January','February','March','April','May','June',
+                       'July','August','September','October','November','December'];
+  const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  document.getElementById('cal-month-label').textContent =
+    `${MONTH_NAMES[calMonth]} ${calYear}`;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Day-of-week headers
+  DOW.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDow    = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const today       = new Date();
+
+  // Leading empty cells
+  for (let i = 0; i < firstDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.innerHTML = '<span class="cal-day-num"></span><span class="cal-dots"></span>';
+    grid.appendChild(el);
+  }
+
+  // Day cells
+  for (let d = 1; d <= daysInMonth; d++) {
+    const mm  = String(calMonth + 1).padStart(2, '0');
+    const dd  = String(d).padStart(2, '0');
+    const key = `${calYear}-${mm}-${dd}`;
+    const notes = dateMap[key] || [];
+
+    const isToday    = (today.getFullYear() === calYear &&
+                        today.getMonth()    === calMonth &&
+                        today.getDate()     === d);
+    const isSelected = (selectedCalDate === key);
+
+    const el = document.createElement('div');
+    el.className = 'cal-day' +
+      (notes.length  ? ' clickable'  : '') +
+      (isToday       ? ' today'      : '') +
+      (isSelected    ? ' selected'   : '');
+
+    // Unique project colors present on this date
+    const colors = [...new Set(notes.map(n => n.color))];
+    const dotsHTML = colors.map(c =>
+      `<span class="cal-dot" style="background:var(--${c});box-shadow:0 0 4px var(--${c})"></span>`
+    ).join('');
+
+    el.innerHTML =
+      `<span class="cal-day-num">${d}</span>` +
+      `<span class="cal-dots">${dotsHTML}</span>`;
+
+    if (notes.length) {
+      el.onclick = () => selectCalDate(key, d, notes);
+    }
+
+    grid.appendChild(el);
+  }
+
+  // Legend
+  const legend = document.getElementById('cal-legend');
+  legend.innerHTML = Object.entries(PROJECTS).map(([, cfg]) =>
+    `<span class="cal-legend-item">
+      <span class="cal-dot" style="background:var(--${cfg.color});box-shadow:0 0 5px var(--${cfg.color})"></span>
+      <span>${cfg.label}</span>
+    </span>`
+  ).join('');
+}
+
+function shiftMonth(delta) {
+  calMonth += delta;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+// ── Select a calendar date ─────────────────────────────────────────────────
+function selectCalDate(key, day, notes) {
+  selectedCalDate = key;
+  renderCalendar();
+
+  const [year, mm] = key.split('-');
+  const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
+                        'Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthName = SHORT_MONTHS[parseInt(mm) - 1];
+
+  document.getElementById('notes-panel-title').textContent =
+    `${monthName} ${day}, ${year}`;
+  document.getElementById('notes-panel-sub').textContent =
+    `${notes.length} note${notes.length !== 1 ? 's' : ''} on this date`;
+
+  const body = document.getElementById('notes-panel-body');
+
+  const selectedHTML = notes.map(n => noteEntryHTML(n, null, true)).join('');
+
+  body.innerHTML =
+    `<div class="timeline-section-header">Notes for this date</div>` +
+    selectedHTML +
+    allNotesTimelineHTML(key);
+}
+
+// ── Full notes timeline (right panel initial state) ────────────────────────
+function renderAllNotes() {
+  const dateMap = buildDateMap();
+  const total = Object.values(dateMap).flat().length;
+
+  document.getElementById('notes-panel-title').textContent = 'Research Journal';
+  document.getElementById('notes-panel-sub').textContent =
+    `${total} dated note${total !== 1 ? 's' : ''} across ${Object.keys(PROJECTS).length} projects`;
+
+  document.getElementById('notes-panel-body').innerHTML = allNotesTimelineHTML(null);
+}
+
+function allNotesTimelineHTML(highlightKey) {
+  const dateMap   = buildDateMap();
+  const sortedKeys = Object.keys(dateMap).sort((a, b) => b.localeCompare(a));
+
+  if (sortedKeys.length === 0) {
+    return `<p class="no-notes-hint">No dated notes found in any project.</p>`;
+  }
+
+  const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
+                        'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const header = `<div class="timeline-section-header" style="padding-top:${highlightKey ? '18px' : '0'}">
+    All dated notes — newest first
+  </div>`;
+
+  const rows = sortedKeys.flatMap(key => {
+    const [, mm, dd] = key.split('-');
+    const label = `${SHORT_MONTHS[parseInt(mm)-1]} ${parseInt(dd)}`;
+    return dateMap[key].map(n => noteEntryHTML(n, label, key === highlightKey));
+  }).join('');
+
+  return header + rows;
+}
+
+function noteEntryHTML(n, dateLabel, highlighted) {
+  const esc = n.filename.replace(/'/g, "\\'");
+  return `
+    <div class="note-entry${highlighted ? ' highlighted' : ''}"
+         onclick="openNoteFromDashboard('${n.project}','${esc}')">
+      ${dateLabel ? `<span class="note-date-badge">${dateLabel}</span>` : ''}
+      <span class="note-proj-badge"
+            style="background:var(--${n.color}-glow);color:var(--${n.color});border:1px solid var(--${n.color}-dim)">
+        ${n.project}
+      </span>
+      <span class="note-filename">${n.filename}</span>
+      <span class="note-open-hint">open →</span>
+    </div>`;
+}
+
+// ── Open note from dashboard ───────────────────────────────────────────────
+function openNoteFromDashboard(project, filename) {
+  // Exit dashboard mode
+  document.querySelector('.layout').classList.remove('dashboard-mode');
+  document.querySelector('main').classList.remove('dashboard-active');
+
+  // Activate the project tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tabEl = document.querySelector(`.tab[data-project="${project}"]`);
+  if (tabEl) tabEl.classList.add('active');
+
+  activeProject = project;
+  activeFile    = null;
+
+  renderSidebar(project);
+
+  document.getElementById('breadcrumb').innerHTML =
+    `<span id="bc-project">${project}</span>`;
+
+  // Small delay to let DOM update before finding the file item
+  setTimeout(() => {
+    const items = document.querySelectorAll('.file-item');
+    let match = null;
+    items.forEach(i => { if (i.dataset.file === filename) match = i; });
+    loadFile(project, filename, match);
+  }, 40);
+}
+
 // ── Render sidebar ─────────────────────────────────────────────────────────
 function renderSidebar(project) {
   const cfg  = PROJECTS[project];
@@ -799,11 +1127,20 @@ function renderSidebar(project) {
 
 // ── Project switch ─────────────────────────────────────────────────────────
 function selectProject(project, tabEl) {
-  activeProject = project;
-  activeFile    = null;
-
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   tabEl.classList.add('active');
+
+  if (project === 'Dashboard') {
+    showDashboard();
+    return;
+  }
+
+  // Exit dashboard mode
+  document.querySelector('.layout').classList.remove('dashboard-mode');
+  document.querySelector('main').classList.remove('dashboard-active');
+
+  activeProject = project;
+  activeFile    = null;
 
   renderSidebar(project);
   showLanding(project);
@@ -814,7 +1151,7 @@ function selectProject(project, tabEl) {
 
 // ── Landing screen ─────────────────────────────────────────────────────────
 function showLanding(project) {
-  const cfg = PROJECTS[project];
+  const cfg  = PROJECTS[project];
   const area = document.getElementById('content-area');
 
   area.innerHTML = `
@@ -841,21 +1178,17 @@ function showLanding(project) {
 
 // ── Load a file ────────────────────────────────────────────────────────────
 async function loadFile(project, filename, itemEl) {
-  // Update active state
   document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
   if (itemEl) itemEl.classList.add('active');
   activeFile = filename;
 
-  // Breadcrumb
   document.getElementById('breadcrumb').innerHTML =
     `<span id="bc-project">${project}</span>
      <span style="color:var(--text-muted)">›</span>
      <span>${filename}</span>`;
 
-  // Status
   document.getElementById('status-text').textContent = `Loading ${filename}…`;
 
-  // Show loading
   const area = document.getElementById('content-area');
   area.innerHTML = `<div class="loading"><div class="loading-dot"></div>Fetching ${filename}…</div>`;
 
@@ -866,12 +1199,8 @@ async function loadFile(project, filename, itemEl) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const md = await res.text();
 
-    // Strip Obsidian image embeds (![[...]]) before rendering
     const cleaned = md.replace(/!\[\[([^\]]+)\]\]/g, '_[image: $1]_');
-
     area.innerHTML = `<div class="md-body">${marked.parse(cleaned)}</div>`;
-
-    // Make checkboxes non-interactive (display only)
     area.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
 
     document.getElementById('content-scroll').scrollTop = 0;
@@ -901,7 +1230,6 @@ showLanding('COSZO');
 document.getElementById('bc-project').textContent = 'COSZO';
 document.getElementById('status-text').textContent = `${PROJECTS['COSZO'].files.length} files`;
 
-// marked config
 marked.setOptions({ breaks: true, gfm: true });
 </script>
 </body>
