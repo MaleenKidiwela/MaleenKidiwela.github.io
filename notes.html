@@ -744,11 +744,11 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
   <a href="index.html" class="wordmark">MK<span class="accent-dot"> · </span>Research</a>
   <div class="divider"></div>
   <nav class="project-tabs" id="project-tabs">
-    <button class="tab" data-project="Dashboard" onclick="selectProject('Dashboard', this)">
+    <button class="tab active" data-project="Dashboard" onclick="selectProject('Dashboard', this)">
       <span class="tab-dash-icon">⊞</span>Dashboard
     </button>
     <div class="tab-sep"></div>
-    <button class="tab active" data-project="COSZO" onclick="selectProject('COSZO', this)">
+    <button class="tab" data-project="COSZO" onclick="selectProject('COSZO', this)">
       <span class="tab-dot dot-coszo"></span>COSZO
     </button>
     <button class="tab" data-project="BransfieldEQ" onclick="selectProject('BransfieldEQ', this)">
@@ -1225,10 +1225,7 @@ function loadFileByName(project, filename) {
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
-renderSidebar('COSZO');
-showLanding('COSZO');
-document.getElementById('bc-project').textContent = 'COSZO';
-document.getElementById('status-text').textContent = `${PROJECTS['COSZO'].files.length} files`;
+showDashboard();
 
 marked.setOptions({ breaks: true, gfm: true });
 </script>
