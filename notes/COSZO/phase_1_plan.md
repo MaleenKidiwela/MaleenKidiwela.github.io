@@ -1,5 +1,5 @@
-Phase 1 Plan — coszo-data-collection
 
+This is the Phase 1 Plan — coszo-data-collection under [[Cascadia Offshore Subduction Zone Observatory]]
 ## Goal
 
 Take over the OOI tidal pressure data pipeline from Mika and get it running locally, then resume operations on the COSZO VM.
@@ -18,7 +18,7 @@ Take over the OOI tidal pressure data pipeline from Mika and get it running loca
 - [x] Adapt shell wrappers to run locally (VM paths kept as comments)
 - [x] Run 24h historical chunk via main pipeline (`miniseed2dmc`)
 - [x] Run 24h test via standalone `testk/pull_data.py` (seedlink-equivalent)
-- [ ] Run 24h real-time chunk via main pipeline (`seedlink`) — blocked on deployment channel bug (awaiting Mika's confirmation)
+- [x] Run 24h real-time chunk via main pipeline (`seedlink`)
 
 ## 2. Access & Permissions
 
@@ -49,9 +49,9 @@ Take over the OOI tidal pressure data pipeline from Mika and get it running loca
   - Axial Base (RS03AXBS): 4 deployments, all 15s
 - [ ] Check if historical data processing (miniseed2dmc) is still paused
 
-## 5. Resume Operations on Kozo VM
+## 5. Resume Operations on COSZO VM
 
-- [ ] VPN in and SSH to Kozo VM
+- [ ] VPN in and SSH to COSZO VM
 - [ ] Pull latest code from `dev/maleen` branch
 - [ ] Verify conda env is set up on VM
 - [ ] Start Ring server (`start_ring_server.sh`)
@@ -78,7 +78,7 @@ Take over the OOI tidal pressure data pipeline from Mika and get it running loca
 
 ## Constraints
 
-- **Kozo VM:** 20GB storage, 2GB RAM — cannot parallelize
+- COSZO VM:** 20GB storage, 2GB RAM — cannot parallelize
 - **Historical processing:** ~6 days per station at 2-min intervals
 - **MiniSEED files** kept ~1 month on VM for verification, then deleted
 - **Ring server must be started before cron job** or files get ignored as "old data"
