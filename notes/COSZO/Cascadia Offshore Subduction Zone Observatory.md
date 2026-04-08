@@ -13,3 +13,4 @@ I created a seperate code in Testk folder to pull data in through OOI and conver
 
 After testing that I could successfully run the OOI API, I have moved on to test the main repo and whether it runs and what issues i have run in to and how to mitigate it. You can find this work in [[04-07-26 Notes]]
 
+SeisFix will be for timing error correction and some calibration application. This plan is discussed in [[SeisFix — Implementation Plan]]
