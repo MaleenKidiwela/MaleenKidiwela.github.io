@@ -897,8 +897,53 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
   /* Status bar */
   .statusbar { padding: 0 14px; font-size: 10px; height: 24px; }
 
-  /* Body — allow scroll on mobile */
-  body { height: auto; overflow: auto; min-height: 100vh; }
+  /* Body — allow vertical scroll, prevent horizontal blowout */
+  body {
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+  }
+
+  /* Header sticks to top so tabs are always reachable */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    animation: none;
+  }
+
+  /* Markdown content — constrain to viewport width */
+  .md-body {
+    max-width: 100%;
+    overflow-x: hidden;
+    word-break: break-word;
+  }
+
+  /* Tables scroll independently instead of blowing out the page */
+  .md-body table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  /* Code blocks already have overflow-x:auto — just clamp width */
+  .md-body pre {
+    max-width: 100%;
+  }
+
+  /* Inline code — allow wrapping */
+  .md-body code {
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  .md-body pre code {
+    word-break: normal;
+    white-space: pre;
+  }
 }
 </style>
 </head>
