@@ -901,7 +901,7 @@ function showDashboard() {
   `;
 
   renderCalendar();
-  renderAllNotes();  // populate right panel with full timeline initially
+  autoSelectLatestDate();
 }
 
 // ── Render calendar ─────────────────────────────────────────────────────────
@@ -1006,56 +1006,30 @@ function selectCalDate(key, day, notes) {
 
   const body = document.getElementById('notes-panel-body');
 
-  const selectedHTML = notes.map(n => noteEntryHTML(n, null, true)).join('');
+  const selectedHTML = notes.map(n => noteEntryHTML(n)).join('');
 
-  body.innerHTML =
-    `<div class="timeline-section-header">Notes for this date</div>` +
-    selectedHTML +
-    allNotesTimelineHTML(key);
+  body.innerHTML = selectedHTML;
 }
 
-// ── Full notes timeline (right panel initial state) ────────────────────────
-function renderAllNotes() {
+// ── Auto-select the most recent dated note on load ─────────────────────────
+function autoSelectLatestDate() {
   const dateMap = buildDateMap();
-  const total = Object.values(dateMap).flat().length;
+  const sortedKeys = Object.keys(dateMap).sort();
+  if (sortedKeys.length === 0) return;
 
-  document.getElementById('notes-panel-title').textContent = 'Research Journal';
-  document.getElementById('notes-panel-sub').textContent =
-    `${total} dated note${total !== 1 ? 's' : ''} across ${Object.keys(PROJECTS).length} projects`;
-
-  document.getElementById('notes-panel-body').innerHTML = allNotesTimelineHTML(null);
+  const key   = sortedKeys[sortedKeys.length - 1];
+  const [, , dd] = key.split('-');
+  const notes = dateMap[key];
+  selectedCalDate = key;
+  renderCalendar();
+  selectCalDate(key, parseInt(dd), notes);
 }
 
-function allNotesTimelineHTML(highlightKey) {
-  const dateMap   = buildDateMap();
-  const sortedKeys = Object.keys(dateMap).sort((a, b) => b.localeCompare(a));
-
-  if (sortedKeys.length === 0) {
-    return `<p class="no-notes-hint">No dated notes found in any project.</p>`;
-  }
-
-  const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
-                        'Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  const header = `<div class="timeline-section-header" style="padding-top:${highlightKey ? '18px' : '0'}">
-    All dated notes — newest first
-  </div>`;
-
-  const rows = sortedKeys.flatMap(key => {
-    const [, mm, dd] = key.split('-');
-    const label = `${SHORT_MONTHS[parseInt(mm)-1]} ${parseInt(dd)}`;
-    return dateMap[key].map(n => noteEntryHTML(n, label, key === highlightKey));
-  }).join('');
-
-  return header + rows;
-}
-
-function noteEntryHTML(n, dateLabel, highlighted) {
+function noteEntryHTML(n) {
   const esc = n.filename.replace(/'/g, "\\'");
   return `
-    <div class="note-entry${highlighted ? ' highlighted' : ''}"
+    <div class="note-entry"
          onclick="openNoteFromDashboard('${n.project}','${esc}')">
-      ${dateLabel ? `<span class="note-date-badge">${dateLabel}</span>` : ''}
       <span class="note-proj-badge"
             style="background:var(--${n.color}-glow);color:var(--${n.color});border:1px solid var(--${n.color}-dim)">
         ${n.project}
