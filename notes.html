@@ -836,10 +836,17 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
 
   .content-scroll {
     padding: 20px 16px 80px;
+    overflow-x: hidden;
     overflow-y: auto;
     height: auto;
     flex: none;
     min-height: 0;
+    max-width: 100vw;
+  }
+
+  #content-area {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   /* Dashboard stacks vertically */
@@ -920,13 +927,18 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
     word-break: break-word;
   }
 
-  /* Tables scroll independently instead of blowing out the page */
+  /* Tables scroll independently — let cells wrap naturally */
   .md-body table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
-    white-space: nowrap;
+  }
+
+  .md-body th,
+  .md-body td {
+    white-space: normal;
+    word-break: break-word;
   }
 
   /* Code blocks already have overflow-x:auto — just clamp width */
