@@ -1,0 +1,136 @@
+# Step 01 — Station Inventory & dv/v Capability Assessment
+
+**Date:** 2026-04-14  
+**Notebook:** `notebooks/01_station_inventory.ipynb`  
+**Output:** `data/inventory/pnw_station_inventory.csv`
+
+---
+
+## Purpose
+
+Build a complete catalog of all seismic stations in PNWstore (1980–2023) and score each station's suitability for single-station cross-component (SC) dv/v analysis.
+
+---
+
+## Data Sources
+
+| Source | Path | Access method |
+|--------|------|---------------|
+| Waveform metadata | `/data/wsd01/PNWstore_sqlite/{year}.sqlite` | `pnwstore.WaveformClient.query_waveforms()` |
+| Station coordinates | `/1-fnp/pnwstore1/p-wd11/PNWStationXML/{NET}/{NET}.{STA}.xml` | `obspy.read_inventory()` |
+
+**Note:** `StationClient` and `EventClient` (MySQL-backed) are inaccessible due to authentication issues. All metadata is derived from the SQLite waveform index and local StationXML files.
+
+---
+
+## Methodology
+
+### Sampling strategy
+
+Each SQLite database indexes one year of waveform data. The `WaveformClient.query_waveforms()` method requires both `year` and `doy` (day-of-year), returning all station-channel records for that day.
+
+We sample **4 DOYs per year** (1, 90, 180, 270) across 44 years = **176 queries**. This captures stations that start or stop mid-year while keeping runtime under 3 minutes.
+
+**Tradeoff:** A station active for <3 months entirely between sample days could be missed. This is acceptable — such short deployments are unlikely to be useful for dv/v (which requires ≥1 year of continuous data).
+
+### Channel classification
+
+Each 3-character SEED channel code (e.g., `BHZ`) is parsed:
+- **Band code** (1st char): B=broadband, H=high-broadband, E=short-period, etc.
+- **Instrument code** (2nd char): H=seismometer, N=accelerometer
+- **Component code** (3rd char): E/N/Z or 1/2/Z
+
+`channel_band` = first 2 characters (e.g., `BH`, `HH`, `EH`).
+
+### 3-component check
+
+A station-band combo has 3-component data if the component set includes {E, N, Z} or {1, 2, Z}. This is checked both overall and per-year.
+
+### StationXML enrichment
+
+For each unique (network, station) pair, we read the corresponding StationXML file at `level='station'` to extract latitude, longitude, elevation, and site name. Coverage: **96.0%** of inventory rows have coordinates.
+
+### dv/v capability scoring
+
+| Criterion | Points |
+|-----------|--------|
+| 3-component required | 0 if missing → "unsuitable" |
+| Band: broadband (B/H) | +3 |
+| Band: short-period (E/S) | +1 |
+| Years of 3C data ≥ 10 | +3 |
+| Years of 3C data ≥ 5 | +2 |
+| Years of 3C data ≥ 1 | +1 |
+| Sample rate ≥ 50 Hz | +2 |
+| Sample rate ≥ 20 Hz | +1 |
+
+**Categories:** ≥7 = excellent, ≥5 = good, ≥3 = marginal, else = unsuitable
+
+---
+
+## Key Findings
+
+### Inventory size
+
+| Metric | Count |
+|--------|-------|
+| Total station-band combinations | 19,648 |
+| Unique stations (net.sta) | 3,289 |
+| With 3-component data | 6,108 |
+| Coordinates populated | 18,870 (96.0%) |
+
+### dv/v capability breakdown
+
+| Category | Count |
+|----------|-------|
+| Excellent | 490 |
+| Good | 2,951 |
+| Marginal | 781 |
+| Unsuitable | 15,426 |
+
+### Top stations by years of 3C broadband data
+
+The top-ranked stations (IU.COR, UW.GNW, UW.LTY, UW.LON, UO.DBO) have 20–25 years of continuous broadband 3-component data — ideal for long-term dv/v monitoring.
+
+### Network coverage
+
+The UW (University of Washington) network dominates, with significant contributions from TA (USArray Transportable Array), PB (Plate Boundary Observatory), and temporary deployments.
+
+### Temporal growth
+
+3-component coverage was sparse before 1990, grew steadily through the 2000s, and peaked around 2008–2009 during the USArray rollthrough. Post-2010 coverage stabilizes at ~1000–1400 station-band combos per year.
+
+---
+
+## Compute environment
+
+- **Machine:** cascadia.ess.washington.edu (48 cores, 376 GB RAM)
+- **Conda env:** `noisepy2` (Python 3.10, noisepy-seis 0.9.91)
+- **Runtime:** ~3 minutes for full inventory build
+
+---
+
+## Limitations
+
+1. **Year-level temporal resolution** — we know which years a station was active, not exact start/end dates. Sufficient for inventory; exact dates can be refined for selected stations in Phase 1.2.
+2. **DOY sampling gaps** — stations active for <3 months between sample days could be missed. Unlikely to affect dv/v candidates (which need ≥1 year).
+3. **2023 mount missing** — SQLite index for 2023 is queryable but waveform files on `/auto/pnwstore1-wd09` are not mounted. Metadata is captured; actual data retrieval will fail for 2023 until the mount is restored.
+4. **No MySQL access** — `StationClient` and `EventClient` are unavailable. Station metadata comes entirely from StationXML. 4% of stations lack coordinates (no matching XML file).
+
+---
+
+## Output files
+
+| File | Description |
+|------|-------------|
+| `data/inventory/pnw_station_inventory.csv` | Full inventory (19,648 rows, 22 columns) |
+| `data/inventory/station_map.png` | Map of stations colored by dv/v capability |
+| `data/inventory/timeline.png` | 3C station coverage over time by network |
+
+---
+
+## Next steps → Phase 1.2: Data Availability Scan
+
+Focus on the **490 excellent** and top **good** stations. For these:
+1. Check detailed data continuity (gap analysis using full SQLite queries, not DOY sampling)
+2. Verify instrument response availability in StationXML at channel level
+3. Select ~20 diverse pilot stations for quality screening (Phase 1.3)
