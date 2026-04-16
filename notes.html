@@ -854,6 +854,11 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
     max-width: 100vw;
   }
 
+  .content-scroll.iframe-mode {
+    height: calc(100dvh - 52px - 44px);
+    overflow: hidden;
+  }
+
   #content-area {
     overflow-x: hidden;
     max-width: 100%;
@@ -1404,6 +1409,7 @@ async function loadFile(project, filename, itemEl) {
   document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
   if (itemEl) itemEl.classList.add('active');
   activeFile = filename;
+  location.hash = encodeURIComponent(project) + '/' + encodeURIComponent(filename);
 
   document.getElementById('breadcrumb').innerHTML =
     `<span id="bc-project">${project}</span>
@@ -1473,9 +1479,22 @@ function closeSidebar() {
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
-showDashboard();
-
 marked.setOptions({ breaks: true, gfm: true });
+
+// Hash routing — open a specific file if URL contains #Project/filename
+(function () {
+  const hash = location.hash.slice(1);
+  if (!hash) { showDashboard(); return; }
+  const slash = hash.indexOf('/');
+  if (slash === -1) { showDashboard(); return; }
+  const project  = decodeURIComponent(hash.slice(0, slash));
+  const filename = decodeURIComponent(hash.slice(slash + 1));
+  const tabEl = document.querySelector(`.tab[data-project="${project}"]`);
+  if (!tabEl) { showDashboard(); return; }
+  selectProject(project, tabEl);
+  // Wait one tick for the file list to render, then load the file
+  setTimeout(() => loadFileByName(project, filename), 0);
+})();
 </script>
 </body>
 </html>
