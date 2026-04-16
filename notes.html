@@ -1053,6 +1053,7 @@ const PROJECTS = {
       "04-15-26 Notes.md",
       "Cascadia dv.v.md",
       "PROJECT_PLAN.md",
+      "active_timeline_map.html",
       "codex_comparison.md",
       "step_02b_data_availability.md",
     ] // AUTO-FILES:Earthnote:END
@@ -1327,7 +1328,8 @@ function renderSidebar(project) {
     const item = document.createElement('div');
     item.className = 'file-item';
     item.dataset.file = filename;
-    item.innerHTML = `<span class="file-icon">◈</span>${filename}`;
+    const icon = filename.endsWith('.html') ? '⬡' : '◈';
+    item.innerHTML = `<span class="file-icon">${icon}</span>${filename}`;
     item.onclick = () => { loadFile(project, filename, item); closeSidebar(); };
     list.appendChild(item);
   });
@@ -1404,6 +1406,13 @@ async function loadFile(project, filename, itemEl) {
   area.innerHTML = `<div class="loading"><div class="loading-dot"></div>Fetching ${filename}…</div>`;
 
   const path = `/notes/${encodeURIComponent(project)}/${encodeURIComponent(filename)}`;
+
+  // HTML files — render in a full-height iframe
+  if (filename.endsWith('.html')) {
+    area.innerHTML = `<iframe src="${path}" style="width:100%;height:100%;border:none;display:block;"></iframe>`;
+    document.getElementById('status-text').textContent = filename;
+    return;
+  }
 
   try {
     const res = await fetch(path);
