@@ -323,6 +323,16 @@ main.dashboard-active .content-scroll { padding: 0; overflow: hidden; }
   overflow-y: auto;
   padding: 48px 80px 100px;
 }
+.content-scroll.iframe-mode {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.content-scroll.iframe-mode #content-area {
+  flex: 1;
+  height: 100%;
+}
 
 .content-scroll::-webkit-scrollbar { width: 4px; }
 .content-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -1407,12 +1417,17 @@ async function loadFile(project, filename, itemEl) {
 
   const path = `/notes/${encodeURIComponent(project)}/${encodeURIComponent(filename)}`;
 
+  const scroll = document.getElementById('content-scroll');
+
   // HTML files — render in a full-height iframe
   if (filename.endsWith('.html')) {
+    scroll.classList.add('iframe-mode');
     area.innerHTML = `<iframe src="${path}" style="width:100%;height:100%;border:none;display:block;"></iframe>`;
     document.getElementById('status-text').textContent = filename;
     return;
   }
+
+  scroll.classList.remove('iframe-mode');
 
   try {
     const res = await fetch(path);
