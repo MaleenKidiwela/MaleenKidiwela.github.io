@@ -1,7 +1,9 @@
 # Gap Detection — coszo-data-collection
 
-Source file: `bin/OOI_data_request_and_convert_mseed.py`
+Source file: `bin/OOI_data_request_and_convert_mseed.py` (see [[COSZO Data Collection — Code Walkthrough]] for the full pipeline)
 Updated: 2026-03-23 (Mika — made detection more robust)
+
+A complementary least-squares framing of sample-interval estimation and jitter separation is in [[timestamp variability assessment plan]].
 
 ---
 

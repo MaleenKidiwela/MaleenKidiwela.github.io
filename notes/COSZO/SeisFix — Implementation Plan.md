@@ -1,5 +1,5 @@
 
-A pip-installable Python package for detecting and correcting timing errors in seismic data, with a roadmap toward broader data quality control.
+A pip-installable Python package for detecting and correcting timing errors in seismic data, with a roadmap toward broader data quality control. Distinct from the gap/jitter diagnostics in [[gap detection]] and [[timestamp variability assessment plan]] — those live inside `coszo-data-collection`; SeisFix is standalone.
 
 ## Background & Context
 

@@ -6,7 +6,7 @@ Specifically:
 
 - **Runs via cron** every day, processing **24-hour windows** of data
 - **Pulls data** from 3 cabled seafloor pressure/temperature sensors (PREST) off the Pacific Northwest coast via the OOI API (returns NetCDF)
-- **Detects data gaps** using an adaptive algorithm based on actual timestamps (not nominal sample rates)
+- **Detects data gaps** using an adaptive algorithm based on actual timestamps (not nominal sample rates) — see [[gap detection]]
 - **Converts to MiniSEED** files (the standard format for seismic waveform data) using ObsPy
 - **Generates StationXML** metadata for the stations
 - **Stages output** for delivery to EarthScope via either SeedLink (real-time) or miniseed2dmc (historical backfill)
@@ -15,7 +15,7 @@ Specifically:
 
 This is an **automated data pipeline** that pulls ocean-floor geophysical sensor data from the [Ocean Observatories Initiative (OOI)](https://oceanobservatories.org/) and converts it into **seismology-standard formats** (MiniSEED and StationXML) for archival at EarthScope (formerly IRIS).
 
-The sensors are **cabled seafloor pressure instruments (PREST)** deployed on the Juan de Fuca plate off the US Pacific Northwest coast, sampling at **≤8 Hz** ("Tier-3" data).
+The sensors are **cabled seafloor pressure instruments (PREST)** deployed on the Juan de Fuca plate off the US Pacific Northwest coast, sampling at **≤8 Hz** ("Tier-3" data). A broader non-Tier-1 channel/station inventory is at [[non_tier1_ooi_instrument_data_notes]].
 
 ---
 

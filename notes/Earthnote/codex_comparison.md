@@ -1,7 +1,7 @@
 # Active-Station Count: Comparison with Codex analysis
 
 **Date:** 2026-04-15
-**Context:** Codex was asked to produce a parallel list of currently-active PNSN stations from EarthScope. Its output lives in `/home/seismic/Earthnote/codex/`. This note reconciles its results against the Earthnote Phase 1.2 pipeline.
+**Context:** Codex was asked to produce a parallel list of currently-active PNSN stations from EarthScope. Its output lives in `/home/seismic/Earthnote/codex/`. This note reconciles its results against the Earthnote Phase 1.2 pipeline (see [[PROJECT_PLAN]]; Phase 1.2 work in [[04-15-26 Notes]]).
 
 ---
 

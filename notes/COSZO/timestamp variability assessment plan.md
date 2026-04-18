@@ -1,5 +1,7 @@
 # Timestamp Variability Assessment Plan for Sensor Timestamps
 
+Companion to [[gap detection]] — that note documents the adaptive threshold used in the pipeline; this plan formalises the sample-interval fit and jitter residual measurement.
+
 ## Goal
 
 Assess timestamp variability in the sensor records by separating:

@@ -30,7 +30,7 @@ Take over the OOI tidal pressure data pipeline from Mika and get it running loca
 
 ## 3. Understand the Pipeline
 
-- [x] Read through the code walkthrough
+- [x] Read through the [[COSZO Data Collection — Code Walkthrough|code walkthrough]]
 - [ ] Review materials in COSZO Drive → "Non-Tier 1 Data Flow" folder
   - Channel code conventions
   - StationXML documentation
