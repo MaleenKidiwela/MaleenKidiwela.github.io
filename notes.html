@@ -689,7 +689,12 @@ main.dashboard-active .content-scroll { padding: 0; overflow: hidden; }
 
 .md-body .wikilink {
   color: var(--accent); border-bottom: 1px dashed var(--accent-dim);
-  padding-bottom: 1px;
+  padding-bottom: 1px; cursor: pointer; text-decoration: none;
+}
+.md-body a.wikilink:hover { border-bottom-style: solid; text-decoration: none; }
+.md-body a.wikilink.broken {
+  color: var(--text-muted); border-bottom-color: var(--text-muted);
+  cursor: not-allowed;
 }
 .md-body mark {
   background: rgba(245, 168, 51, 0.18); color: var(--text);
@@ -1421,6 +1426,69 @@ function showLanding(project) {
 }
 
 // ── Load a file ────────────────────────────────────────────────────────────
+// ── Wikilink helpers ───────────────────────────────────────────────────────
+const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escAttr = s => escHtml(s).replace(/"/g,'&quot;');
+
+// Normalize for fuzzy filename matching: lowercase, strip .md, unify separators,
+// drop punctuation that Obsidian ignores in link resolution.
+function normKey(s) {
+  return String(s)
+    .toLowerCase()
+    .replace(/\.md$/, '')
+    .replace(/[_\s\-]+/g, ' ')
+    .trim();
+}
+
+// Build a {normalized-name → [{project, filename}]} index over all projects.
+let _wikiIndex = null;
+function wikiIndex() {
+  if (_wikiIndex) return _wikiIndex;
+  const idx = {};
+  for (const [project, cfg] of Object.entries(PROJECTS)) {
+    if (!cfg.files) continue;
+    for (const filename of cfg.files) {
+      const key = normKey(filename);
+      (idx[key] = idx[key] || []).push({ project, filename });
+    }
+  }
+  _wikiIndex = idx;
+  return idx;
+}
+
+// Resolve [[target]] → {project, filename} or null. Prefers current project.
+function resolveWikilink(target, fromProject) {
+  let t = String(target).split('#')[0].split('^')[0];
+  const slash = t.lastIndexOf('/');
+  if (slash !== -1) t = t.slice(slash + 1);
+  const hits = wikiIndex()[normKey(t)];
+  if (!hits || !hits.length) return null;
+  return hits.find(h => h.project === fromProject) || hits[0];
+}
+
+function hydrateWikilinks(container, fromProject) {
+  container.querySelectorAll('a.wikilink[data-target]').forEach(a => {
+    const target = a.getAttribute('data-target');
+    const hit = resolveWikilink(target, fromProject);
+    if (!hit) {
+      a.classList.add('broken');
+      a.title = `No note found for "${target}"`;
+      a.addEventListener('click', e => e.preventDefault());
+      return;
+    }
+    a.href = '#' + encodeURIComponent(hit.project) + '/' + encodeURIComponent(hit.filename);
+    a.title = `${hit.project} › ${hit.filename}`;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (hit.project !== activeProject) {
+        const tab = document.querySelector(`.tab[data-project="${hit.project}"]`);
+        if (tab) selectProject(hit.project, tab);
+      }
+      setTimeout(() => loadFileByName(hit.project, hit.filename), 0);
+    });
+  });
+}
+
 function renderObsidianMarkdown(md) {
   // 1. Extract math so marked's GFM doesn't mangle underscores/asterisks inside formulas.
   const mathBlocks = [];
@@ -1433,8 +1501,10 @@ function renderObsidianMarkdown(md) {
   // 2. Obsidian-isms.
   work = work
     .replace(/!\[\[([^\]]+)\]\]/g, '_[image: $1]_')
-    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '<span class="wikilink">$2</span>')
-    .replace(/\[\[([^\]]+)\]\]/g, '<span class="wikilink">$1</span>')
+    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,
+      (_, t, d) => `<a class="wikilink" data-target="${escAttr(t)}">${escHtml(d)}</a>`)
+    .replace(/\[\[([^\]]+)\]\]/g,
+      (_, t) => `<a class="wikilink" data-target="${escAttr(t)}">${escHtml(t)}</a>`)
     .replace(/==([^=\n]+)==/g, '<mark>$1</mark>');
 
   // 3. Markdown → HTML.
@@ -1491,6 +1561,7 @@ async function loadFile(project, filename, itemEl) {
 
     area.innerHTML = `<div class="md-body">${renderObsidianMarkdown(md)}</div>`;
     area.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
+    hydrateWikilinks(area, project);
 
     document.getElementById('content-scroll').scrollTop = 0;
     document.getElementById('status-text').textContent = filename;
