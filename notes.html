@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
 
 :root {
@@ -684,6 +686,17 @@ main.dashboard-active .content-scroll { padding: 0; overflow: hidden; }
 .md-body ul, .md-body ol { margin: 0 0 16px 22px; color: var(--text); line-height: 1.85; }
 .md-body li { margin-bottom: 5px; font-size: 16px; }
 .md-body li input[type="checkbox"] { margin-right: 8px; accent-color: var(--accent); }
+
+.md-body .wikilink {
+  color: var(--accent); border-bottom: 1px dashed var(--accent-dim);
+  padding-bottom: 1px;
+}
+.md-body mark {
+  background: rgba(245, 168, 51, 0.18); color: var(--text);
+  padding: 0 3px; border-radius: 2px;
+}
+.md-body .katex { font-size: 1.05em; }
+.md-body .katex-display { margin: 18px 0; overflow-x: auto; overflow-y: hidden; }
 
 .md-body code {
   font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;
@@ -1408,6 +1421,39 @@ function showLanding(project) {
 }
 
 // ── Load a file ────────────────────────────────────────────────────────────
+function renderObsidianMarkdown(md) {
+  // 1. Extract math so marked's GFM doesn't mangle underscores/asterisks inside formulas.
+  const mathBlocks = [];
+  const stash = (tex, display) => `@@MATHBLOCK${mathBlocks.push({tex, display}) - 1}@@`;
+
+  let work = md
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => stash(tex.trim(), true))
+    .replace(/(?<![\\$])\$(?!\s)([^\$\n]+?)(?<!\s)\$(?!\$)/g, (_, tex) => stash(tex, false));
+
+  // 2. Obsidian-isms.
+  work = work
+    .replace(/!\[\[([^\]]+)\]\]/g, '_[image: $1]_')
+    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '<span class="wikilink">$2</span>')
+    .replace(/\[\[([^\]]+)\]\]/g, '<span class="wikilink">$1</span>')
+    .replace(/==([^=\n]+)==/g, '<mark>$1</mark>');
+
+  // 3. Markdown → HTML.
+  let html = marked.parse(work);
+
+  // 4. Restore math, rendered with KaTeX.
+  html = html.replace(/@@MATHBLOCK(\d+)@@/g, (_, i) => {
+    const { tex, display } = mathBlocks[+i];
+    if (!window.katex) return display ? `<pre>$$${tex}$$</pre>` : `<code>$${tex}$</code>`;
+    try {
+      return katex.renderToString(tex, { displayMode: display, throwOnError: false });
+    } catch (e) {
+      return `<code>${display ? '$$' + tex + '$$' : '$' + tex + '$'}</code>`;
+    }
+  });
+
+  return html;
+}
+
 async function loadFile(project, filename, itemEl) {
   document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
   if (itemEl) itemEl.classList.add('active');
@@ -1443,8 +1489,7 @@ async function loadFile(project, filename, itemEl) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const md = await res.text();
 
-    const cleaned = md.replace(/!\[\[([^\]]+)\]\]/g, '_[image: $1]_');
-    area.innerHTML = `<div class="md-body">${marked.parse(cleaned)}</div>`;
+    area.innerHTML = `<div class="md-body">${renderObsidianMarkdown(md)}</div>`;
     area.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
 
     document.getElementById('content-scroll').scrollTop = 0;
