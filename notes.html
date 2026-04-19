@@ -51,6 +51,67 @@
   --radius-lg: 14px;
 
   --shadow-diffuse: 0 20px 40px -18px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.03) inset;
+  --shadow-float:   0 24px 60px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04);
+  --shadow-drawer:  -24px 0 60px -20px rgba(0,0,0,0.6);
+
+  --surface-glass:        rgba(19, 19, 24, 0.82);
+  --surface-glass-strong: rgba(19, 19, 24, 0.92);
+  --tt-bg:                var(--bg2);
+
+  --md-h1:     #f0f0ef;
+  --md-h2:     #dcdcdb;
+  --md-strong: #f0ece0;
+  --md-code:   #9cd0b8;
+  --md-precode:#c0d8c4;
+
+  --hud-backdrop-1: rgba(75,184,192,0.05);
+  --hud-backdrop-2: rgba(152,132,216,0.025);
+}
+
+/* ── Light theme ── */
+:root[data-theme="light"] {
+  --bg:             #f6f6f4;
+  --bg2:            #ffffff;
+  --bg3:            #ededea;
+  --bg4:            #e3e3df;
+  --border:         #e3e3df;
+  --border-2:       #cfcfc9;
+
+  --accent:         #0c8790;
+  --accent-dim:     #b8e0e3;
+  --accent-glow:    rgba(12, 135, 144, 0.10);
+
+  --coszo:          #c6761e;
+  --coszo-dim:      #e6c69c;
+  --coszo-glow:     rgba(198, 118, 30, 0.12);
+  --bransfield:     #6a57c4;
+  --bransfield-dim: #cfc5ea;
+  --bransfield-glow:rgba(106, 87, 196, 0.12);
+  --earthnote:      #1f8c63;
+  --earthnote-dim:  #b9dec9;
+  --earthnote-glow: rgba(31, 140, 99, 0.12);
+
+  --text:       #1a1a1e;
+  --text-2:     #545460;
+  --text-3:     #8a8a94;
+  --text-muted: #6e6e78;
+
+  --shadow-diffuse: 0 20px 40px -18px rgba(30,30,40,0.14), 0 1px 0 rgba(255,255,255,0.6) inset;
+  --shadow-float:   0 24px 60px -22px rgba(30,30,40,0.22), inset 0 1px 0 rgba(255,255,255,0.6);
+  --shadow-drawer:  -24px 0 60px -20px rgba(30,30,40,0.18);
+
+  --surface-glass:        rgba(255, 255, 255, 0.72);
+  --surface-glass-strong: rgba(255, 255, 255, 0.88);
+  --tt-bg:                #ffffff;
+
+  --md-h1:     #111114;
+  --md-h2:     #26262b;
+  --md-strong: #0f0f12;
+  --md-code:   #0a6958;
+  --md-precode:#2a3a32;
+
+  --hud-backdrop-1: rgba(12,135,144,0.06);
+  --hud-backdrop-2: rgba(106,87,196,0.04);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -75,8 +136,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 85% 40% at 50% -8%, rgba(75,184,192,0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 45% 65% at 100% 100%, rgba(152,132,216,0.025) 0%, transparent 50%);
+    radial-gradient(ellipse 85% 40% at 50% -8%, var(--hud-backdrop-1) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 65% at 100% 100%, var(--hud-backdrop-2) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -201,6 +262,28 @@ header::after {
   transition: color 0.15s;
   white-space: nowrap;
 }
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--border-2); background: var(--bg3); }
+.theme-toggle:active { transform: translateY(1px); }
+.theme-toggle svg { width: 15px; height: 15px; display: block; }
+.theme-toggle .icon-sun  { display: none; }
+.theme-toggle .icon-moon { display: block; }
+:root[data-theme="light"] .theme-toggle .icon-sun  { display: block; }
+:root[data-theme="light"] .theme-toggle .icon-moon { display: none; }
 .back-link:hover { color: var(--text-2); }
 
 /* ── Layout ── */
@@ -530,7 +613,7 @@ main.dashboard-active #content-area > .dashboard-layout {
 .constellation-tooltip {
   position: absolute;
   pointer-events: none;
-  background: var(--bg2);
+  background: var(--tt-bg);
   border: 1px solid var(--border-2);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
@@ -635,7 +718,7 @@ main.dashboard-active #content-area > .dashboard-layout {
   bottom: 28px;
   z-index: 4;
   width: 300px;
-  background: rgba(19, 19, 24, 0.82);
+  background: var(--surface-glass);
   backdrop-filter: blur(18px) saturate(130%);
   -webkit-backdrop-filter: blur(18px) saturate(130%);
   border: 1px solid var(--border-2);
@@ -644,9 +727,7 @@ main.dashboard-active #content-area > .dashboard-layout {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow:
-    0 24px 60px -20px rgba(0,0,0,0.7),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow: var(--shadow-float);
   transition: opacity 0.3s, transform 0.3s;
 }
 
@@ -666,7 +747,7 @@ main.dashboard-active #content-area > .dashboard-layout {
   bottom: 0;
   width: 420px;
   z-index: 4;
-  background: rgba(19, 19, 24, 0.92);
+  background: var(--surface-glass-strong);
   backdrop-filter: blur(20px) saturate(130%);
   -webkit-backdrop-filter: blur(20px) saturate(130%);
   border-left: 1px solid var(--border-2);
@@ -674,7 +755,7 @@ main.dashboard-active #content-area > .dashboard-layout {
   flex-direction: column;
   transform: translateX(100%);
   transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: -24px 0 60px -20px rgba(0,0,0,0.6);
+  box-shadow: var(--shadow-drawer);
 }
 
 .notes-drawer.open { transform: translateX(0); }
@@ -1002,7 +1083,7 @@ main.dashboard-active #content-area > .dashboard-layout {
 .md-body h1 {
   font-family: var(--font-serif);
   font-size: 36px; font-weight: 400;
-  color: #f0f0ef; margin-bottom: 28px; padding-bottom: 16px;
+  color: var(--md-h1); margin-bottom: 28px; padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
   line-height: 1.15; letter-spacing: -0.025em;
 }
@@ -1010,7 +1091,7 @@ main.dashboard-active #content-area > .dashboard-layout {
 .md-body h2 {
   font-family: var(--font-serif);
   font-size: 24px; font-weight: 400;
-  color: #dcdcdb; margin: 44px 0 14px;
+  color: var(--md-h2); margin: 44px 0 14px;
   line-height: 1.25; letter-spacing: -0.018em;
 }
 
@@ -1045,7 +1126,7 @@ main.dashboard-active #content-area > .dashboard-layout {
 .md-body code {
   font-family: var(--font-mono); font-size: 13px;
   background: var(--bg3); border: 1px solid var(--border);
-  padding: 2px 6px; border-radius: 4px; color: #9cd0b8;
+  padding: 2px 6px; border-radius: 4px; color: var(--md-code);
 }
 
 .md-body pre {
@@ -1054,7 +1135,7 @@ main.dashboard-active #content-area > .dashboard-layout {
   border-radius: var(--radius-md); overflow-x: auto; margin-bottom: 22px;
 }
 
-.md-body pre code { background: none; border: none; padding: 0; font-size: 13px; color: #c0d8c4; line-height: 1.7; }
+.md-body pre code { background: none; border: none; padding: 0; font-size: 13px; color: var(--md-precode); line-height: 1.7; }
 
 .md-body blockquote {
   border-left: 2px solid var(--accent-dim); padding: 12px 22px; margin: 0 0 16px;
@@ -1069,7 +1150,7 @@ main.dashboard-active #content-area > .dashboard-layout {
 .md-body hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
 .md-body a { color: var(--accent); text-decoration: none; }
 .md-body a:hover { text-decoration: underline; }
-.md-body strong { color: #f0ece0; font-weight: 600; }
+.md-body strong { color: var(--md-strong); font-weight: 600; }
 .md-body em { color: var(--text-2); }
 
 /* ── Loading (skeleton shimmer) ── */
@@ -1425,6 +1506,10 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
       <span class="tab-dot dot-earthnote"></span>Earthnote
     </button>
   </nav>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  </button>
   <a href="index.html" class="back-link">← portfolio</a>
 </header>
 
@@ -2519,6 +2604,29 @@ function closeSidebar() {
   document.querySelector('aside').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('visible');
 }
+
+// ── Theme toggle ───────────────────────────────────────────────────────────
+function applyTheme(mode) {
+  document.documentElement.setAttribute('data-theme', mode);
+  try { localStorage.setItem('notes-theme', mode); } catch (_) {}
+  // Invalidate canvas color cache so the constellation picks up new palette
+  for (const k in __colorCache) delete __colorCache[k];
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+(function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem('notes-theme'); } catch (_) {}
+  if (saved === 'light' || saved === 'dark') {
+    applyTheme(saved);
+  } else {
+    applyTheme('dark');
+  }
+})();
 
 // ── Init ───────────────────────────────────────────────────────────────────
 marked.setOptions({ breaks: true, gfm: true });
