@@ -263,40 +263,58 @@ async function ask(query) {
     const reader = r.body.getReader();
     const dec = new TextDecoder();
     let buf = '';
+    let raw = '';
+    const handleLine = (line) => {
+      const m = line.match(/^data:\s?(.*)$/);
+      if (!m) return;
+      const payload = m[1].trim();
+      if (!payload || payload === '[DONE]') return;
+      try {
+        const j = JSON.parse(payload);
+        if (j.error) { upstreamErr = j.error; return; }
+        const cand = j?.candidates?.[0];
+        const parts = cand?.content?.parts || [];
+        for (const p of parts) {
+          if (typeof p.text === 'string' && p.text) {
+            textEl.textContent += p.text;
+            gotText = true;
+            scrollDown();
+          }
+        }
+        if (cand?.finishReason) lastFinish = cand.finishReason;
+        if (j?.promptFeedback?.blockReason) lastFinish = `blocked: ${j.promptFeedback.blockReason}`;
+      } catch {
+        // ignore unparseable line
+      }
+    };
+    const flushEvents = () => {
+      // Normalize CRLF, then split on blank line.
+      buf = buf.replace(/\r\n/g, '\n');
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) !== -1) {
+        const event = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        for (const line of event.split('\n')) handleLine(line);
+      }
+    };
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-      buf += dec.decode(value, { stream: true });
-      let nl;
-      while ((nl = buf.indexOf('\n\n')) !== -1) {
-        const event = buf.slice(0, nl);
-        buf = buf.slice(nl + 2);
-        for (const line of event.split('\n')) {
-          if (!line.startsWith('data: ')) continue;
-          const payload = line.slice(6).trim();
-          if (!payload || payload === '[DONE]') continue;
-          try {
-            const j = JSON.parse(payload);
-            if (j.error) { upstreamErr = j.error; continue; }
-            const cand = j?.candidates?.[0];
-            const parts = cand?.content?.parts || [];
-            for (const p of parts) {
-              if (typeof p.text === 'string' && p.text) {
-                textEl.textContent += p.text;
-                gotText = true;
-                scrollDown();
-              }
-            }
-            if (cand?.finishReason) lastFinish = cand.finishReason;
-            if (j?.promptFeedback?.blockReason) lastFinish = `blocked: ${j.promptFeedback.blockReason}`;
-          } catch {
-            // ignore unparseable line
-          }
-        }
-      }
+      const chunk = dec.decode(value, { stream: true });
+      raw += chunk;
+      buf += chunk;
+      flushEvents();
+    }
+    // Process anything left in the buffer (no trailing blank line).
+    if (buf.trim()) {
+      for (const line of buf.split('\n')) handleLine(line);
+      buf = '';
     }
     if (!gotText) {
-      const detail = upstreamErr ? JSON.stringify(upstreamErr) : (lastFinish || 'no text returned');
+      console.log('[chat] raw stream (', raw.length, 'bytes):', raw);
+      const detail = upstreamErr
+        ? JSON.stringify(upstreamErr)
+        : (lastFinish || `no text — ${raw.length} raw bytes (see console)`);
       textEl.textContent = `(empty response — ${detail})`;
     }
   } catch (e) {
