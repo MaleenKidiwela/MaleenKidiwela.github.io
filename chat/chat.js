@@ -159,11 +159,11 @@ function appendUser(text) {
 
 function appendAssistant() {
   const wrap = document.createElement('div');
-  wrap.className = 'msg msg-assistant';
-  const avatar = document.createElement('img');
-  avatar.src = 'fox.svg';
+  wrap.className = 'msg msg-assistant thinking';
+  const avatar = document.createElement('div');
   avatar.className = 'avatar';
-  avatar.alt = '';
+  avatar.setAttribute('role', 'img');
+  avatar.setAttribute('aria-label', 'fox');
   const body = document.createElement('div');
   body.className = 'body';
   const textEl = document.createElement('div');
@@ -176,7 +176,7 @@ function appendAssistant() {
   wrap.appendChild(body);
   $('messages').appendChild(wrap);
   scrollDown();
-  return { textEl, cites };
+  return { textEl, cites, wrap };
 }
 
 function scrollDown() {
@@ -185,8 +185,9 @@ function scrollDown() {
 }
 
 async function ask(query) {
-  const { textEl, cites } = appendAssistant();
+  const { textEl, cites, wrap } = appendAssistant();
   textEl.textContent = '…';
+  const stopThinking = () => wrap.classList.remove('thinking');
 
   // 1. embed query
   let qEmb;
@@ -202,12 +203,14 @@ async function ask(query) {
       $('pwScreen').hidden = false;
       $('pwBtn').disabled = false;
       $('pwError').textContent = 'Session expired. Re-enter the password.';
+      stopThinking();
       return;
     }
     if (!r.ok) throw new Error(`embed ${r.status}`);
     qEmb = (await r.json()).embedding;
   } catch (e) {
     textEl.textContent = `Embedding error: ${e.message}`;
+    stopThinking();
     return;
   }
   const qVec = l2norm(new Float32Array(qEmb));
@@ -221,6 +224,7 @@ async function ask(query) {
 
   if (fused.length === 0) {
     textEl.textContent = 'No relevant notes found for that query.';
+    stopThinking();
     return;
   }
 
@@ -319,6 +323,8 @@ async function ask(query) {
     }
   } catch (e) {
     textEl.textContent += `\n[stream error: ${e.message}]`;
+  } finally {
+    stopThinking();
   }
 }
 

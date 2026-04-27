@@ -178,8 +178,23 @@ img { image-rendering: pixelated; }
   width: 32px; height: 32px;
   flex: 0 0 32px;
   border-radius: 8px;
-  background: var(--accent-soft);
-  padding: 2px;
+  background-color: var(--accent-soft);
+  background-image: url('fox-anim.png');
+  background-repeat: no-repeat;
+  background-size: 128px 32px;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  animation: foxwalk 1.6s steps(4) infinite;
+}
+.msg-assistant.thinking .avatar {
+  animation-duration: 0.6s;
+}
+@keyframes foxwalk {
+  from { background-position: 0 0; }
+  to   { background-position: -128px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msg-assistant .avatar { animation: none; }
 }
 .msg-assistant .body {
   background: var(--surface);
