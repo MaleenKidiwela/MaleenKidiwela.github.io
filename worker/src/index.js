@@ -51,6 +51,24 @@ async function readJson(req) {
   }
 }
 
+async function fetchWithRetry(url, init, { tries = 4, baseMs = 800 } = {}) {
+  let last;
+  for (let i = 0; i < tries; i++) {
+    const res = await fetch(url, init);
+    if (res.ok) return res;
+    if (res.status !== 429 && res.status !== 503 && res.status < 500) return res;
+    last = res;
+    if (i === tries - 1) break;
+    let wait = baseMs * Math.pow(2, i);
+    const ra = res.headers.get('retry-after');
+    if (ra && !Number.isNaN(parseInt(ra, 10))) wait = Math.max(wait, parseInt(ra, 10) * 1000);
+    // Drain body so the connection can be reused.
+    try { await res.arrayBuffer(); } catch {}
+    await new Promise((r) => setTimeout(r, wait));
+  }
+  return last;
+}
+
 export default {
   async fetch(req, env) {
     const origin = req.headers.get('origin') || '';
@@ -87,7 +105,7 @@ export default {
       if (!text) return json({ error: 'text required' }, 400, cors);
       if (text.length > MAX_QUERY_LEN) return json({ error: 'text too long' }, 400, cors);
 
-      const upstream = await fetch(
+      const upstream = await fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${env.GEMINI_API_KEY}`,
         {
           method: 'POST',
@@ -117,7 +135,7 @@ export default {
 
       const userText = `Context (retrieved notes):\n\n${context}\n\n---\n\nQuestion: ${query}`;
 
-      const upstream = await fetch(
+      const upstream = await fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL}:streamGenerateContent?alt=sse&key=${env.GEMINI_API_KEY}`,
         {
           method: 'POST',
