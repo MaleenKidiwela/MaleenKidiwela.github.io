@@ -1,0 +1,11 @@
+name = "notes-rag"
+main = "src/index.js"
+compatibility_date = "2025-04-01"
+
+# Restrict which origins can call the Worker. Edit if you add a custom domain.
+[vars]
+ALLOWED_ORIGIN = "https://maleenkidiwela.github.io"
+
+# Secrets (set via `wrangler secret put`, do NOT commit values):
+#   wrangler secret put GEMINI_API_KEY
+#   wrangler secret put CHAT_PASSWORD
