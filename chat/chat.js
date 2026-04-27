@@ -246,6 +246,9 @@ async function ask(query) {
 
   // 5. stream
   textEl.textContent = '';
+  let gotText = false;
+  let lastFinish = null;
+  let upstreamErr = null;
   try {
     const r = await fetch(`${CONFIG.workerUrl}/chat`, {
       method: 'POST',
@@ -274,18 +277,27 @@ async function ask(query) {
           if (!payload || payload === '[DONE]') continue;
           try {
             const j = JSON.parse(payload);
-            const parts = j?.candidates?.[0]?.content?.parts || [];
+            if (j.error) { upstreamErr = j.error; continue; }
+            const cand = j?.candidates?.[0];
+            const parts = cand?.content?.parts || [];
             for (const p of parts) {
               if (typeof p.text === 'string' && p.text) {
                 textEl.textContent += p.text;
+                gotText = true;
                 scrollDown();
               }
             }
+            if (cand?.finishReason) lastFinish = cand.finishReason;
+            if (j?.promptFeedback?.blockReason) lastFinish = `blocked: ${j.promptFeedback.blockReason}`;
           } catch {
             // ignore unparseable line
           }
         }
       }
+    }
+    if (!gotText) {
+      const detail = upstreamErr ? JSON.stringify(upstreamErr) : (lastFinish || 'no text returned');
+      textEl.textContent = `(empty response — ${detail})`;
     }
   } catch (e) {
     textEl.textContent += `\n[stream error: ${e.message}]`;
