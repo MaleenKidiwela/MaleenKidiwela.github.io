@@ -22,7 +22,12 @@ const EMBED_MODEL = 'gemini-embedding-001';
 const EMBED_DIM = 768;
 const CHUNK_WORDS = 375;     // ~500 tokens at 0.75 words/token
 const OVERLAP_WORDS = 75;    // ~100 tokens
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 25;
+const MAX_RETRIES = 6;
+const BASE_BACKOFF_MS = 4000;
+const INTER_BATCH_DELAY_MS = 1500;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function walk(dir) {
   const out = [];
@@ -80,20 +85,34 @@ async function embedBatch(texts, apiKey) {
       taskType: 'RETRIEVAL_DOCUMENT',
     })),
   };
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    },
-  );
-  if (!res.ok) {
+  let lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    );
+    if (res.ok) {
+      const j = await res.json();
+      return j.embeddings.map((e) => e.values);
+    }
     const txt = await res.text().catch(() => '');
-    throw new Error(`Embed batch failed (${res.status}): ${txt.slice(0, 500)}`);
+    lastErr = new Error(`Embed batch failed (${res.status}): ${txt.slice(0, 500)}`);
+    // Retry on 429 and 5xx; bail on other 4xx.
+    if (res.status !== 429 && res.status < 500) throw lastErr;
+    if (attempt === MAX_RETRIES) throw lastErr;
+    let wait = BASE_BACKOFF_MS * Math.pow(2, attempt);
+    const retryHdr = res.headers.get('retry-after');
+    if (retryHdr && !Number.isNaN(parseInt(retryHdr, 10))) {
+      wait = Math.max(wait, parseInt(retryHdr, 10) * 1000);
+    }
+    console.warn(`  ${res.status} from embed API; retrying in ${Math.round(wait / 1000)}s (attempt ${attempt + 1}/${MAX_RETRIES})`);
+    await sleep(wait);
   }
-  const j = await res.json();
-  return j.embeddings.map((e) => e.values);
+  throw lastErr;
 }
 
 async function main() {
@@ -166,6 +185,7 @@ async function main() {
       embeddings.set(norm, (b + i) * EMBED_DIM);
     });
     console.log(`  embedded ${Math.min(b + BATCH_SIZE, chunks.length)}/${chunks.length}`);
+    if (b + BATCH_SIZE < chunks.length) await sleep(INTER_BATCH_DELAY_MS);
   }
 
   const mini = new MiniSearch({
