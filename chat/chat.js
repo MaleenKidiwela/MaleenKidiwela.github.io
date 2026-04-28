@@ -95,13 +95,14 @@ function playIntro() {
   }
 
   // Beat order: door materializes → opens → fox steps out → waves Hi → runs across → settles.
+  // Durations must match the matching CSS animation lengths in chat.css.
   const beats = [
-    { cls: 'beat-1', ms: 720 },
-    { cls: 'beat-2', ms: 720 },
-    { cls: 'beat-3', ms: 600 },
-    { cls: 'beat-4', ms: 880 },
-    { cls: 'beat-5', ms: 1600 },
-    { cls: 'beat-6', ms: 600 },
+    { cls: 'beat-1', ms: 1400 },
+    { cls: 'beat-2', ms: 1400 },
+    { cls: 'beat-3', ms: 1200 },
+    { cls: 'beat-4', ms: 1600 },
+    { cls: 'beat-5', ms: 3200 },
+    { cls: 'beat-6', ms: 1100 },
   ];
 
   return new Promise((resolve) => {

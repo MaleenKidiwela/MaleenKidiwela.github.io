@@ -260,38 +260,27 @@ img { image-rendering: pixelated; }
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: var(--bg);
+  background: transparent;
+  pointer-events: none;
   overflow: hidden;
-  contain: strict;
-  animation: introFadeIn 220ms ease-out both;
+  animation: introFadeIn 360ms ease-out both;
 }
-.intro-stage.is-leaving { animation: introFadeOut 380ms ease-in both; }
+.intro-stage.is-leaving { animation: introFadeOut 520ms ease-in both; }
 @keyframes introFadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes introFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-.intro-stage__ground {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: max(18vh, 120px);
-  height: 1px;
-  background: var(--line);
-  transform-origin: 0 50%;
-  animation: introGround 520ms cubic-bezier(.2,.7,.2,1) both;
-}
-@keyframes introGround { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-
 .intro-stage__sprite {
-  --frame-w: 140px;
-  --frame-h: 280px;
+  --frame-w: 72px;
+  --frame-h: 144px;
   position: absolute;
-  left: max(8vw, 48px);
-  bottom: max(18vh, 120px);
+  left: max(6vw, 32px);
+  bottom: max(12vh, 72px);
   width: var(--frame-w);
   height: var(--frame-h);
   background-repeat: no-repeat;
   background-size: calc(var(--frame-w) * 4) var(--frame-h);
   background-position: 0 0;
+  background-color: transparent;
   image-rendering: pixelated;
   will-change: transform, background-image;
   transform: translate3d(0, 0, 0);
@@ -299,19 +288,20 @@ img { image-rendering: pixelated; }
 
 @keyframes introWalk {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(calc(100vw - var(--frame-w) - max(16vw, 96px)), 0, 0); }
+  to   { transform: translate3d(calc(100vw - var(--frame-w) - max(12vw, 64px)), 0, 0); }
 }
 
-/* Beat classes — each swaps the strip and the frame-cycle animation */
-.intro-stage__sprite.beat-1 { background-image: url('../a1.png'); animation: foxFrames 720ms steps(4) 1; }
-.intro-stage__sprite.beat-2 { background-image: url('../a4.png'); animation: foxFrames 720ms steps(4) 1; }
-.intro-stage__sprite.beat-3 { background-image: url('../a2.png'); animation: foxFrames 600ms steps(4) 1; }
-.intro-stage__sprite.beat-4 { background-image: url('../a3.png'); animation: foxFrames 880ms steps(4) 1; }
+/* Beat classes — each swaps the strip and the frame-cycle animation. */
+/* Slow pacing: each non-running beat plays its 4 frames over ~1.4s. */
+.intro-stage__sprite.beat-1 { background-image: url('../a1.png'); animation: foxFrames 1400ms steps(4) 1; }
+.intro-stage__sprite.beat-2 { background-image: url('../a4.png'); animation: foxFrames 1400ms steps(4) 1; }
+.intro-stage__sprite.beat-3 { background-image: url('../a2.png'); animation: foxFrames 1200ms steps(4) 1; }
+.intro-stage__sprite.beat-4 { background-image: url('../a3.png'); animation: foxFrames 1600ms steps(4) 1; }
 .intro-stage__sprite.beat-5 {
   background-image: url('../a5.png');
-  animation: foxFrames 360ms steps(4) infinite, introWalk 1600ms linear forwards;
+  animation: foxFrames 640ms steps(4) infinite, introWalk 3200ms linear forwards;
 }
-.intro-stage__sprite.beat-6 { background-image: url('../a6.png'); animation: foxFrames 600ms steps(4) 1; }
+.intro-stage__sprite.beat-6 { background-image: url('../a6.png'); animation: foxFrames 1100ms steps(4) 1; }
 
 @keyframes foxFrames {
   from { background-position-x: 0; }
@@ -320,24 +310,24 @@ img { image-rendering: pixelated; }
 
 .intro-stage__skip {
   position: absolute;
-  top: 18px;
-  right: 20px;
+  top: 14px;
+  right: 16px;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 6px 14px;
+  padding: 4px 12px;
   cursor: pointer;
   letter-spacing: 0.02em;
+  pointer-events: auto;
   transition: color 160ms, border-color 160ms;
 }
 .intro-stage__skip:hover { color: var(--ink); border-color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
   .intro-stage,
-  .intro-stage__ground,
   .intro-stage__sprite { animation: none !important; }
 }
 
