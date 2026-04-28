@@ -68,13 +68,77 @@ $('pwForm').addEventListener('submit', async (e) => {
     }
     password = pw;
     $('pwScreen').hidden = true;
+    loadAssets(); // run in parallel with the intro; status bar reflects progress
+    await playIntro();
     $('chatScreen').hidden = false;
-    await loadAssets();
   } catch (err) {
     $('pwError').textContent = `Network error: ${err.message}`;
     $('pwBtn').disabled = false;
   }
 });
+
+// ---------- Login intro ----------
+
+function playIntro() {
+  const stage = $('introStage');
+  const sprite = $('introSprite');
+  const skip = $('introSkip');
+  if (!stage || !sprite) return Promise.resolve();
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  stage.hidden = false;
+
+  if (reduced) {
+    return new Promise((resolve) => {
+      setTimeout(() => { stage.hidden = true; resolve(); }, 200);
+    });
+  }
+
+  // Beat order: door materializes → opens → fox steps out → waves Hi → runs across → settles.
+  const beats = [
+    { cls: 'beat-1', ms: 720 },
+    { cls: 'beat-2', ms: 720 },
+    { cls: 'beat-3', ms: 600 },
+    { cls: 'beat-4', ms: 880 },
+    { cls: 'beat-5', ms: 1600 },
+    { cls: 'beat-6', ms: 600 },
+  ];
+
+  return new Promise((resolve) => {
+    let cancelled = false;
+    let timer = null;
+
+    const finish = () => {
+      if (cancelled) return;
+      cancelled = true;
+      clearTimeout(timer);
+      stage.classList.add('is-leaving');
+      skip?.removeEventListener('click', finish);
+      window.removeEventListener('keydown', onKey);
+      stage.removeEventListener('click', onStageClick);
+      setTimeout(() => {
+        stage.hidden = true;
+        stage.classList.remove('is-leaving');
+        sprite.className = 'intro-stage__sprite';
+        resolve();
+      }, 380);
+    };
+
+    const onKey = (e) => { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') finish(); };
+    const onStageClick = (e) => { if (e.target === stage) finish(); };
+    skip?.addEventListener('click', finish);
+    window.addEventListener('keydown', onKey);
+    stage.addEventListener('click', onStageClick);
+
+    const runBeat = (i) => {
+      if (cancelled) return;
+      if (i >= beats.length) { finish(); return; }
+      sprite.className = 'intro-stage__sprite ' + beats[i].cls;
+      timer = setTimeout(() => runBeat(i + 1), beats[i].ms);
+    };
+    runBeat(0);
+  });
+}
 
 // ---------- Asset loading ----------
 

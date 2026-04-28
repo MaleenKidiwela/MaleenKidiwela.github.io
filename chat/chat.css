@@ -255,8 +255,95 @@ img { image-rendering: pixelated; }
 }
 .composer button:disabled { opacity: 0.6; cursor: progress; }
 
+/* Login intro */
+.intro-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  overflow: hidden;
+  contain: strict;
+  animation: introFadeIn 220ms ease-out both;
+}
+.intro-stage.is-leaving { animation: introFadeOut 380ms ease-in both; }
+@keyframes introFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes introFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+.intro-stage__ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(18vh, 120px);
+  height: 1px;
+  background: var(--line);
+  transform-origin: 0 50%;
+  animation: introGround 520ms cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes introGround { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.intro-stage__sprite {
+  --frame-w: 140px;
+  --frame-h: 280px;
+  position: absolute;
+  left: max(8vw, 48px);
+  bottom: max(18vh, 120px);
+  width: var(--frame-w);
+  height: var(--frame-h);
+  background-repeat: no-repeat;
+  background-size: calc(var(--frame-w) * 4) var(--frame-h);
+  background-position: 0 0;
+  image-rendering: pixelated;
+  will-change: transform, background-image;
+  transform: translate3d(0, 0, 0);
+}
+
+@keyframes introWalk {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(100vw - var(--frame-w) - max(16vw, 96px)), 0, 0); }
+}
+
+/* Beat classes — each swaps the strip and the frame-cycle animation */
+.intro-stage__sprite.beat-1 { background-image: url('../a1.png'); animation: foxFrames 720ms steps(4) 1; }
+.intro-stage__sprite.beat-2 { background-image: url('../a4.png'); animation: foxFrames 720ms steps(4) 1; }
+.intro-stage__sprite.beat-3 { background-image: url('../a2.png'); animation: foxFrames 600ms steps(4) 1; }
+.intro-stage__sprite.beat-4 { background-image: url('../a3.png'); animation: foxFrames 880ms steps(4) 1; }
+.intro-stage__sprite.beat-5 {
+  background-image: url('../a5.png');
+  animation: foxFrames 360ms steps(4) infinite, introWalk 1600ms linear forwards;
+}
+.intro-stage__sprite.beat-6 { background-image: url('../a6.png'); animation: foxFrames 600ms steps(4) 1; }
+
+@keyframes foxFrames {
+  from { background-position-x: 0; }
+  to   { background-position-x: calc(var(--frame-w) * -4); }
+}
+
+.intro-stage__skip {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: color 160ms, border-color 160ms;
+}
+.intro-stage__skip:hover { color: var(--ink); border-color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-stage,
+  .intro-stage__ground,
+  .intro-stage__sprite { animation: none !important; }
+}
+
 @media (max-width: 520px) {
   .topbar { padding: 10px 14px; }
   .chat-screen { padding: 10px; }
   .msg { max-width: 100%; }
+  .intro-stage__sprite { --frame-w: 96px; --frame-h: 192px; }
 }
