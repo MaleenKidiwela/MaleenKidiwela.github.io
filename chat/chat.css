@@ -184,10 +184,10 @@ img { image-rendering: pixelated; }
   background-size: 128px 32px;
   background-position: 0 0;
   image-rendering: pixelated;
-  animation: foxwalk 3.2s steps(4) infinite;
+  animation: foxwalk 6s steps(4) infinite;
 }
 .msg-assistant.thinking .avatar {
-  animation-duration: 1.4s;
+  animation-duration: 2.4s;
 }
 @keyframes foxwalk {
   from { background-position: 0 0; }
