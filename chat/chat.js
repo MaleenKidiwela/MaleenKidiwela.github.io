@@ -24,10 +24,13 @@ let chunks = null;
 let embeddings = null; // Float32Array, length = chunks.length * embedDim
 let assetsReady = false;
 
-function setStatus(text, isError = false) {
+function setStatus(text, mode = 'loading') {
+  // mode: 'loading' | 'ready' | 'error'
   const el = $('status');
-  el.textContent = text;
-  el.classList.toggle('error', !!isError);
+  const txt = $('statusText');
+  if (txt) txt.textContent = text; else el.textContent = text;
+  el.classList.remove('is-loading', 'is-ready', 'is-error');
+  el.classList.add(`is-${mode}`);
 }
 
 function configLooksUnset() {
@@ -79,7 +82,7 @@ $('pwForm').addEventListener('submit', async (e) => {
 // ---------- Asset loading ----------
 
 async function loadAssets() {
-  setStatus('Loading index…');
+  setStatus('Loading index…', 'loading');
   try {
     const [idxText, chunkData, embBuf] = await Promise.all([
       fetchText(CONFIG.indexPath, 'search-index.json'),
@@ -97,11 +100,11 @@ async function loadAssets() {
       throw new Error(`embedding/chunk mismatch (${embeddings.length} vs ${chunks.length * CONFIG.embedDim})`);
     }
     assetsReady = true;
-    setStatus(`Ready. ${chunks.length} chunks across ${countNotes()} notes.`);
+    setStatus(`Ready · ${chunks.length} chunks · ${countNotes()} notes`, 'ready');
   } catch (e) {
     setStatus(
       `Index not available: ${e.message}. The chat will work after the GitHub Action has built /public.`,
-      true,
+      'error',
     );
   }
 }
@@ -130,11 +133,28 @@ async function fetchBuffer(url, label) {
 
 // ---------- Chat ----------
 
+// Prompt-suggestion chips populate the input.
+document.querySelectorAll('.suggestion').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const q = btn.dataset.q || btn.textContent.trim();
+    const input = $('qInput');
+    input.value = q;
+    input.focus();
+    $('chatForm').requestSubmit();
+  });
+});
+
+function dismissEmptyState() {
+  const el = $('emptyState');
+  if (el && !el.hidden) el.hidden = true;
+}
+
 $('chatForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const q = $('qInput').value.trim();
   if (!q) return;
   $('qInput').value = '';
+  dismissEmptyState();
   appendUser(q);
   if (!assetsReady) {
     appendAssistant().textEl.textContent = 'Index is not loaded yet. Try again once the status bar says Ready.';

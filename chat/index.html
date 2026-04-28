@@ -7,37 +7,73 @@
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="chat.css">
 </head>
 <body>
 
   <header class="topbar">
-    <a href="/notes.html" class="back" aria-label="Back to notes">← notes</a>
-    <span class="title">Ask the notes</span>
-    <span class="spacer"></span>
+    <a href="/notes.html" class="back" aria-label="Back to notes">
+      <span class="back__arrow" aria-hidden="true">&larr;</span>
+      <span class="back__label">notes</span>
+    </a>
+    <span class="topbar__title">Ask the notes</span>
+    <span class="topbar__spacer"></span>
   </header>
 
   <section id="pwScreen" class="pw-screen" aria-labelledby="pwTitle">
-    <div class="pw-card">
-      <img src="fox.svg" alt="" class="logo" width="64" height="64">
-      <h1 id="pwTitle">Ask the notes</h1>
-      <p class="muted">Enter the shared password to start chatting with the research notes.</p>
-      <form id="pwForm" autocomplete="off">
-        <input id="pwInput" type="password" name="password" placeholder="password" autocomplete="current-password" required>
-        <button id="pwBtn" type="submit">Enter</button>
-      </form>
-      <p id="pwError" class="error" role="alert"></p>
-      <p class="hint muted">Your password is held only in this tab and is forgotten on refresh.</p>
+    <div class="pw-screen__editorial">
+      <span class="overline">Research notes / vault</span>
+      <h1 id="pwTitle" class="pw-screen__title">Ask the <em>notes.</em></h1>
+      <p class="pw-screen__lead">
+        Conversational search over the working vault &mdash; Cascadia field
+        records, Bransfield earthquake catalogs, and Earthnote mapping.
+        Every answer cites the underlying note.
+      </p>
+      <img src="fox.svg" alt="" class="pw-screen__mark" width="48" height="48">
+    </div>
+    <div class="pw-screen__panel">
+      <div class="pw-card">
+        <span class="overline pw-card__overline">Sign in</span>
+        <h2 class="pw-card__title">Shared password</h2>
+        <form id="pwForm" autocomplete="off" class="pw-card__form">
+          <label class="field">
+            <span class="field__label">Password</span>
+            <input id="pwInput" type="password" name="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password" required>
+          </label>
+          <button id="pwBtn" type="submit" class="btn btn--primary">
+            <span>Enter</span>
+            <span class="btn__hint" aria-hidden="true">&#x21B5;</span>
+          </button>
+        </form>
+        <p id="pwError" class="error" role="alert"></p>
+        <p class="pw-card__hint">Held in this tab only. Forgotten on refresh.</p>
+      </div>
     </div>
   </section>
 
   <section id="chatScreen" class="chat-screen" hidden>
-    <div id="status" class="status muted">Loading index…</div>
-    <div id="messages" class="messages" aria-live="polite"></div>
+    <div id="status" class="status" role="status">
+      <span class="status__dot" aria-hidden="true"></span>
+      <span id="statusText" class="status__text">Loading index&hellip;</span>
+    </div>
+    <div id="messages" class="messages" aria-live="polite">
+      <div id="emptyState" class="empty-state">
+        <span class="overline">Try asking</span>
+        <h2 class="empty-state__title">What do you want to know?</h2>
+        <div class="empty-state__suggestions" role="list">
+          <button type="button" class="suggestion" role="listitem" data-q="What&#39;s new in the Cascadia notes?">What&rsquo;s new in the Cascadia notes?</button>
+          <button type="button" class="suggestion" role="listitem" data-q="Summarize the Bransfield earthquake findings.">Summarize the Bransfield earthquake findings.</button>
+          <button type="button" class="suggestion" role="listitem" data-q="What did Earthnote map most recently?">What did Earthnote map most recently?</button>
+        </div>
+      </div>
+    </div>
     <form id="chatForm" class="composer">
-      <input id="qInput" type="text" placeholder="Ask about the notes…" autocomplete="off" required maxlength="2000">
-      <button id="qBtn" type="submit" aria-label="Send">Send</button>
+      <input id="qInput" type="text" placeholder="Ask about the notes&hellip;" autocomplete="off" required maxlength="2000">
+      <button id="qBtn" type="submit" class="btn btn--primary composer__send" aria-label="Send">
+        <span>Send</span>
+        <span class="btn__hint" aria-hidden="true">&#x21B5;</span>
+      </button>
     </form>
   </section>
 
