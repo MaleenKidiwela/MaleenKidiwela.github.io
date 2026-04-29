@@ -53,7 +53,7 @@ This is the monolith — ~911 lines. Every numbered sub-step maps to a section o
 1. ⬜ **Read state** — `run/endtime_<station>_<run>.txt` → `start_time`. `end_time = start_time + time_interval` (86400 s).
 2. ⬜ **Build + submit M2M request** — data URL with `beginDT`/`endDT`, `format=application/netcdf`, `include_provenance=true`. Poll `status.json` up to `max_cycle × delay` seconds.
 3. ⬜ **Locate NetCDF via NCML** — parse the XML index, find the aggregated `.nc` location.
-4. 🟨 **Optional local NetCDF save** (`save_netcdf = 1` in `run_prest.txt`) — downloads to `output/netcdf/` with server filename. This **duplicates** `temporal_anomaly_investigator --save-nc` which writes to `output/temporal_anomaly/netcdf/` with a deployment-tagged filename. See §8 for proposed unification.
+4. 🟨 **Optional local NetCDF save** — kept as a capability in the pipeline, but moved off the param file. Becomes a CLI flag `--save-nc` on `OOI_data_request_and_convert_mseed.py` (mirroring the investigator). The cron wrapper (`bin/run_data_collection.sh`) does not pass it, so cron-driven runs never save. Manual ad-hoc runs do. Output stays at `output/netcdf/` with the server-provided filename. The investigator's own `output/temporal_anomaly/netcdf/` archive (also `--save-nc`) is unchanged. See §5 Unification.
 5. ⬜ **Open NetCDF via OPeNDAP, trim to window** — `utcdata1900` conversion, `searchsorted` trim to [start_time, end_time].
 6. 🟥 **Gap detection + sample period estimation** (lines ~460–700, the core of the legacy algorithm):
 	- `sp = median(Δt after 90 %-trim)`
@@ -63,19 +63,85 @@ This is the monolith — ~911 lines. Every numbered sub-step maps to a section o
 	- `split_idx = gap_idx + 1`
 	- **All of this is replaced** by the anomaly method. See §2 / §4.
 7. 🟥 **sp-deviation email alert** — uses `sp` from step 6 compared to the deployment's nominal. Needs to use whichever `sp`/`sr` the new algorithm reports.
-8. 🟨 **Auto-diagnostic figure** — triggers when `len(gap_idx) > 0 OR diag_sp_alert_fired`. Calls `diagnose_timing.run_diagnostic(t_sec, sp_calc, sp_nominal, dt_all, gap_idx, gap_threshold, multiplier, is_full, ...)`. Inputs change because `gap_idx`, `sp_calc`, `gap_threshold`, `multiplier`, and `is_full` are produced by the new algorithm. The function itself may need small adjustments if the new algorithm does not produce one of those fields (e.g. `multiplier` has no analogue in the integer-step method).
+8. 🟥 **Auto-diagnostic figure → REMOVED on cron**. Original behaviour: triggered when `len(gap_idx) > 0 OR diag_sp_alert_fired`, called `diagnose_timing.run_diagnostic(...)`, wrote a PNG to `output/diagnostics/`. **The COSZO VM is resource-constrained (20 GB disk / 2 GB RAM) and should not be generating figures during cron runs.** Replaced by:
+	- Keep the email alerts (`sp_deviation` and the other 6 upstream emails) — those are cheap.
+	- Append a per-day stats row to a pipeline-side CSV (see Stage 4b below) so operators can audit days remotely from the metrics file.
+	- Figure generation moves to offline tools (`bin/plot_from_netcdf.py`, the investigator) run on a workstation, not on the VM.
+	- `auto_diag` param in `run_prest.txt` deprecated (Phase 4).
 9. 🟥 **Per-channel × per-segment MiniSEED write**:
 	- `data_split = np.split(timestamps, split_idx)` — segment boundaries come from step 6.
 	- For each channel → for each segment: build `Trace` with `stats.sampling_rate = sr` (from step 6, not per-segment), write one MiniSEED under `output/mseed/` (seedlink) or `output/mseed2dmc/<YEAR>/` (miniseed2dmc).
 	- **The `sampling_rate` in every header is the day-global value** from the new algorithm (OLS Δt_true, with fallback per Phase 2).
+	- **Timestamp reconstruction semantics.** MiniSEED does not store per-sample timestamps — each segment is fully defined by `(starttime, sampling_rate, npts)` and any reader reconstructs the sample grid as `starttime + i × (1/sampling_rate)`. So under the new algorithm:
+		- `sampling_rate = 1 / Δt_true` (OLS slope) → every reconstructed sample timestamp uses the fit-derived interval, not the raw observed Δt.
+		- `starttime` per segment **stays as the raw first UTC timestamp** of that segment (no change from legacy). We considered using the OLS-implied `t_i0` but that introduces a sub-ms offset against the actually observed first sample; cleaner to anchor each segment to its observed start and let Δt_true govern only the inter-sample spacing.
+		- `npts` per segment unchanged.
+		- Under Option A (split only when `true_missing > 0`), most days are single-segment, so the reconstructed grid is `t_sec[0] + i × Δt_true` end-to-end. Gap days apply the same logic per segment.
 10. 🟥 **Continuity advance** — `next_start_time = last_written_time + sp`, persisted to `run/endtime_<station>_<run>.txt`. Uses the same `sp` as step 6. Under the new algorithm this becomes `last_written_time + Δt_true` (or the chosen fallback). Any drift here accumulates across runs.
 11. 🟨 **Gap log append** — `log/gap_<station>_<run>.txt` and `output/diagnostics/gaps_<station>_<run>.txt`. Lines are algorithm-specific (thresholds, missing-sample estimates). Format should be kept parseable — existing `gap detection.md` downstream tooling may rely on it.
+
+12. 🟥 **NEW: per-day stats CSV append** — replaces the auto-diagnostic figure on the VM. One row per (station × 24 h window). Path: `output/metrics/<station>_pipeline_stats.csv`. Columns at minimum:
+	- `date`, `station`, `run`
+	- `n_points`, `n_ideal`, `true_missing`
+	- `sr` (= 1/Δt_true), `Δt_true` (full repr precision)
+	- `n_gaps`, `n_segments`, `is_full`
+	- `jitter_unstable`, `frac_maxabs`
+	- `sp_deviation_alert_fired` (bool)
+	- `gap_email_fired` (bool, if we add the gap-detected email — see §5)
+	- `algorithm` (`legacy` | `anomaly`) so historical rows stay self-describing across the migration
+	Append-only, idempotent on `(station, date)` so cron retries don't duplicate. Schema mirrors the investigator's `metrics/<station>_variability.csv` where the columns are the same — operators can diff the two files to verify pipeline ↔ investigator agreement.
 
 ### Stage 5 — Downstream transfer (outside this repo)
 
 ⬜ **seedlink path**: `output/mseed/` → Ring server (mseedscan picks up files) → EarthScope SeedLink client. Ring server + mseedscan config lives elsewhere (not in this repo). No code change here, but **behavioural** impact: more segments = more files landing in `output/mseed/`, potentially higher inode / watcher churn. Worth checking that mseedscan handles larger directories without slowing down.
 
 ⬜ **miniseed2dmc path**: `output/mseed2dmc/<YEAR>/` → run `mseedtodmc` manually for backfill. Unaffected mechanically; same file-count consideration applies.
+
+### Stage 5b — Daily metrics sync to GitHub (NEW)
+
+🟥 **New capability** — push the per-day stats CSV (and per-event diagnostics) from the VM to a dedicated GitHub repo once a day, so operators can audit pipeline health without SSHing in.
+
+**Target repo:** `coszo-hub/PREST` (private monorepo, one per instrument family — separate repos for current meter, SCPR, BOTPT come later).
+
+**Repo layout:**
+
+```
+coszo-hub/PREST/
+├── prest-data-collection/        # the pipeline code itself
+│                                 # populated later by migrating the current
+│                                 # coszo-data-collection repo here AFTER
+│                                 # dev/maleen is fully sorted out
+└── metrics/
+    ├── RS01SLBS-MJ01A-06-PRESTA101/
+    │   ├── pipeline_stats.csv    # one row per day, append-only
+    │   └── diagnostics/          # gap_*.txt, missing_data_*.txt, ...
+    ├── RS01SUM1-LJ01B-09-PRESTB102/
+    │   └── ...
+    └── RS03AXBS-MJ03A-06-PRESTA301/
+        └── ...
+```
+
+**Operational flow on the VM:**
+
+1. VM clones `coszo-hub/PREST` at a known path (e.g. `/home/coszo/PREST/`).
+2. Cron pipeline writes to its existing output paths (`output/metrics/*.csv`, `output/diagnostics/*.txt`) inside the data-collection working directory — **no path change to the pipeline itself**.
+3. New `bin/sync_metrics.sh` runs once daily (separate cron entry, ~18:35 UTC, after the maintenance window):
+	- `rsync` CSVs + diagnostics from `output/{metrics,diagnostics}/` → `<PREST clone>/metrics/<station>/`
+	- `cd <PREST clone> && git pull --rebase && git add metrics/ && git commit -m "metrics: sync <UTC date>" && git push`
+	- No-op if there's no diff.
+4. Single commit per day. Append-only CSVs make merge conflicts unlikely; `--force-with-lease` as a safety guard.
+
+**Auth:** dedicated SSH deploy key on the VM, scoped to write access on `coszo-hub/PREST` only — VM cannot accidentally push to `coszo-data-collection` or anywhere else.
+
+**Failure handling:** sync script logs to `log/sync_metrics.log`. Push failures don't block the pipeline; CSVs are append-only so a missed day just means the next day's commit catches up.
+
+**Repo migration (separate, later effort):** the current `coszo-data-collection` repo moves *into* `coszo-hub/PREST/prest-data-collection/` only after all `dev/maleen` work (this migration included) is sorted out. Out of scope for this document — tracked separately.
+
+**Cron entry:** add to `crons_prest_seedlink_and_mseed2dmc.txt`:
+
+```cron
+35 18 * * *  bash /home/coszo/coszo-data-collection/bin/sync_metrics.sh >> /home/coszo/coszo-data-collection/log/sync_metrics.log 2>&1
+```
 
 ### Stage 6 — Pipeline health monitoring
 
@@ -85,12 +151,15 @@ This is the monolith — ~911 lines. Every numbered sub-step maps to a section o
 
 | File | Change |
 |---|---|
-| `bin/OOI_data_request_and_convert_mseed.py` | Replace lines ~460–700; adjust continuity advance; adjust alert inputs; adjust auto-diagnostic call signature. |
-| `bin/diagnose_timing.py` | `run_diagnostic` signature may loosen — `multiplier` becomes optional since anomaly has no analogue. |
+| `bin/OOI_data_request_and_convert_mseed.py` | Replace lines ~460–700; adjust continuity advance; adjust alert inputs; **remove auto-diagnostic figure call**; **add per-day stats CSV append**. |
+| `bin/sync_metrics.sh` (new) | Daily rsync + commit + push of `output/metrics/*.csv` and `output/diagnostics/*.txt` to `coszo-hub/PREST/metrics/<station>/`. |
+| `crons_prest_seedlink_and_mseed2dmc.txt` | Add daily cron entry at 18:35 UTC for `sync_metrics.sh`. |
+| `bin/diagnose_timing.py` | `run_diagnostic` no longer called from cron. Kept for offline use; signature may loosen — `multiplier` becomes optional. |
 | `bin/plot_from_netcdf.py` | Replace embedded legacy gap detection with a call to the shared `detect_gaps_{legacy,anomaly}` functions so offline conversion matches live output. |
-| `param/run_prest.txt` | Add `gap_algo = legacy` (default) / `anomaly`. |
+| `testk/pull_data.py` | Refactor to import the shared `detect_gaps_{legacy,anomaly}` interface so it acts as a single-window smoke-test harness for both algorithms. `testk/verify_mseed.py` already reads the result. |
+| `param/run_prest.txt` | Add `gap_algo = legacy` (default) / `anomaly`. Deprecate `auto_diag` (Phase 4). |
 | Obsidian [[gap detection]] | Rewrite once cutover is complete. |
-| `README.md` | Collapse the contrastive section added 04-24-26 back to a single description. |
+| `README.md` | Collapse the contrastive section added 04-24-26 back to a single description; document per-day stats CSV. |
 
 ### Tests / safety rails to add during Phase 1
 
@@ -221,6 +290,14 @@ gap_algo = legacy            # default; accepted: legacy | anomaly
 
 This lets us flip per-station or per-deployment without code changes, and lets `plot_from_netcdf.py --convert-mseed` share the same implementation as the live pipeline.
 
+**Phase 1 also delivers** (in the same PR series, since they consume `GapResult`):
+
+- `output/metrics/<station>_pipeline_stats.csv` writer in the cron pipeline, append-only, idempotent on `(station, date)`. Schema per Stage 4 step 12.
+- `bin/sync_metrics.sh` daily sync script + cron entry per Stage 5b.
+- `testk/pull_data.py` refactor to import `detect_gaps_{legacy,anomaly}` so a single 24 h window can be exercised end-to-end locally with both algorithms.
+- Removal of the auto-diagnostic figure call (lines ~664–690) from the cron pipeline. `bin/diagnose_timing.py` itself is kept for offline use.
+- `--save-nc` CLI flag added to `OOI_data_request_and_convert_mseed.py`; `save_netcdf` param removed from `run_prest.txt` (Phase 4 housekeeping pulls earlier when convenient).
+
 ### Phase 2 — decision points to settle before the flip
 
 These need explicit answers before we default to `anomaly`:
@@ -233,19 +310,26 @@ These need explicit answers before we default to `anomaly`:
 
 ### Phase 3 — cutover
 
-- Flip default to `anomaly` for **one station first**. Suggestion: AXBS (Axial Base) — quietest historically, single-deployment regime (15 s throughout all 4 deployments), good canary.
-- Re-run one week of backfill under the new algorithm, diff against the existing archive:
+- Flip default to `anomaly` for **one station first**. **Canary: RS01SLBS-MJ01A-06-PRESTA101 (Slope Base)** — Maleen has prior offline validation experience on this station and wants to start there. **Canary window: 2025-01-01 → 2025-01-07** (7 days, Dep 2 / 1 Hz regime). Decided 2026-04-28.
+- **Execution recipe** (decided 2026-04-28):
+	1. Set `gap_algo = anomaly` in `param/run_prest.txt`.
+	2. Overwrite `run/endtime_RS01SLBS-MJ01A-06-PRESTA101_prest_mseed2dmc.txt` with the literal string `2024-12-31T23:59:59.999Z` (one line, no newline issues — pipeline reads it via `UTCDateTime(...)`).
+	3. Uncomment the SLBS miniseed2dmc cron entries in `crons_prest_seedlink_and_mseed2dmc.txt` (currently both lines are commented; only SUM1 miniseed2dmc is active in production right now).
+	4. Let it run. Each cron tick processes one 24 h window and advances the endtime by one day. Seven cron-driven days clears the canary window.
+	5. Diff `output/mseed2dmc/2025/` MiniSEED against the existing archive of the same window, plus `output/metrics/RS01SLBS-...-prest_pipeline_stats.csv` rows.
+- **Caveat — algorithm flip applies to BOTH transfer paths.** `gap_algo` lives in `run_prest.txt` and is read by both `seedlink` and `miniseed2dmc` invocations. If SLBS seedlink were active, the flip would hit it simultaneously. SLBS seedlink is currently commented out in cron, so this isn't an issue for the canary — only the miniseed2dmc path executes. Keep this in mind when canarying on a station whose seedlink path is also live.
+- Diff that week of backfill output against the existing archive:
 	- Segment counts per day
 	- `sampling_rate` header values
 	- Byte-level comparison on overlapping portions where the sample arrays are identical
 - Hold for 1–2 cron cycles in live (seedlink path) with email alerts fully enabled.
-- Roll to the remaining two stations (SLBS, SUM1) individually, same protocol.
+- Roll to the remaining two stations (SUM1, then AXBS) individually, same protocol.
 - Keep `gap_algo = legacy` supported as an escape hatch for ~1 release.
 
 ### Phase 4 — cleanup
 
 - Once stable, delete the legacy path. The ~240-line gap-detection comment block in `OOI_data_request_and_convert_mseed.py` retires with it.
-- **Remove `save_netcdf` from the pipeline entirely** — lines 92 and 287–301 in `OOI_data_request_and_convert_mseed.py`, plus the `output/netcdf/` directory reference. NetCDF archiving is the investigator's job via `--save-nc`, not the live pipeline's.
+- **Move `save_netcdf` from `run_prest.txt` to a `--save-nc` CLI flag** on `OOI_data_request_and_convert_mseed.py`. Default off. Cron wrapper (`bin/run_data_collection.sh`) does not pass it, so cron never saves. Manual ad-hoc runs do. Code path stays; only the toggle moves out of the param file.
 - Drop the `save_netcdf` param from `param/run_prest.txt`.
 - Update `gap detection.md` in the Obsidian vault to reflect the new canonical behaviour.
 - Update `README.md` (the contrastive section added on 04-24-26 collapses down to a single description; the `output/netcdf/` row in the output-directories table is removed).
@@ -256,10 +340,10 @@ These need explicit answers before we default to `anomaly`:
 ## 5. Open questions / to refine
 
 ### Algorithm & splitting
-- [x] **Splitting trigger**: Option A (`true_missing > 0`). Sign-off still expected from William during Phase 3 canary.
-- [x] **`sampling_rate` source**: `Δt_true` (OLS) used as the day's `sampling_rate`.
-- [x] **Instability flag**: use `frac_maxabs > 0.4` (40 % of `Δt_true`), which is sample-rate-agnostic and derived from `Δt_true` rather than `Δt_FG`. Replaces the earlier `max_abs_epsilon > 0.4` proposal. CSV already has `frac_maxabs`; add a boolean companion column (e.g. `jitter_unstable`).
-- [x] **Instability → no email.** `jitter_unstable` stays a CSV-only diagnostic. Surfaced via metrics CSV and the 4-panel figure; not a notification trigger. Email-worthy events are limited to `sp_deviation` (rate diverges from nominal).
+- ✓ **Splitting trigger**: Option A (`true_missing > 0`). Sign-off still expected from William during Phase 3 canary.
+- ✓ **`sampling_rate` source**: `Δt_true` (OLS) used as the day's `sampling_rate`.
+- ✓ **Instability flag**: use `frac_maxabs > 0.4` (40 % of `Δt_true`), which is sample-rate-agnostic and derived from `Δt_true` rather than `Δt_FG`. Replaces the earlier `max_abs_epsilon > 0.4` proposal. CSV already has `frac_maxabs`; add a boolean companion column (e.g. `jitter_unstable`).
+- ✓ **Instability → no email.** `jitter_unstable` stays a CSV-only diagnostic. Surfaced via metrics CSV and the 4-panel figure; not a notification trigger. Email-worthy events are limited to `sp_deviation` (rate diverges from nominal).
 - [ ] **`jitter_unstable` action beyond the email**: warn and continue with `Δt_true` anyway, refuse to write and flag a manual-review day, or fall back to legacy median? (The OLS fit on a day with `frac_maxabs > 0.4` is itself suspect.)
 - [ ] **Threshold tuning**: 40 % is a starting guess. Re-check after Phase 0 regenerates the archive and we can see how often it actually fires.
 - [ ] **Short-window minimum n**: 100 samples is a starting guess for the fallback-to-legacy cutoff.
@@ -270,22 +354,33 @@ These need explicit answers before we default to `anomaly`:
 - [ ] Confirm approach for existing CSV data: regenerate from saved NetCDFs (preferred) vs in-place schema migration.
 - [ ] Update `timestamp variability assessment plan.md` (Obsidian) to reflect the `true_missing` formulation once §2 of this plan is settled.
 
+### VM resource constraints
+- ✓ **No figures on cron.** COSZO VM is 20 GB / 2 GB RAM — figure generation moves entirely off the cron path. Auto-diagnostic figure call in `OOI_data_request_and_convert_mseed.py` (lines ~664–690) is removed. `auto_diag` param in `run_prest.txt` deprecated. (Decided 2026-04-28.)
+- ✓ **Per-day stats CSV instead of figures.** Replace the figure with an append-only row to `output/metrics/<station>_pipeline_stats.csv`. Schema aligns with investigator's `metrics/<station>_variability.csv` columns where shared. Idempotent on `(station, date)`. See §1b Stage 4 step 12.
+
 ### Email alerts (pipeline)
-- [x] **Keep `sp_deviation` as the only algorithm-related email** (line 535 of `OOI_data_request_and_convert_mseed.py`), redefined against `Δt_true` instead of legacy median-Δt. Same hybrid floor + fraction threshold.
-- [x] **No jitter email.** `jitter_unstable` is computed and written to the CSV but does not trigger a notification. Operators see it only via the metrics CSV / 4-panel figure.
+- ✓ **Keep `sp_deviation` as the only algorithm-related email** (line 535 of `OOI_data_request_and_convert_mseed.py`), redefined against `Δt_true` instead of legacy median-Δt. Same hybrid floor + fraction threshold.
+- ✓ **Threshold freeze during cutover.** Keep `sp_alert_abs_floor = 0.05 s` and `sp_alert_rel_frac = 0.05` (5%) unchanged through Phase 3. These were chosen as a noise-floor concession for the legacy median estimator; under OLS Δt_true the noise floor is sub-ms so they could be tightened, but **do not retune during the cutover** — keep operator behaviour stable. Revisit in a follow-up after Phase 0b distributions across the 2015–2026 archive are visible.
+- ✓ **No jitter email.** `jitter_unstable` is computed and written to the CSV but does not trigger a notification. Operators see it only via the metrics CSV / 4-panel figure.
 - [ ] **Gap-detected email**: should `true_missing > 0` (beyond some nominal floor, e.g. 0.1 % of the day) trigger an email? Today gaps are only written to `gap_<station>_<run>.txt`. Decision pending.
-- [x] **Other 6 pipeline emails unchanged**: no-data, HTTP error, incomplete-status, NetCDF-open-failure, too-few-points, deployment-end-warnings — all live upstream of gap detection and are unaffected by the migration.
+- ✓ **Other 6 pipeline emails unchanged**: no-data, HTTP error, incomplete-status, NetCDF-open-failure, too-few-points, deployment-end-warnings — all live upstream of gap detection and are unaffected by the migration.
+
+### Daily sync repo
+- ✓ **Target repo: `coszo-hub/PREST`** — private monorepo per instrument family. Layout: `prest-data-collection/` (code, populated later via repo migration after `dev/maleen` is settled) + `metrics/<station>/{pipeline_stats.csv, diagnostics/}`. Decided 2026-04-28.
+- ✓ **Sync trigger: separate daily cron at ~18:35 UTC** running `bin/sync_metrics.sh`. Append-only commits, no force-push, deploy-key auth scoped to `coszo-hub/PREST`.
+- ✓ **Diagnostics included.** Sync both `output/metrics/*.csv` and `output/diagnostics/*.txt`. Diagnostics provide narrative ops detail (gap events, NETCDF_OPEN_FAIL, MISSING_DATA, etc.) that complements the structured CSV.
+- ✓ **Repo migration deferred.** Moving `coszo-data-collection` into `coszo-hub/PREST/prest-data-collection/` is a separate effort that happens *after* this code migration lands on `dev/maleen`.
 
 ### Downstream / rollout
 - [ ] Confirm with William that fragmented MiniSEED (more files, smaller segments on gap days) is acceptable to EarthScope ingest.
 - [ ] Confirm whether mseedscan (ring-server side, outside repo) tolerates the higher file count on jitter- or gap-heavy days.
 - [ ] Confirm whether downstream consumers of the MiniSEED `sampling_rate` field will see any precision-level surprise (OLS produces many decimals vs legacy's 6 — the value difference is tiny but the bytes differ).
 - [ ] Continuity-drift monitoring plan: `next_start = last_written + sp` accumulates any systematic bias between legacy median and OLS Δt_true across cron runs. Need a one-line metric in the cron log or a separate check.
-- [ ] Agree on canary station and duration (AXBS, 1 week proposed).
+- ✓ **Canary station/window decided 2026-04-28: SLBS, 2025-01-01 → 2025-01-07.** Order: SLBS → SUM1 → AXBS. (Earlier proposal was AXBS first; revised based on Maleen's prior offline validation on SLBS.)
 - [ ] Agree on rollback criteria (what metric, over what window, triggers reverting to `legacy`).
 
 ### Unification
-- [x] **NetCDF saving is investigator-only.** Remove `save_netcdf` from the pipeline entirely (Phase 4 cleanup). Investigator keeps the `--save-nc` switch but adopts the server-provided filename convention (Phase 0).
+- ✓ **NetCDF saving stays available in the pipeline, but CLI-only and not on cron.** Phase 4 cleanup moves the toggle out of `param/run_prest.txt` and exposes it as a `--save-nc` flag on `OOI_data_request_and_convert_mseed.py`. Default off. The cron wrapper (`bin/run_data_collection.sh`) does not pass the flag, so cron-driven runs cannot save. Manual ad-hoc runs do. Output stays at `output/netcdf/` with the server-provided filename. Investigator keeps its own `--save-nc` (Phase 0) writing to `output/temporal_anomaly/netcdf/`. (Revised 2026-04-28 — earlier decision was to remove the pipeline path entirely.)
 
 ---
 
