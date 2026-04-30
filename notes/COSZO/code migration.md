@@ -77,7 +77,7 @@ This is the monolith — ~911 lines. Every numbered sub-step maps to a section o
 		- `starttime` per segment **stays as the raw first UTC timestamp** of that segment (no change from legacy). We considered using the OLS-implied `t_i0` but that introduces a sub-ms offset against the actually observed first sample; cleaner to anchor each segment to its observed start and let Δt_true govern only the inter-sample spacing.
 		- `npts` per segment unchanged.
 		- Under Option A (split only when `true_missing > 0`), most days are single-segment, so the reconstructed grid is `t_sec[0] + i × Δt_true` end-to-end. Gap days apply the same logic per segment.
-10. 🟥 **Continuity advance** — `next_start_time = last_written_time + sp`, persisted to `run/endtime_<station>_<run>.txt`. Uses the same `sp` as step 6. Under the new algorithm this becomes `last_written_time + Δt_true` (or the chosen fallback). Any drift here accumulates across runs.
+10. 🟥 **Continuity advance** — `next_start_time = UTCDateTime(end_time)` (the upper bound of the request window), persisted to `run/endtime_<station>_<run>.txt`. **Each day stands alone**: the cron's day-boundary arithmetic is independent of any per-day rate estimate. Per-day Δt_true describes spacing WITHIN a day; the next day's first sample is observed in OOI's response, not predicted arithmetically. Partial-data windows therefore leave permanent gaps (consistent with the "gaps are honest" principle — we record and move on rather than re-fetching from where partial data ended). Decided 2026-04-28; replaces the legacy `last_written + sp` continuity formula.
 11. 🟨 **Gap log append** — `log/gap_<station>_<run>.txt` and `output/diagnostics/gaps_<station>_<run>.txt`. Lines are algorithm-specific (thresholds, missing-sample estimates). Format should be kept parseable — existing `gap detection.md` downstream tooling may rely on it.
 
 12. 🟥 **NEW: per-day stats CSV append** — replaces the auto-diagnostic figure on the VM. One row per (station × 24 h window). Path: `output/metrics/<station>_pipeline_stats.csv`. Columns at minimum:
@@ -96,6 +96,37 @@ This is the monolith — ~911 lines. Every numbered sub-step maps to a section o
 ⬜ **seedlink path**: `output/mseed/` → Ring server (mseedscan picks up files) → EarthScope SeedLink client. Ring server + mseedscan config lives elsewhere (not in this repo). No code change here, but **behavioural** impact: more segments = more files landing in `output/mseed/`, potentially higher inode / watcher churn. Worth checking that mseedscan handles larger directories without slowing down.
 
 ⬜ **miniseed2dmc path**: `output/mseed2dmc/<YEAR>/` → run `mseedtodmc` manually for backfill. Unaffected mechanically; same file-count consideration applies.
+
+### Stage 4c — Local historical backfill (NEW, local-only)
+
+🟥 **New capability** — historical MiniSEED archive built locally from the investigator's saved NetCDFs, not by the VM cron.
+
+**Rationale (decided 2026-04-29):**
+
+- The investigator (`temporal_anomaly_investigator.py`) is already running locally with `--save-nc` to capture NCs across the full historical range (2014→present).
+- Re-fetching the same data through the VM cron would be redundant *and* slow (~6–7 days of cron pulling per station for ~12 years of history).
+- A local one-shot script can read those existing NCs and emit MiniSEEDs in the cron's exact filename + record-length format. No OOI calls, no figures, no NC re-saves.
+
+**Script:** `bin/backfill_mseed_from_nc.py`. Default invocation:
+
+```bash
+python bin/backfill_mseed_from_nc.py \
+    --start 2014-09-14 --end <date investigator collect has reached>
+```
+
+Walks `output/temporal_anomaly/netcdf/`, dispatches through `bin/gap_algorithms.py`, writes to `output/mseed2dmc/<YEAR>/`. **No** per-day stats CSV by default (the investigator's variability CSVs already cover historical data quality). **No** NC re-saving (the investigator already has them).
+
+**Workflow split after backfill completes:**
+
+| Source | Time range | Outputs |
+|---|---|---|
+| Investigator (local) | 2014→present (rolling) | variability CSV, NCs |
+| Backfill script (local, one-shot) | same range as NC coverage | MiniSEEDs in `output/mseed2dmc/<YEAR>/` |
+| Cron pipeline (VM) | forward-only after backfill ends | live MiniSEEDs, `pipeline_stats.csv`, `output/diagnostics/` |
+
+VM cron's `endtime_*.txt` is set to (last_backfill_date + 1 day). Cron then continues live without re-touching the historical range.
+
+**Coexists with the cron** — same output path, same filename convention, same gap_algorithms dispatch. The cron's per-day CSV idempotency check means rows it writes won't duplicate any local-backfill activity.
 
 ### Stage 5b — Daily metrics sync to GitHub (NEW)
 
@@ -217,8 +248,8 @@ n_gaps       = 0 if true_missing == 0 else n_gaps_raw
 
 ## 3. Risks & edge cases to name up front
 
-1. **Smaller splits / more segments.** The anomaly detector flags single-sample gaps the pipeline silently bridges. On 15 s long-period data this could multiply MiniSEED file counts meaningfully. EarthScope ingest may or may not care — **TBD**: confirm with William whether more fragmented MiniSEED output is acceptable.
-2. **Different `sampling_rate` in headers.** Even when agreement is to 6 decimals, consumers that hash or compare headers will see different values. Downstream cross-correlation and timing-error analyses (the May 18 items) would legitimately prefer the OLS value, but it is a behavioural change.
+1. **Smaller splits / more segments.** The anomaly detector flags single-sample gaps the pipeline silently bridges. On 15 s long-period data this multiplies MiniSEED file counts on gap-heavy days. **This is design intent, not a tradeoff** (decided 2026-04-28): each gap deserves its own file boundary so the archive is honest about *when* data exists and *when* it doesn't. The legacy algorithm's behaviour of bridging sub-threshold gaps into continuous segments is the bug being fixed.
+2. **Different `sampling_rate` in headers — accepted by design** (decided 2026-04-28). Δt_true is the right value: it's a day-global OLS slope computed over the full day's t_sec (gaps and all), and every segment from that day shares the same `sampling_rate = 1/Δt_true` in its MiniSEED header. Even a 6-segment fragmented day has identical rate metadata across all six files. Downstream consumers that hash headers will see different bytes than the legacy median-Δt output; this is acceptable because the new value is more accurate and the precision change reflects honesty about the underlying clock, not a regression.
 3. **Short-window robustness.** `compute_variability` assumes n ≥ 2 and a stable median. For a sparse 24 h window, the OLS slope is still meaningful but `Δt_FG = median(Δt')` can misbehave if >50 % of intervals are gap-dominated. The pipeline's 90-%-trim is more defensive there.
 4. **Split trigger for MiniSEED files.** With the refined algorithm, `true_missing == 0` means no samples are missing. **Decided: Option A.** Split only when `true_missing > 0`. Jitter-only days produce a single MiniSEED spanning the full day. `Δt_true` is used as the day's `sampling_rate`. Flagged for William's sign-off during Phase 3 canary.
 5. **Unstable reconstruction on jitter-heavy days.** If the worst single-sample timing residual is a large fraction of `Δt_true`, the OLS fit itself becomes suspect — and so does `true_missing`. The refined algorithm handles this via the `jitter_unstable = (frac_maxabs > 0.4)` guardrail (40 % of `Δt_true`). When True: emit an email alert and flag the day. Whether to also fall back to legacy or refuse to write MiniSEED is still open (see §5).
@@ -346,8 +377,8 @@ These need explicit answers before we default to `anomaly`:
 - ✓ **Instability → no email.** `jitter_unstable` stays a CSV-only diagnostic. Surfaced via metrics CSV and the 4-panel figure; not a notification trigger. Email-worthy events are limited to `sp_deviation` (rate diverges from nominal).
 - [ ] **`jitter_unstable` action beyond the email**: warn and continue with `Δt_true` anyway, refuse to write and flag a manual-review day, or fall back to legacy median? (The OLS fit on a day with `frac_maxabs > 0.4` is itself suspect.)
 - [ ] **Threshold tuning**: 40 % is a starting guess. Re-check after Phase 0 regenerates the archive and we can see how often it actually fires.
-- [ ] **Short-window minimum n**: 100 samples is a starting guess for the fallback-to-legacy cutoff.
-- [ ] **Deployment-boundary pre-split policy**: reject windows crossing a boundary, or split at the boundary first? Legacy happens to survive this; anomaly needs explicit handling.
+- ✓ **Short-window minimum n = 100.** Implemented in `bin/gap_algorithms.py` as `MIN_N_FOR_ANOMALY = 100`. When `gap_algo=anomaly` and `len(t_sec) < 100`, dispatch silently falls back to legacy with a WARNING and the result records the actual algorithm used (`result.diagnostics["algorithm"] = "legacy"`). 100 ≈ 25 min of 15 s data and 100 s of 1 Hz data — comfortably above any backfill chunk we'd run.
+- ✓ **Deployment-boundary policy: detect + fall back to legacy + flag in CSV.** Implemented in `bin/OOI_data_request_and_convert_mseed.py`. Before dispatch, the pipeline reads the active deployment's `c_end` from the per-channel param file. If `c_end` falls strictly inside `(window_start, window_end)`, sets `boundary_in_window=True`, logs a warning, and forces `gap_algo="legacy"` for that window (legacy's trimmed median is robust to mixed-rate data; anomaly OLS is not). Per-day CSV records both `algorithm_requested` and the actual `algorithm` used so cutover bookkeeping stays auditable. **A proper split-and-write per slice is deferred** as a follow-up — boundary days are rare (~5 across the entire 2015–2026 archive) and can be re-run manually if needed.
 
 ### Investigator refactor
 - [ ] Confirm Phase 0 scope: refactor `compute_variability` + CSV schema + `write_stats` + figure suptitle in one PR, or split?
@@ -372,10 +403,10 @@ These need explicit answers before we default to `anomaly`:
 - ✓ **Repo migration deferred.** Moving `coszo-data-collection` into `coszo-hub/PREST/prest-data-collection/` is a separate effort that happens *after* this code migration lands on `dev/maleen`.
 
 ### Downstream / rollout
-- [ ] Confirm with William that fragmented MiniSEED (more files, smaller segments on gap days) is acceptable to EarthScope ingest.
+- ✓ **Fragmented MiniSEED on gap days is design intent** (decided 2026-04-28). Each gap = file boundary = honest representation of what time ranges contain data. No William sign-off needed for this.
 - [ ] Confirm whether mseedscan (ring-server side, outside repo) tolerates the higher file count on jitter- or gap-heavy days.
-- [ ] Confirm whether downstream consumers of the MiniSEED `sampling_rate` field will see any precision-level surprise (OLS produces many decimals vs legacy's 6 — the value difference is tiny but the bytes differ).
-- [ ] Continuity-drift monitoring plan: `next_start = last_written + sp` accumulates any systematic bias between legacy median and OLS Δt_true across cron runs. Need a one-line metric in the cron log or a separate check.
+- ✓ **Header `sampling_rate` precision change accepted by design** (decided 2026-04-28). Δt_true is the day-global OLS slope, identical across every segment of a given day. Bytes differ from legacy median-rounded output; this is intentional.
+- ✓ **Continuity-drift monitoring not needed** (decided 2026-04-28). Drift between `sp_estimate` and `sp_true` is sub-ms per day under OLS; even at 1 Hz the rate of boundary-sample loss is ~1 sample per 1000 days. Each NC is authoritative for its own first/last sample timestamps — the pipeline trusts the data, not arithmetic predictions. No metric or check added.
 - ✓ **Canary station/window decided 2026-04-28: SLBS, 2025-01-01 → 2025-01-07.** Order: SLBS → SUM1 → AXBS. (Earlier proposal was AXBS first; revised based on Maleen's prior offline validation on SLBS.)
 - [ ] Agree on rollback criteria (what metric, over what window, triggers reverting to `legacy`).
 
