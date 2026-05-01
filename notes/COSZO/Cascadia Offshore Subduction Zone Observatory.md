@@ -13,7 +13,7 @@ I created a seperate code in Testk folder to pull data in through OOI and conver
 
 After testing that I could successfully run the OOI API, I have moved on to test the main repo and whether it runs and what issues i have run in to and how to mitigate it. You can find this work in [[04-07-26 Notes]]
 
-SeisFix will be for timing error correction and some calibration application. This plan is discussed in [[SeisFix — Implementation Plan]]
+SeisFix will be for timing error correction and some calibration application. This plan is discussed in [[ChronFix — Implementation Plan]]
 
 On 04-08 I received VM access and started scoping data quality diagnostics with William. Those sessions are in [[04-08-26 Notes]], [[04-09-26 Notes]], [[04-10-26 Notes]], and [[04-11-26 Notes]] — the output is the `diagnose_timing.py` batch collector.
 
@@ -25,5 +25,5 @@ Work through [[04-14-26 Notes]] and [[04-16-26 Notes]] tightened the metrics sch
 - [[COSZO Data Collection — Code Walkthrough]] — architecture of `coszo-data-collection` (shell wrappers, waveform + metadata pipelines, state tracking)
 - [[gap detection]] — adaptive gap-detection algorithm used inside the pipeline
 - [[timestamp variability assessment plan]] — least-squares plan for separating sample interval, gaps, and jitter
-- [[SeisFix — Implementation Plan]] — standalone Python package for timing-error correction (HYS14 target)
+- [[ChronFix — Implementation Plan]] — standalone Python package for timing-error correction (HYS14 target)
 - [[non_tier1_ooi_instrument_data_notes]] — non-Tier 1 OOI channel/station inventory and FDSN code reference

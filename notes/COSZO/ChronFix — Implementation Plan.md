@@ -1,9 +1,9 @@
 
-A pip-installable Python package for detecting and correcting timing errors in seismic data, with a roadmap toward broader data quality control. Distinct from the gap/jitter diagnostics in [[gap detection]] and [[timestamp variability assessment plan]] — those live inside `coszo-data-collection`; SeisFix is standalone.
+A pip-installable Python package for detecting and correcting timing errors in seismic data, with a roadmap toward broader data quality control. Distinct from the gap/jitter diagnostics in [[gap detection]] and [[timestamp variability assessment plan]] — those live inside `coszo-data-collection`; ChronFix is standalone.
 
 ## Background & Context
 
-Seismic instruments — especially ocean-bottom seismometers and temporary deployments — commonly accumulate timing errors (clock drift, jumps, offsets) because they lose GPS synchronization. SeisFix is a **standalone, general-purpose Python package** that anyone can install and use to detect and fix these issues.
+Seismic instruments — especially ocean-bottom seismometers and temporary deployments — commonly accumulate timing errors (clock drift, jumps, offsets) because they lose GPS synchronization. chronfix is a **standalone, general-purpose Python package** that anyone can install and use to detect and fix these issues.
 
 - **ObsPy-style API** — importable functions, works with `Stream`/`Trace` objects
 - **Works with any seismic data** — MiniSEED, SAC, or anything ObsPy can read
@@ -30,7 +30,7 @@ Seismic instruments — especially ocean-bottom seismometers and temporary deplo
 > 2. **Split** traces at jump boundaries (creating separate segments), or **shift** the data after the jump?
 
 > [!important]
-> **Input flexibility:** Should `seisfix` accept:
+> **Input flexibility:** Should `chronfix` accept:
 > - (a) Only ObsPy `Stream`/`Trace` objects (users call `obspy.read()` themselves), or
 > - (b) Also accept file paths and read MiniSEED internally?
 
@@ -39,14 +39,14 @@ Seismic instruments — especially ocean-bottom seismometers and temporary deplo
 ## Proposed Project Structure
 
 ```
-SeisFix/
+chronfix/
 ├── pyproject.toml              # Build config, dependencies, metadata
 ├── README.md                   # Installation & usage docs
 ├── LICENSE
 ├── .gitignore
 │
 ├── src/
-│   └── seisfix/                # The importable package
+│   └── Chronfix/                # The importable package
 │       ├── __init__.py         # Public API exports
 │       ├── io.py               # Data loading helpers (ObsPy wrappers)
 │       ├── timing/
@@ -81,10 +81,10 @@ SeisFix/
 
 ## Module Details
 
-### `src/seisfix/io.py` — Data Loading
+### `src/Chronfix/io.py` — Data Loading
 
 ```python
-from seisfix import read_data
+from Chronfix import read_data
 
 # Read from file
 st = read_data("path/to/data.mseed")
@@ -97,7 +97,7 @@ st = read_data(existing_stream)
 - Checks for empty streams, missing stats, sample rate consistency
 - Auto-detects format (MiniSEED, SAC, etc.)
 
-### `src/seisfix/timing/detect.py` — Detection
+### `src/chronfix/timing/detect.py` — Detection
 
 | Function | Description |
 |---|---|
@@ -110,7 +110,7 @@ Returns structured results with:
 - Magnitude of each jump
 - Affected trace IDs
 
-### `src/seisfix/timing/correct.py` — Correction
+### `src/chronfix/timing/correct.py` — Correction
 
 | Function | Description |
 |---|---|
@@ -131,8 +131,8 @@ Key behaviors:
 ## Example Usage (Phase 1)
 
 ```python
-from seisfix import read_data
-from seisfix.timing import detect_time_jumps, correct_clock_jump, correct_constant_offset
+from chronfix import read_data
+from chornfix.timing import detect_time_jumps, correct_clock_jump, correct_constant_offset
 
 # Load HYS14 data
 st = read_data("HYS14_data.mseed")
@@ -190,7 +190,7 @@ dependencies = [
 - **Detection tests** — verify algorithms find the correct jump times and magnitudes
 - **Correction tests** — verify corrected traces match expected output within tolerance
 - **Round-trip test** — read → detect → correct → write → re-read → verify
-- **Install test** — `pip install -e .` then `from seisfix import correct_clock_jump`
+- **Install test** — `pip install -e .` then `from chronfix import correct_clock_jump`
 
 ---
 
