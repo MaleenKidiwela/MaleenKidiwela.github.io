@@ -206,12 +206,21 @@ function projectFromRel(rel) {
 }
 
 function dateFromFilename(name) {
-  const m = name.match(/(\d{4})[-_.]?(\d{2})[-_.]?(\d{2})/);
-  if (!m) return '';
-  const [_, y, mo, d] = m;
-  const yi = parseInt(y, 10), moi = parseInt(mo, 10), di = parseInt(d, 10);
-  if (moi < 1 || moi > 12 || di < 1 || di > 31) return '';
-  return `${y}-${mo}-${d}`;
+  // YYYY-MM-DD or YYYYMMDD anywhere in the filename
+  let m = name.match(/(\d{4})[-_.]?(\d{2})[-_.]?(\d{2})/);
+  if (m) {
+    const moi = parseInt(m[2], 10), di = parseInt(m[3], 10);
+    if (moi >= 1 && moi <= 12 && di >= 1 && di <= 31) return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+  // US-style MM-DD-YY: e.g., "05-01-26 Notes" → 2026-05-01
+  m = name.match(/\b(\d{2})-(\d{2})-(\d{2})\b/);
+  if (m) {
+    const moi = parseInt(m[1], 10), di = parseInt(m[2], 10);
+    if (moi >= 1 && moi <= 12 && di >= 1 && di <= 31) {
+      return `20${m[3]}-${m[1]}-${m[2]}`;
+    }
+  }
+  return '';
 }
 
 function noteTitleFromTree(tree, frontmatterTitle, fallback) {
