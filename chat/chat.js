@@ -425,16 +425,28 @@ function shiftDate(iso, deltaDays) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+const MONTHS = {
+  jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3,
+  apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7,
+  aug: 8, august: 8, sep: 9, sept: 9, september: 9,
+  oct: 10, october: 10, nov: 11, november: 11, dec: 12, december: 12,
+};
+const MONTH_RE = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
 function extractDateIntent(query, today) {
   // Returns a Set of YYYY-MM-DD strings the user appears to be asking about.
   const out = new Set();
-  const q = ` ${query.toLowerCase()} `;
+  const lower = query.toLowerCase();
+  const padded = ` ${lower} `;
+  const todayYear = parseInt(today.slice(0, 4), 10);
 
-  if (/\btoday\b/.test(q)) out.add(today);
-  if (/\byesterday\b/.test(q)) out.add(shiftDate(today, -1));
-  if (/\bday before yesterday\b/.test(q)) out.add(shiftDate(today, -2));
+  if (/\btoday\b/.test(padded)) out.add(today);
+  if (/\byesterday\b/.test(padded)) out.add(shiftDate(today, -1));
+  if (/\bday before yesterday\b/.test(padded)) out.add(shiftDate(today, -2));
 
-  const nDaysAgo = q.match(/\b(\d{1,3})\s+days?\s+ago\b/);
+  const nDaysAgo = padded.match(/\b(\d{1,3})\s+days?\s+ago\b/);
   if (nDaysAgo) out.add(shiftDate(today, -parseInt(nDaysAgo[1], 10)));
 
   // Explicit ISO: 2026-05-01
@@ -443,9 +455,9 @@ function extractDateIntent(query, today) {
   }
   // US-style MM-DD-YY: 05-01-26 → 2026-05-01
   for (const m of query.matchAll(/\b(\d{2})-(\d{2})-(\d{2})\b/g)) {
-    const mm = parseInt(m[1], 10), dd = parseInt(m[2], 10), yy = parseInt(m[3], 10);
+    const mm = parseInt(m[1], 10), dd = parseInt(m[2], 10);
     if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
-      out.add(`20${String(yy).padStart(2, '0')}-${m[1]}-${m[2]}`);
+      out.add(`20${m[3]}-${m[1]}-${m[2]}`);
     }
   }
   // MM/DD/YY or MM/DD/YYYY
@@ -454,9 +466,28 @@ function extractDateIntent(query, today) {
     let yyyy = m[3];
     if (yyyy.length === 2) yyyy = '20' + yyyy;
     if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
-      out.add(`${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`);
+      out.add(`${yyyy}-${pad2(mm)}-${pad2(dd)}`);
     }
   }
+
+  // Month name then day: "April 19", "Apr 19th", "April 19, 2026", "April 19 2026"
+  const reMonthDay = new RegExp(`\\b${MONTH_RE}\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:[,\\s]+(\\d{2,4}))?\\b`, 'gi');
+  for (const m of lower.matchAll(reMonthDay)) {
+    const mm = MONTHS[m[1]];
+    const dd = parseInt(m[2], 10);
+    let yyyy = m[3] ? (m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10)) : todayYear;
+    if (mm && dd >= 1 && dd <= 31) out.add(`${yyyy}-${pad2(mm)}-${pad2(dd)}`);
+  }
+
+  // Day then month: "19 April", "19th April", "19th of April", "19 April 2026"
+  const reDayMonth = new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?${MONTH_RE}(?:[,\\s]+(\\d{2,4}))?\\b`, 'gi');
+  for (const m of lower.matchAll(reDayMonth)) {
+    const dd = parseInt(m[1], 10);
+    const mm = MONTHS[m[2]];
+    let yyyy = m[3] ? (m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10)) : todayYear;
+    if (mm && dd >= 1 && dd <= 31) out.add(`${yyyy}-${pad2(mm)}-${pad2(dd)}`);
+  }
+
   return out;
 }
 
