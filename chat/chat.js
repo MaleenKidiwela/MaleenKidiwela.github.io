@@ -14,8 +14,8 @@ const CONFIG = {
   bm25K: 14,
   semanticK: 14,
   fuseK: 6,
-  neighborRadius: 1,
-  maxContextWords: 2400,
+  neighborRadius: 2,
+  maxContextWords: 3200,
 };
 
 const $ = (id) => document.getElementById(id);

@@ -1,7 +1,7 @@
 {
   "embedDim": 768,
   "chunking": {
-    "minChunkWords": 60,
+    "minChunkWords": 100,
     "maxChunkWords": 375,
     "overlapWords": 75
   },
@@ -9,7 +9,7 @@
     "bm25K": 14,
     "semanticK": 14,
     "fuseK": 6,
-    "neighborRadius": 1,
-    "maxContextWords": 2400
+    "neighborRadius": 2,
+    "maxContextWords": 3200
   }
 }
