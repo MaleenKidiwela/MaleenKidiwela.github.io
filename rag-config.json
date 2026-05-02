@@ -10,6 +10,7 @@
     "semanticK": 14,
     "fuseK": 6,
     "neighborRadius": 2,
-    "maxContextWords": 3200
+    "maxContextChars": 17000,
+    "hardContextCap": 19500
   }
 }

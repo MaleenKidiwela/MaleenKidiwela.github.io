@@ -15,7 +15,8 @@ const CONFIG = {
   semanticK: 14,
   fuseK: 6,
   neighborRadius: 2,
-  maxContextWords: 3200,
+  maxContextChars: 17000, // worker hard caps at 20000; leave headroom for headings/preamble
+  hardContextCap: 19500,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -305,7 +306,11 @@ async function ask(query) {
   }
 
   // 3. neighbor expansion + budget-packed context, with a date-aware preamble
-  const { context, included } = packContext(fused, CONFIG.neighborRadius, CONFIG.maxContextWords, today);
+  let { context, included } = packContext(fused, CONFIG.neighborRadius, CONFIG.maxContextChars, today);
+  // Hard safety cap so we never trip the worker's 20K-char limit.
+  if (context.length > CONFIG.hardContextCap) {
+    context = context.slice(0, CONFIG.hardContextCap);
+  }
 
   // 4. citations (dedup by note + section, labelled Note · Section)
   cites.innerHTML = '';
@@ -555,18 +560,24 @@ function neighborsOf(c) {
   return out;
 }
 
-function wordsIn(text) {
-  return text ? text.split(/\s+/).filter(Boolean).length : 0;
+function blockSerialized(anchor, blockChunks) {
+  return `${sectionHeading(anchor)}\n${blockChunks.map((ch) => ch.text).join('\n\n')}`;
 }
 
-function packContext(fused, neighborRadius, maxWords, today) {
-  // Greedy pack: for each fused chunk in fusion order, attempt to add a
-  // section-coherent block (chunk + its same-section neighbors). If the
-  // block doesn't fit, fall back to the chunk alone. Stop when the budget
-  // is exhausted. Dedup chunks across blocks.
+function packContext(fused, neighborRadius, maxChars, today) {
+  // Char-budgeted greedy pack: each fused chunk attempts to add a
+  // section-coherent block (chunk + same-section neighbors). If the
+  // block doesn't fit, fall back to the chunk alone. Stop when the
+  // running total of *serialized* chars (including headings + separators)
+  // would exceed the budget.
+  const SEP = '\n\n---\n\n';
+  const preamble = today
+    ? `Today's date is ${today}. Each section below is headed with "Note · Section · YYYY-MM-DD" when the source note has a date in its filename. When the user asks about "today", "yesterday", or other relative dates, resolve them against ${today} and use those date headers to identify the relevant entries.${SEP}`
+    : '';
+
   const seenChunks = new Set();
   const blocks = [];
-  let used = 0;
+  let used = preamble.length;
 
   for (const c of fused) {
     if (seenChunks.has(c.id)) continue;
@@ -576,20 +587,21 @@ function packContext(fused, neighborRadius, maxWords, today) {
       .sort((a, b) => a.idx - b.idx)
       .map((x) => x.id);
     const blockChunks = blockIds.map((id) => chunks[id]).filter(Boolean);
-    const blockWords = blockChunks.reduce((s, ch) => s + wordsIn(ch.text), 0);
+    const sepCost = blocks.length === 0 ? 0 : SEP.length;
 
-    if (used + blockWords <= maxWords) {
+    const fullSerialized = blockSerialized(c, blockChunks);
+    if (used + sepCost + fullSerialized.length <= maxChars) {
       blockChunks.forEach((ch) => seenChunks.add(ch.id));
       blocks.push({ anchor: c, chunks: blockChunks });
-      used += blockWords;
+      used += sepCost + fullSerialized.length;
       continue;
     }
     // Block too big: try the anchor alone.
-    const anchorWords = wordsIn(c.text);
-    if (used + anchorWords <= maxWords) {
+    const anchorSerialized = blockSerialized(c, [c]);
+    if (used + sepCost + anchorSerialized.length <= maxChars) {
       seenChunks.add(c.id);
       blocks.push({ anchor: c, chunks: [c] });
-      used += anchorWords;
+      used += sepCost + anchorSerialized.length;
       continue;
     }
     // No room left at all; stop.
@@ -597,14 +609,10 @@ function packContext(fused, neighborRadius, maxWords, today) {
   }
 
   const body = blocks
-    .map((b) => `${sectionHeading(b.anchor)}\n${b.chunks.map((ch) => ch.text).join('\n\n')}`)
-    .join('\n\n---\n\n');
+    .map((b) => blockSerialized(b.anchor, b.chunks))
+    .join(SEP);
 
-  const preamble = today
-    ? `Today's date is ${today}. Each section below is headed with "Note · Section · YYYY-MM-DD" when the source note has a date in its filename. When the user asks about "today", "yesterday", or other relative dates, resolve them against ${today} and use those date headers to identify the relevant entries.\n\n---\n\n`
-    : '';
-
-  return { context: preamble + body, included: blocks, words: used };
+  return { context: preamble + body, included: blocks, chars: used };
 }
 
 // ---------- Math ----------
