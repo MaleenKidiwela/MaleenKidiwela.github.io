@@ -160,6 +160,16 @@ $('chatForm').addEventListener('submit', async (e) => {
   $('qInput').value = '';
   dismissEmptyState();
   appendUser(q);
+
+  // Short-circuit greetings, meta-questions, and other small talk so they
+  // don't get sent through retrieval and refused as out-of-context.
+  const reply = handleSmallTalk(q);
+  if (reply) {
+    appendAssistant().textEl.textContent = reply;
+    $('qInput').focus();
+    return;
+  }
+
   if (!assetsReady) {
     appendAssistant().textEl.textContent = 'Index is not loaded yet. Try again once the status bar says Ready.';
     return;
@@ -172,6 +182,30 @@ $('chatForm').addEventListener('submit', async (e) => {
     $('qInput').focus();
   }
 });
+
+function handleSmallTalk(qRaw) {
+  const q = qRaw.toLowerCase().replace(/[!?.,]+$/g, '').trim();
+  if (!q) return null;
+
+  const greetings = /^(hi|hello|hey+|yo|sup|hiya|howdy|good (morning|afternoon|evening)|hola|namaste|ayubowan)\b/;
+  const thanks    = /^(thanks?|thank you|thx|ty|cheers)\b/;
+  const farewells = /^(bye|goodbye|see ya|later|cya)\b/;
+  const meta      = /(who are you|what (are|do) you|what can you do|how do you work|what is this|help|how to use)/;
+
+  if (greetings.test(q)) {
+    return 'Hi. I answer questions grounded in the research notes — Cascadia, Bransfield earthquakes, and Earthnote. Try one of the suggestions, or ask something specific (a place, a date, a finding).';
+  }
+  if (thanks.test(q)) {
+    return 'Anytime.';
+  }
+  if (farewells.test(q)) {
+    return 'See you.';
+  }
+  if (meta.test(q)) {
+    return 'I search the working vault — Cascadia, Bransfield earthquakes, Earthnote — and answer with citations back to the source notes. Ask about a place, a date, a measurement, or a finding. I will not guess outside the notes.';
+  }
+  return null;
+}
 
 function appendUser(text) {
   const div = document.createElement('div');
