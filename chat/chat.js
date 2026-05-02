@@ -11,9 +11,11 @@ const CONFIG = {
   embeddingsPath: '/public/embeddings.bin',
   chunksPath: '/public/chunks.json',
   embedDim: 768,
-  bm25K: 10,
-  semanticK: 10,
-  fuseK: 5,
+  bm25K: 14,
+  semanticK: 14,
+  fuseK: 6,
+  neighborRadius: 1,
+  maxContextWords: 2400,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -23,6 +25,7 @@ let mini = null;
 let chunks = null;
 let embeddings = null; // Float32Array, length = chunks.length * embedDim
 let assetsReady = false;
+let noteIndex = null; // noteId -> sorted array of chunk ids by chunkIndex
 
 function setStatus(text, mode = 'loading') {
   // mode: 'loading' | 'ready' | 'error'
@@ -90,8 +93,8 @@ async function loadAssets() {
       fetchBuffer(CONFIG.embeddingsPath, 'embeddings.bin'),
     ]);
     mini = MiniSearch.loadJSON(idxText, {
-      fields: ['text', 'noteTitle'],
-      storeFields: ['noteTitle', 'noteUrl', 'chunkIndex', 'noteId'],
+      fields: ['text', 'noteTitle', 'sectionTitle', 'project'],
+      storeFields: ['noteId', 'noteTitle', 'noteUrl', 'chunkIndex', 'sectionTitle', 'sectionPath', 'project', 'dateFromFilename', 'filePath'],
       idField: 'id',
     });
     chunks = chunkData;
@@ -99,6 +102,7 @@ async function loadAssets() {
     if (embeddings.length !== chunks.length * CONFIG.embedDim) {
       throw new Error(`embedding/chunk mismatch (${embeddings.length} vs ${chunks.length * CONFIG.embedDim})`);
     }
+    noteIndex = buildNoteIndex(chunks);
     assetsReady = true;
     setStatus(`Ready · ${chunks.length} chunks · ${countNotes()} notes`, 'ready');
   } catch (e) {
@@ -235,8 +239,13 @@ async function ask(query) {
   }
   const qVec = l2norm(new Float32Array(qEmb));
 
-  // 2. hybrid retrieval
-  const bm25 = mini.search(query, { fuzzy: 0.2, prefix: true })
+  // 2. hybrid retrieval (BM25 + semantic, fused via RRF)
+  const bm25 = mini
+    .search(query, {
+      fuzzy: 0.2,
+      prefix: true,
+      boost: { noteTitle: 2, sectionTitle: 1.5, project: 1.2 },
+    })
     .slice(0, CONFIG.bm25K)
     .map((r) => ({ id: r.id }));
   const semantic = cosineTopK(qVec, CONFIG.semanticK);
@@ -248,25 +257,25 @@ async function ask(query) {
     return;
   }
 
-  // 3. context
-  const context = fused
-    .map((c) => `### ${c.noteTitle}\n${c.text}`)
-    .join('\n\n---\n\n');
+  // 3. neighbor expansion + budget-packed context
+  const { context, included } = packContext(fused, CONFIG.neighborRadius, CONFIG.maxContextWords);
 
-  // 4. citations (dedup by note)
+  // 4. citations (dedup by note + section, labelled Note · Section)
   cites.innerHTML = '';
   const seen = new Set();
   for (const c of fused) {
-    if (seen.has(c.noteId)) continue;
-    seen.add(c.noteId);
+    const key = citationKey(c);
+    if (seen.has(key)) continue;
+    seen.add(key);
     const a = document.createElement('a');
     a.className = 'chip';
     a.href = c.noteUrl;
     a.target = '_blank';
     a.rel = 'noopener';
-    a.textContent = c.noteTitle;
+    a.textContent = formatCitation(c);
     cites.appendChild(a);
   }
+  void included; // included is reserved for future debug surfacing
 
   // 5. stream
   textEl.textContent = '';
@@ -346,6 +355,108 @@ async function ask(query) {
   } finally {
     stopThinking();
   }
+}
+
+// ---------- Retrieval helpers ----------
+
+function buildNoteIndex(chunkArr) {
+  // For each note, collect chunk ids in sectionTitle then chunkIndex order so
+  // we can find same-section neighbors quickly.
+  const map = new Map();
+  for (let i = 0; i < chunkArr.length; i++) {
+    const c = chunkArr[i];
+    if (!map.has(c.noteId)) map.set(c.noteId, []);
+    map.get(c.noteId).push(i);
+  }
+  // Within each note, ids are already in document order from the indexer,
+  // so chunkIndex is monotonically increasing. No re-sort needed.
+  return map;
+}
+
+function citationKey(c) {
+  const sec = c.sectionTitle && c.sectionTitle !== c.noteTitle ? c.sectionTitle : '';
+  return `${c.noteId}|${sec}`;
+}
+
+function formatCitation(c) {
+  if (c.sectionTitle && c.sectionTitle !== c.noteTitle) {
+    return `${c.noteTitle} · ${c.sectionTitle}`;
+  }
+  return c.noteTitle;
+}
+
+function sectionHeading(c) {
+  const path = Array.isArray(c.sectionPath) && c.sectionPath.length
+    ? c.sectionPath.join(' / ')
+    : c.sectionTitle || c.noteTitle;
+  return `### ${c.noteTitle} · ${path}`;
+}
+
+function neighborsOf(c) {
+  // Return the chunk ids in the same note + same top-level section (shared
+  // first heading) within ±neighborRadius of c.chunkIndex.
+  if (!noteIndex) return [];
+  const ids = noteIndex.get(c.noteId) || [];
+  const root = (Array.isArray(c.sectionPath) && c.sectionPath[0]) || c.sectionTitle || '';
+  const out = [];
+  for (const id of ids) {
+    const n = chunks[id];
+    if (!n || id === c.id) continue;
+    const nRoot = (Array.isArray(n.sectionPath) && n.sectionPath[0]) || n.sectionTitle || '';
+    if (nRoot !== root) continue;
+    if (Math.abs((n.chunkIndex ?? 0) - (c.chunkIndex ?? 0)) <= CONFIG.neighborRadius) {
+      out.push(id);
+    }
+  }
+  return out;
+}
+
+function wordsIn(text) {
+  return text ? text.split(/\s+/).filter(Boolean).length : 0;
+}
+
+function packContext(fused, neighborRadius, maxWords) {
+  // Greedy pack: for each fused chunk in fusion order, attempt to add a
+  // section-coherent block (chunk + its same-section neighbors). If the
+  // block doesn't fit, fall back to the chunk alone. Stop when the budget
+  // is exhausted. Dedup chunks across blocks.
+  const seenChunks = new Set();
+  const blocks = [];
+  let used = 0;
+
+  for (const c of fused) {
+    if (seenChunks.has(c.id)) continue;
+    const neighborIds = neighborRadius > 0 ? neighborsOf(c) : [];
+    const blockIds = [...neighborIds.filter((id) => !seenChunks.has(id)), c.id]
+      .map((id) => ({ id, idx: chunks[id]?.chunkIndex ?? 0 }))
+      .sort((a, b) => a.idx - b.idx)
+      .map((x) => x.id);
+    const blockChunks = blockIds.map((id) => chunks[id]).filter(Boolean);
+    const blockWords = blockChunks.reduce((s, ch) => s + wordsIn(ch.text), 0);
+
+    if (used + blockWords <= maxWords) {
+      blockChunks.forEach((ch) => seenChunks.add(ch.id));
+      blocks.push({ anchor: c, chunks: blockChunks });
+      used += blockWords;
+      continue;
+    }
+    // Block too big: try the anchor alone.
+    const anchorWords = wordsIn(c.text);
+    if (used + anchorWords <= maxWords) {
+      seenChunks.add(c.id);
+      blocks.push({ anchor: c, chunks: [c] });
+      used += anchorWords;
+      continue;
+    }
+    // No room left at all; stop.
+    break;
+  }
+
+  const context = blocks
+    .map((b) => `${sectionHeading(b.anchor)}\n${b.chunks.map((ch) => ch.text).join('\n\n')}`)
+    .join('\n\n---\n\n');
+
+  return { context, included: blocks, words: used };
 }
 
 // ---------- Math ----------

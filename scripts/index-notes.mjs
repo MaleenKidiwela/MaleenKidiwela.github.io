@@ -1,33 +1,52 @@
 #!/usr/bin/env node
 // Build-time RAG indexer for Maleen's notes site.
-// Reads markdown under /notes/{COSZO,BransfieldEQ,Earthnote}/**, chunks each note,
-// embeds chunks via Gemini, and writes search-index.json + chunks.json + embeddings.bin
-// into /public.
+// Walks /notes/{COSZO,BransfieldEQ,Earthnote}/**, parses each markdown file
+// into a mdast tree, splits into section-aware chunks, embeds via Gemini,
+// and writes search-index.json + chunks.json + embeddings.bin into /public.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import { remark } from 'remark';
-import strip from 'strip-markdown';
 import MiniSearch from 'minisearch';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const NOTES_DIR = path.join(ROOT, 'notes');
 const OUT_DIR = path.join(ROOT, 'public');
+const CONFIG_PATH = path.join(ROOT, 'rag-config.json');
 
 const PROJECT_FOLDERS = ['COSZO', 'BransfieldEQ', 'Earthnote'];
 const EMBED_MODEL = 'gemini-embedding-001';
-const EMBED_DIM = 768;
-const CHUNK_WORDS = 375;     // ~500 tokens at 0.75 words/token
-const OVERLAP_WORDS = 75;    // ~100 tokens
 const BATCH_SIZE = 25;
 const MAX_RETRIES = 6;
 const BASE_BACKOFF_MS = 4000;
 const INTER_BATCH_DELAY_MS = 1500;
 
+const DEFAULTS = {
+  embedDim: 768,
+  chunking: { minChunkWords: 60, maxChunkWords: 375, overlapWords: 75 },
+};
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function loadConfig() {
+  try {
+    const raw = await fs.readFile(CONFIG_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+    return {
+      embedDim: parsed.embedDim ?? DEFAULTS.embedDim,
+      chunking: { ...DEFAULTS.chunking, ...(parsed.chunking || {}) },
+    };
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      console.warn(`No rag-config.json at ${CONFIG_PATH}; using defaults.`);
+      return DEFAULTS;
+    }
+    throw e;
+  }
+}
 
 async function walk(dir) {
   const out = [];
@@ -46,21 +65,124 @@ async function walk(dir) {
   return out;
 }
 
-function chunkWords(text) {
+// Render an mdast node (or array) to plain inline-ish text.
+// Handles paragraphs, lists, code blocks, blockquotes, links, etc.
+function flattenNode(node) {
+  if (!node) return '';
+  if (typeof node.value === 'string') return node.value;
+  if (Array.isArray(node.children)) {
+    const blockTypes = new Set([
+      'paragraph', 'heading', 'listItem', 'blockquote',
+      'tableRow', 'tableCell', 'definition', 'footnoteDefinition',
+    ]);
+    const sep = blockTypes.has(node.type) ? ' ' : '\n';
+    return node.children.map(flattenNode).join(sep);
+  }
+  return '';
+}
+
+function flattenNodes(nodes) {
+  return nodes.map(flattenNode).join('\n').replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+}
+
+// Split a tree into sections delimited by headings.
+// Returns [{ headingPath: [{depth,title}], nodes: [...] }, ...]
+function splitIntoSections(tree) {
+  const sections = [];
+  const headingStack = [];
+  let current = { headingPath: [], nodes: [] };
+  for (const node of tree.children) {
+    if (node.type === 'heading') {
+      // Close previous if it has any content.
+      if (current.nodes.length || current.headingPath.length) sections.push(current);
+      // Pop the heading stack to reflect entering a heading at this depth.
+      while (headingStack.length && headingStack[headingStack.length - 1].depth >= node.depth) {
+        headingStack.pop();
+      }
+      const title = flattenNode(node).trim();
+      headingStack.push({ depth: node.depth, title });
+      current = { headingPath: headingStack.map((h) => ({ ...h })), nodes: [] };
+    } else {
+      current.nodes.push(node);
+    }
+  }
+  if (current.nodes.length || current.headingPath.length) sections.push(current);
+  return sections;
+}
+
+function wordCount(s) {
+  return s ? s.split(/\s+/).filter(Boolean).length : 0;
+}
+
+function splitWithOverlap(text, maxWords, overlapWords) {
   const words = text.split(/\s+/).filter(Boolean);
-  const chunks = [];
-  if (!words.length) return chunks;
-  if (words.length <= CHUNK_WORDS) {
-    chunks.push(words.join(' '));
-    return chunks;
-  }
-  const step = CHUNK_WORDS - OVERLAP_WORDS;
+  if (words.length <= maxWords) return [words.join(' ')];
+  const step = Math.max(1, maxWords - overlapWords);
+  const out = [];
   for (let i = 0; i < words.length; i += step) {
-    const piece = words.slice(i, i + CHUNK_WORDS).join(' ');
-    chunks.push(piece);
-    if (i + CHUNK_WORDS >= words.length) break;
+    out.push(words.slice(i, i + maxWords).join(' '));
+    if (i + maxWords >= words.length) break;
   }
-  return chunks;
+  return out;
+}
+
+function rootSection(headingPath) {
+  return headingPath.length ? headingPath[0].title : '';
+}
+
+// Build chunk records from sections, applying min/max word policy.
+function buildChunksForNote(sections, meta, cfg) {
+  const { minChunkWords, maxChunkWords, overlapWords } = cfg;
+  const draft = [];
+
+  for (const sec of sections) {
+    const text = flattenNodes(sec.nodes);
+    if (!text) continue;
+    const sectionTitle = sec.headingPath.length
+      ? sec.headingPath[sec.headingPath.length - 1].title
+      : '';
+    const sectionPath = sec.headingPath.map((h) => h.title);
+    const wc = wordCount(text);
+    if (wc <= maxChunkWords) {
+      draft.push({ sectionTitle, sectionPath, text });
+    } else {
+      const splits = splitWithOverlap(text, maxChunkWords, overlapWords);
+      splits.forEach((piece) => draft.push({ sectionTitle, sectionPath, text: piece }));
+    }
+  }
+
+  // Merge tiny chunks into the previous chunk when they share a root section,
+  // so we don't ship weak fragmentary chunks.
+  const merged = [];
+  for (const ch of draft) {
+    const wc = wordCount(ch.text);
+    const prev = merged[merged.length - 1];
+    const sameRoot = prev && rootSection(prev.sectionPath) === rootSection(ch.sectionPath);
+    if (wc < minChunkWords && prev && sameRoot) {
+      prev.text = (prev.text + '\n' + ch.text).trim();
+      // Keep the prev's sectionTitle/path; the merged content is "under" it logically.
+    } else {
+      merged.push({ ...ch });
+    }
+  }
+
+  // If the last chunk is itself tiny and there is nothing to merge into,
+  // and we have a previous chunk, fold it backward.
+  if (merged.length >= 2) {
+    const last = merged[merged.length - 1];
+    if (wordCount(last.text) < minChunkWords && rootSection(last.sectionPath) === rootSection(merged[merged.length - 2].sectionPath)) {
+      merged[merged.length - 2].text = (merged[merged.length - 2].text + '\n' + last.text).trim();
+      merged.pop();
+    }
+  }
+
+  return merged.map((ch, idx) => ({
+    ...meta,
+    chunkIndex: idx,
+    sectionTitle: ch.sectionTitle || meta.noteTitle,
+    sectionPath: ch.sectionPath,
+    text: ch.text,
+  }));
 }
 
 function l2norm(values) {
@@ -76,12 +198,38 @@ function urlForRelPath(rel) {
   return '/' + rel.split(path.sep).map(encodeURIComponent).join('/');
 }
 
-async function embedBatch(texts, apiKey) {
+function projectFromRel(rel) {
+  const parts = rel.split(path.sep);
+  // rel looks like notes/COSZO/foo.md → parts[0]=notes, parts[1]=COSZO
+  if (parts[0] === 'notes' && parts.length > 1) return parts[1];
+  return parts[0] || '';
+}
+
+function dateFromFilename(name) {
+  const m = name.match(/(\d{4})[-_.]?(\d{2})[-_.]?(\d{2})/);
+  if (!m) return '';
+  const [_, y, mo, d] = m;
+  const yi = parseInt(y, 10), moi = parseInt(mo, 10), di = parseInt(d, 10);
+  if (moi < 1 || moi > 12 || di < 1 || di > 31) return '';
+  return `${y}-${mo}-${d}`;
+}
+
+function noteTitleFromTree(tree, frontmatterTitle, fallback) {
+  if (frontmatterTitle) return String(frontmatterTitle);
+  const h1 = tree.children.find((n) => n.type === 'heading' && n.depth === 1);
+  if (h1) {
+    const t = flattenNode(h1).trim();
+    if (t) return t;
+  }
+  return fallback;
+}
+
+async function embedBatch(texts, apiKey, embedDim) {
   const body = {
     requests: texts.map((t) => ({
       model: `models/${EMBED_MODEL}`,
       content: { parts: [{ text: t }] },
-      outputDimensionality: EMBED_DIM,
+      outputDimensionality: embedDim,
       taskType: 'RETRIEVAL_DOCUMENT',
     })),
   };
@@ -101,7 +249,6 @@ async function embedBatch(texts, apiKey) {
     }
     const txt = await res.text().catch(() => '');
     lastErr = new Error(`Embed batch failed (${res.status}): ${txt.slice(0, 500)}`);
-    // Retry on 429 and 5xx; bail on other 4xx.
     if (res.status !== 429 && res.status < 500) throw lastErr;
     if (attempt === MAX_RETRIES) throw lastErr;
     let wait = BASE_BACKOFF_MS * Math.pow(2, attempt);
@@ -122,6 +269,9 @@ async function main() {
     process.exit(1);
   }
 
+  const cfg = await loadConfig();
+  console.log(`Config: embedDim=${cfg.embedDim} chunking=${JSON.stringify(cfg.chunking)}`);
+
   const files = [];
   for (const folder of PROJECT_FOLDERS) {
     const found = await walk(path.join(NOTES_DIR, folder));
@@ -130,80 +280,85 @@ async function main() {
   files.sort();
   console.log(`Found ${files.length} markdown files across ${PROJECT_FOLDERS.join(', ')}.`);
 
-  const stripper = remark().use(strip);
-  const chunks = [];
+  const parser = remark();
+  const allChunks = [];
   let totalWords = 0;
 
   for (const file of files) {
     const raw = await fs.readFile(file, 'utf8');
     const { data, content } = matter(raw);
-    const plain = String(await stripper.process(content)).replace(/\s+/g, ' ').trim();
-    if (!plain) continue;
+    const tree = parser.parse(content);
     const rel = path.relative(ROOT, file);
-    const noteId = rel;
-    const noteTitle = data.title || path.basename(file, path.extname(file));
-    const noteUrl = urlForRelPath(rel);
-    const pieces = chunkWords(plain);
-    pieces.forEach((text, idx) => {
-      totalWords += text.split(/\s+/).length;
-      chunks.push({
-        id: chunks.length,
-        noteId,
-        noteTitle,
-        noteUrl,
-        chunkIndex: idx,
-        text,
-      });
-    });
+    const baseName = path.basename(file, path.extname(file));
+    const noteTitle = noteTitleFromTree(tree, data.title, baseName);
+    const meta = {
+      noteId: rel,
+      noteTitle,
+      noteUrl: urlForRelPath(rel),
+      project: projectFromRel(rel),
+      filePath: rel,
+      dateFromFilename: dateFromFilename(baseName),
+    };
+
+    const sections = splitIntoSections(tree);
+    const chunks = buildChunksForNote(sections, meta, cfg.chunking);
+
+    for (const ch of chunks) {
+      if (!ch.text || !wordCount(ch.text)) continue;
+      const id = allChunks.length;
+      totalWords += wordCount(ch.text);
+      allChunks.push({ id, ...ch });
+    }
   }
 
-  console.log(`Chunked into ${chunks.length} pieces (~${Math.round(totalWords / 0.75)} tokens).`);
+  console.log(`Chunked into ${allChunks.length} pieces (~${Math.round(totalWords / 0.75)} tokens).`);
 
   await fs.mkdir(OUT_DIR, { recursive: true });
 
-  if (chunks.length === 0) {
+  const indexFields = ['text', 'noteTitle', 'sectionTitle', 'project'];
+  const storeFields = ['noteId', 'noteTitle', 'noteUrl', 'chunkIndex', 'sectionTitle', 'sectionPath', 'project', 'dateFromFilename', 'filePath'];
+
+  if (allChunks.length === 0) {
     console.warn('No content to index. Writing empty artifacts.');
-    const mini = new MiniSearch({
-      fields: ['text', 'noteTitle'],
-      storeFields: ['noteTitle', 'noteUrl', 'chunkIndex', 'noteId'],
-      idField: 'id',
-    });
+    const mini = new MiniSearch({ fields: indexFields, storeFields, idField: 'id' });
     await fs.writeFile(path.join(OUT_DIR, 'search-index.json'), JSON.stringify(mini));
     await fs.writeFile(path.join(OUT_DIR, 'chunks.json'), '[]');
     await fs.writeFile(path.join(OUT_DIR, 'embeddings.bin'), Buffer.alloc(0));
     return;
   }
 
-  const embeddings = new Float32Array(chunks.length * EMBED_DIM);
+  const embeddings = new Float32Array(allChunks.length * cfg.embedDim);
   let calls = 0;
-  for (let b = 0; b < chunks.length; b += BATCH_SIZE) {
-    const batch = chunks.slice(b, b + BATCH_SIZE);
-    const vectors = await embedBatch(batch.map((c) => c.text), apiKey);
+  for (let b = 0; b < allChunks.length; b += BATCH_SIZE) {
+    const batch = allChunks.slice(b, b + BATCH_SIZE);
+    // Embed the section-aware text: prepend the section path so the embedding
+    // is aware of where the content lives, without polluting the BM25 text field.
+    const inputs = batch.map((c) => {
+      const path = c.sectionPath && c.sectionPath.length ? c.sectionPath.join(' / ') : c.noteTitle;
+      return `${c.project} :: ${c.noteTitle} :: ${path}\n\n${c.text}`;
+    });
+    const vectors = await embedBatch(inputs, apiKey, cfg.embedDim);
     calls++;
     vectors.forEach((vec, i) => {
       const norm = l2norm(vec);
-      embeddings.set(norm, (b + i) * EMBED_DIM);
+      embeddings.set(norm, (b + i) * cfg.embedDim);
     });
-    console.log(`  embedded ${Math.min(b + BATCH_SIZE, chunks.length)}/${chunks.length}`);
-    if (b + BATCH_SIZE < chunks.length) await sleep(INTER_BATCH_DELAY_MS);
+    console.log(`  embedded ${Math.min(b + BATCH_SIZE, allChunks.length)}/${allChunks.length}`);
+    if (b + BATCH_SIZE < allChunks.length) await sleep(INTER_BATCH_DELAY_MS);
   }
 
-  const mini = new MiniSearch({
-    fields: ['text', 'noteTitle'],
-    storeFields: ['noteTitle', 'noteUrl', 'chunkIndex', 'noteId'],
-    idField: 'id',
-  });
-  mini.addAll(chunks);
+  const mini = new MiniSearch({ fields: indexFields, storeFields, idField: 'id' });
+  mini.addAll(allChunks);
 
   await fs.writeFile(path.join(OUT_DIR, 'search-index.json'), JSON.stringify(mini));
-  await fs.writeFile(path.join(OUT_DIR, 'chunks.json'), JSON.stringify(chunks));
+  await fs.writeFile(path.join(OUT_DIR, 'chunks.json'), JSON.stringify(allChunks));
   await fs.writeFile(
     path.join(OUT_DIR, 'embeddings.bin'),
     Buffer.from(embeddings.buffer, embeddings.byteOffset, embeddings.byteLength),
   );
 
   console.log(
-    `Done. notes=${files.length} chunks=${chunks.length} ~tokens=${Math.round(totalWords / 0.75)} embed_calls=${calls} bytes=${chunks.length * EMBED_DIM * 4}`,
+    `Done. notes=${files.length} chunks=${allChunks.length} ~tokens=${Math.round(totalWords / 0.75)} embed_calls=${calls} bytes=${allChunks.length * cfg.embedDim * 4}`,
   );
 }
 
