@@ -184,23 +184,22 @@ $('chatForm').addEventListener('submit', async (e) => {
 });
 
 function handleSmallTalk(qRaw) {
-  const q = qRaw.toLowerCase().replace(/[!?.,]+$/g, '').trim();
-  if (!q) return null;
+  // Strip trailing punctuation/whitespace, lowercase, then require the WHOLE
+  // input to match — substrings like "what do you know about X" must NOT be
+  // treated as small talk.
+  const q = qRaw.toLowerCase().replace(/[\s!?.,]+$/g, '').trim();
+  if (!q || q.length > 60) return null;
 
-  const greetings = /^(hi|hello|hey+|yo|sup|hiya|howdy|good (morning|afternoon|evening)|hola|namaste|ayubowan)\b/;
-  const thanks    = /^(thanks?|thank you|thx|ty|cheers)\b/;
-  const farewells = /^(bye|goodbye|see ya|later|cya)\b/;
-  const meta      = /(who are you|what (are|do) you|what can you do|how do you work|what is this|help|how to use)/;
+  const greetings = /^(hi+|hello+|hey+|yo|sup|hiya|howdy|good (morning|afternoon|evening|night)|hola|namaste|ayubowan)$/;
+  const thanks    = /^(thanks?|thank you|thx|ty|cheers)$/;
+  const farewells = /^(bye|goodbye|see ya|later|cya|peace)$/;
+  const meta      = /^(who are you|what are you|what can you do|how do you work|what is this|help|how (do i|to) use( this)?)$/;
 
   if (greetings.test(q)) {
     return 'Hi. I answer questions grounded in the research notes — Cascadia, Bransfield earthquakes, and Earthnote. Try one of the suggestions, or ask something specific (a place, a date, a finding).';
   }
-  if (thanks.test(q)) {
-    return 'Anytime.';
-  }
-  if (farewells.test(q)) {
-    return 'See you.';
-  }
+  if (thanks.test(q)) return 'Anytime.';
+  if (farewells.test(q)) return 'See you.';
   if (meta.test(q)) {
     return 'I search the working vault — Cascadia, Bransfield earthquakes, Earthnote — and answer with citations back to the source notes. Ask about a place, a date, a measurement, or a finding. I will not guess outside the notes.';
   }
@@ -283,16 +282,30 @@ async function ask(query) {
     .slice(0, CONFIG.bm25K)
     .map((r) => ({ id: r.id }));
   const semantic = cosineTopK(qVec, CONFIG.semanticK);
-  const fused = rrf(bm25, semantic, CONFIG.fuseK);
+  const fusedRRF = rrf(bm25, semantic, CONFIG.fuseK);
+
+  // Date-aware retrieval: if the query references "today/yesterday/05-01-26",
+  // resolve to dates and prepend all chunks tagged with those dates so the
+  // packer is guaranteed to surface them ahead of merely-similar chunks.
+  const today = todayISO();
+  const intentDates = extractDateIntent(query, today);
+  const dateSeed = chunksMatchingDates(intentDates);
+
+  const seenIds = new Set();
+  const fused = [];
+  for (const c of dateSeed) { if (!seenIds.has(c.id)) { fused.push(c); seenIds.add(c.id); } }
+  for (const c of fusedRRF) { if (!seenIds.has(c.id)) { fused.push(c); seenIds.add(c.id); } }
 
   if (fused.length === 0) {
-    textEl.textContent = 'No relevant notes found for that query.';
+    textEl.textContent = intentDates.size
+      ? `No notes found for ${[...intentDates].join(', ')}.`
+      : 'No relevant notes found for that query.';
     stopThinking();
     return;
   }
 
-  // 3. neighbor expansion + budget-packed context
-  const { context, included } = packContext(fused, CONFIG.neighborRadius, CONFIG.maxContextWords);
+  // 3. neighbor expansion + budget-packed context, with a date-aware preamble
+  const { context, included } = packContext(fused, CONFIG.neighborRadius, CONFIG.maxContextWords, today);
 
   // 4. citations (dedup by note + section, labelled Note · Section)
   cites.innerHTML = '';
@@ -391,6 +404,71 @@ async function ask(query) {
   }
 }
 
+// ---------- Date helpers ----------
+
+function todayISO() {
+  // Local-date YYYY-MM-DD, since note filenames are local-day-stamped.
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function shiftDate(iso, deltaDays) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + deltaDays);
+  const yyyy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function extractDateIntent(query, today) {
+  // Returns a Set of YYYY-MM-DD strings the user appears to be asking about.
+  const out = new Set();
+  const q = ` ${query.toLowerCase()} `;
+
+  if (/\btoday\b/.test(q)) out.add(today);
+  if (/\byesterday\b/.test(q)) out.add(shiftDate(today, -1));
+  if (/\bday before yesterday\b/.test(q)) out.add(shiftDate(today, -2));
+
+  const nDaysAgo = q.match(/\b(\d{1,3})\s+days?\s+ago\b/);
+  if (nDaysAgo) out.add(shiftDate(today, -parseInt(nDaysAgo[1], 10)));
+
+  // Explicit ISO: 2026-05-01
+  for (const m of query.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g)) {
+    out.add(`${m[1]}-${m[2]}-${m[3]}`);
+  }
+  // US-style MM-DD-YY: 05-01-26 → 2026-05-01
+  for (const m of query.matchAll(/\b(\d{2})-(\d{2})-(\d{2})\b/g)) {
+    const mm = parseInt(m[1], 10), dd = parseInt(m[2], 10), yy = parseInt(m[3], 10);
+    if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
+      out.add(`20${String(yy).padStart(2, '0')}-${m[1]}-${m[2]}`);
+    }
+  }
+  // MM/DD/YY or MM/DD/YYYY
+  for (const m of query.matchAll(/\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/g)) {
+    const mm = parseInt(m[1], 10), dd = parseInt(m[2], 10);
+    let yyyy = m[3];
+    if (yyyy.length === 2) yyyy = '20' + yyyy;
+    if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) {
+      out.add(`${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`);
+    }
+  }
+  return out;
+}
+
+function chunksMatchingDates(dateSet) {
+  if (!dateSet || !dateSet.size || !chunks) return [];
+  const out = [];
+  for (const c of chunks) {
+    if (c.dateFromFilename && dateSet.has(c.dateFromFilename)) out.push(c);
+  }
+  return out;
+}
+
 // ---------- Retrieval helpers ----------
 
 function buildNoteIndex(chunkArr) {
@@ -423,7 +501,8 @@ function sectionHeading(c) {
   const path = Array.isArray(c.sectionPath) && c.sectionPath.length
     ? c.sectionPath.join(' / ')
     : c.sectionTitle || c.noteTitle;
-  return `### ${c.noteTitle} · ${path}`;
+  const date = c.dateFromFilename ? ` · ${c.dateFromFilename}` : '';
+  return `### ${c.noteTitle} · ${path}${date}`;
 }
 
 function neighborsOf(c) {
@@ -449,7 +528,7 @@ function wordsIn(text) {
   return text ? text.split(/\s+/).filter(Boolean).length : 0;
 }
 
-function packContext(fused, neighborRadius, maxWords) {
+function packContext(fused, neighborRadius, maxWords, today) {
   // Greedy pack: for each fused chunk in fusion order, attempt to add a
   // section-coherent block (chunk + its same-section neighbors). If the
   // block doesn't fit, fall back to the chunk alone. Stop when the budget
@@ -486,11 +565,15 @@ function packContext(fused, neighborRadius, maxWords) {
     break;
   }
 
-  const context = blocks
+  const body = blocks
     .map((b) => `${sectionHeading(b.anchor)}\n${b.chunks.map((ch) => ch.text).join('\n\n')}`)
     .join('\n\n---\n\n');
 
-  return { context, included: blocks, words: used };
+  const preamble = today
+    ? `Today's date is ${today}. Each section below is headed with "Note · Section · YYYY-MM-DD" when the source note has a date in its filename. When the user asks about "today", "yesterday", or other relative dates, resolve them against ${today} and use those date headers to identify the relevant entries.\n\n---\n\n`
+    : '';
+
+  return { context: preamble + body, included: blocks, words: used };
 }
 
 // ---------- Math ----------
