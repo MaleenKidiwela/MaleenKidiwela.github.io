@@ -6,6 +6,7 @@ on:
     paths:
       - 'notes/**'
       - 'scripts/index-notes.mjs'
+      - 'rag-config.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/build-index.yml'
