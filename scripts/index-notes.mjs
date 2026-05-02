@@ -6,6 +6,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import { remark } from 'remark';
@@ -233,6 +234,51 @@ function noteTitleFromTree(tree, frontmatterTitle, fallback) {
   return fallback;
 }
 
+function embeddingInputFor(c) {
+  const sectionPathStr = Array.isArray(c.sectionPath) && c.sectionPath.length
+    ? c.sectionPath.join(' / ')
+    : c.noteTitle;
+  return `${c.project} :: ${c.noteTitle} :: ${sectionPathStr}\n\n${c.text}`;
+}
+
+function sha1(s) {
+  return crypto.createHash('sha1').update(s).digest('hex');
+}
+
+async function loadPreviousCache(outDir, embedDim) {
+  // Load the previous build's chunks.json + embeddings.bin so we can reuse
+  // vectors for chunks whose embedding-input hash hasn't changed.
+  let chunksRaw, embBuf;
+  try {
+    chunksRaw = await fs.readFile(path.join(outDir, 'chunks.json'), 'utf8');
+    embBuf = await fs.readFile(path.join(outDir, 'embeddings.bin'));
+  } catch {
+    return null;
+  }
+  let prevChunks;
+  try { prevChunks = JSON.parse(chunksRaw); } catch { return null; }
+  if (!Array.isArray(prevChunks) || !prevChunks.length) return null;
+  const expectedFloats = prevChunks.length * embedDim;
+  if (embBuf.byteLength !== expectedFloats * 4) {
+    console.warn(`Previous embeddings.bin size mismatch (${embBuf.byteLength} vs expected ${expectedFloats * 4}); ignoring cache.`);
+    return null;
+  }
+  // Copy into a fresh, aligned ArrayBuffer so the Float32Array view is safe.
+  const ab = new ArrayBuffer(embBuf.byteLength);
+  new Uint8Array(ab).set(embBuf);
+  const arr = new Float32Array(ab);
+
+  const map = new Map();
+  for (let i = 0; i < prevChunks.length; i++) {
+    const c = prevChunks[i];
+    if (!c || typeof c.text !== 'string') continue;
+    const key = sha1(embeddingInputFor(c));
+    if (map.has(key)) continue;
+    map.set(key, arr.subarray(i * embedDim, (i + 1) * embedDim));
+  }
+  return map;
+}
+
 async function embedBatch(texts, apiKey, embedDim) {
   const body = {
     requests: texts.map((t) => ({
@@ -336,24 +382,42 @@ async function main() {
     return;
   }
 
+  // Reuse vectors from the previous build whenever the embedding-input hash
+  // matches, so the daily auto-sync only embeds chunks that actually changed.
+  const cache = await loadPreviousCache(OUT_DIR, cfg.embedDim);
+  const cacheSize = cache ? cache.size : 0;
+  console.log(`Cache: ${cacheSize} prior chunk vectors available.`);
+
   const embeddings = new Float32Array(allChunks.length * cfg.embedDim);
+  const toEmbed = []; // { chunkIndex, input }
+  let cachedHits = 0;
+
+  for (let i = 0; i < allChunks.length; i++) {
+    const c = allChunks[i];
+    const input = embeddingInputFor(c);
+    const key = cache ? sha1(input) : null;
+    const hit = cache && cache.get(key);
+    if (hit) {
+      embeddings.set(hit, i * cfg.embedDim);
+      cachedHits++;
+    } else {
+      toEmbed.push({ chunkIndex: i, input });
+    }
+  }
+
+  console.log(`Cache hits: ${cachedHits}/${allChunks.length}; embedding ${toEmbed.length} new chunks.`);
+
   let calls = 0;
-  for (let b = 0; b < allChunks.length; b += BATCH_SIZE) {
-    const batch = allChunks.slice(b, b + BATCH_SIZE);
-    // Embed the section-aware text: prepend the section path so the embedding
-    // is aware of where the content lives, without polluting the BM25 text field.
-    const inputs = batch.map((c) => {
-      const path = c.sectionPath && c.sectionPath.length ? c.sectionPath.join(' / ') : c.noteTitle;
-      return `${c.project} :: ${c.noteTitle} :: ${path}\n\n${c.text}`;
-    });
-    const vectors = await embedBatch(inputs, apiKey, cfg.embedDim);
+  for (let b = 0; b < toEmbed.length; b += BATCH_SIZE) {
+    const batch = toEmbed.slice(b, b + BATCH_SIZE);
+    const vectors = await embedBatch(batch.map((x) => x.input), apiKey, cfg.embedDim);
     calls++;
     vectors.forEach((vec, i) => {
       const norm = l2norm(vec);
-      embeddings.set(norm, (b + i) * cfg.embedDim);
+      embeddings.set(norm, batch[i].chunkIndex * cfg.embedDim);
     });
-    console.log(`  embedded ${Math.min(b + BATCH_SIZE, allChunks.length)}/${allChunks.length}`);
-    if (b + BATCH_SIZE < allChunks.length) await sleep(INTER_BATCH_DELAY_MS);
+    console.log(`  embedded ${Math.min(b + BATCH_SIZE, toEmbed.length)}/${toEmbed.length}`);
+    if (b + BATCH_SIZE < toEmbed.length) await sleep(INTER_BATCH_DELAY_MS);
   }
 
   const mini = new MiniSearch({ fields: indexFields, storeFields, idField: 'id' });
@@ -367,7 +431,7 @@ async function main() {
   );
 
   console.log(
-    `Done. notes=${files.length} chunks=${allChunks.length} ~tokens=${Math.round(totalWords / 0.75)} embed_calls=${calls} bytes=${allChunks.length * cfg.embedDim * 4}`,
+    `Done. notes=${files.length} chunks=${allChunks.length} ~tokens=${Math.round(totalWords / 0.75)} cached=${cachedHits} embedded=${toEmbed.length} embed_calls=${calls} bytes=${allChunks.length * cfg.embedDim * 4}`,
   );
 }
 
