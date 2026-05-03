@@ -407,32 +407,67 @@ async function main() {
 
   console.log(`Cache hits: ${cachedHits}/${allChunks.length}; embedding ${toEmbed.length} new chunks.`);
 
-  let calls = 0;
-  for (let b = 0; b < toEmbed.length; b += BATCH_SIZE) {
-    const batch = toEmbed.slice(b, b + BATCH_SIZE);
-    const vectors = await embedBatch(batch.map((x) => x.input), apiKey, cfg.embedDim);
-    calls++;
-    vectors.forEach((vec, i) => {
-      const norm = l2norm(vec);
-      embeddings.set(norm, batch[i].chunkIndex * cfg.embedDim);
-    });
-    console.log(`  embedded ${Math.min(b + BATCH_SIZE, toEmbed.length)}/${toEmbed.length}`);
-    if (b + BATCH_SIZE < toEmbed.length) await sleep(INTER_BATCH_DELAY_MS);
+  // Track which chunk indices have a usable vector (cache hit OR freshly
+  // embedded). On a mid-run failure (e.g. embedding RPD exhausted), we save
+  // partial artifacts containing only the chunks with vectors so the next
+  // rebuild's cache covers them and we only retry the missing ones.
+  const haveVector = new Uint8Array(allChunks.length);
+  for (let i = 0; i < allChunks.length; i++) {
+    if (cache && cache.get(sha1(embeddingInputFor(allChunks[i])))) haveVector[i] = 1;
   }
 
+  let calls = 0;
+  let abortError = null;
+  try {
+    for (let b = 0; b < toEmbed.length; b += BATCH_SIZE) {
+      const batch = toEmbed.slice(b, b + BATCH_SIZE);
+      const vectors = await embedBatch(batch.map((x) => x.input), apiKey, cfg.embedDim);
+      calls++;
+      vectors.forEach((vec, i) => {
+        const norm = l2norm(vec);
+        embeddings.set(norm, batch[i].chunkIndex * cfg.embedDim);
+        haveVector[batch[i].chunkIndex] = 1;
+      });
+      console.log(`  embedded ${Math.min(b + BATCH_SIZE, toEmbed.length)}/${toEmbed.length}`);
+      if (b + BATCH_SIZE < toEmbed.length) await sleep(INTER_BATCH_DELAY_MS);
+    }
+  } catch (err) {
+    abortError = err;
+    console.error(`Embedding aborted: ${err.message}`);
+  }
+
+  // Build the saved set: only chunks that actually have a vector. Drop the
+  // missing ones so the artifacts are coherent and retrieval still works.
+  const savedChunks = [];
+  const savedEmbeddings = new Float32Array(allChunks.length * cfg.embedDim); // size is upper bound
+  let writeIdx = 0;
+  for (let i = 0; i < allChunks.length; i++) {
+    if (!haveVector[i]) continue;
+    const slice = embeddings.subarray(i * cfg.embedDim, (i + 1) * cfg.embedDim);
+    savedEmbeddings.set(slice, writeIdx * cfg.embedDim);
+    savedChunks.push({ ...allChunks[i], id: writeIdx });
+    writeIdx++;
+  }
+  const savedEmbView = savedEmbeddings.subarray(0, writeIdx * cfg.embedDim);
+
   const mini = new MiniSearch({ fields: indexFields, storeFields, idField: 'id' });
-  mini.addAll(allChunks);
+  mini.addAll(savedChunks);
 
   await fs.writeFile(path.join(OUT_DIR, 'search-index.json'), JSON.stringify(mini));
-  await fs.writeFile(path.join(OUT_DIR, 'chunks.json'), JSON.stringify(allChunks));
+  await fs.writeFile(path.join(OUT_DIR, 'chunks.json'), JSON.stringify(savedChunks));
   await fs.writeFile(
     path.join(OUT_DIR, 'embeddings.bin'),
-    Buffer.from(embeddings.buffer, embeddings.byteOffset, embeddings.byteLength),
+    Buffer.from(savedEmbView.buffer, savedEmbView.byteOffset, savedEmbView.byteLength),
   );
 
+  const dropped = allChunks.length - savedChunks.length;
   console.log(
-    `Done. notes=${files.length} chunks=${allChunks.length} ~tokens=${Math.round(totalWords / 0.75)} cached=${cachedHits} embedded=${toEmbed.length} embed_calls=${calls} bytes=${allChunks.length * cfg.embedDim * 4}`,
+    `Done. notes=${files.length} chunks_total=${allChunks.length} chunks_saved=${savedChunks.length} dropped=${dropped} ~tokens=${Math.round(totalWords / 0.75)} cached=${cachedHits} embedded=${writeIdx - cachedHits} embed_calls=${calls} bytes=${savedChunks.length * cfg.embedDim * 4}`,
   );
+  if (abortError) {
+    console.error(`Saved partial index (missing ${dropped} chunks). Re-run after quota reset to fill in.`);
+    process.exit(1);
+  }
 }
 
 main().catch((err) => {
