@@ -106,9 +106,10 @@ export default {
       if (!env.CHAT_PASSWORD || !timingSafeEqual(String(body.password || ''), env.CHAT_PASSWORD)) {
         return json({ error: 'unauthorized' }, 401, cors);
       }
-      if (!env.GEMINI_API_KEY) return json({ error: 'server misconfigured' }, 500, cors);
+      const embedKey = env.GEMINI_EMBED_KEY || env.GEMINI_API_KEY;
+      if (!embedKey) return json({ error: 'server misconfigured' }, 500, cors);
       const upstream = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${embedKey}`,
       );
       if (!upstream.ok) {
         const detail = await upstream.text().catch(() => '');
@@ -131,8 +132,12 @@ export default {
       return json({ error: 'unauthorized' }, 401, cors);
     }
 
-    if (!env.GEMINI_API_KEY) {
-      return json({ error: 'server misconfigured: missing GEMINI_API_KEY' }, 500, cors);
+    // Per-role keys with fallback to the legacy single key, so adding the
+    // dedicated secrets is a non-breaking migration.
+    const embedKey = env.GEMINI_EMBED_KEY || env.GEMINI_API_KEY;
+    const chatKey  = env.GEMINI_CHAT_KEY  || env.GEMINI_API_KEY;
+    if (!embedKey || !chatKey) {
+      return json({ error: 'server misconfigured: missing GEMINI key(s)' }, 500, cors);
     }
 
     if (url.pathname === '/embed') {
@@ -141,7 +146,7 @@ export default {
       if (text.length > MAX_QUERY_LEN) return json({ error: 'text too long' }, 400, cors);
 
       const upstream = await fetchWithRetry(
-        `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${embedKey}`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -181,7 +186,7 @@ export default {
       let usedModel = '';
       for (const model of CHAT_MODELS) {
         const res = await fetchWithRetry(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${env.GEMINI_API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${chatKey}`,
           {
             method: 'POST',
             headers: { 'content-type': 'application/json' },

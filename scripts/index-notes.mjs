@@ -318,9 +318,11 @@ async function embedBatch(texts, apiKey, embedDim) {
 }
 
 async function main() {
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Prefer the dedicated embedding key (paid tier); fall back to the legacy
+  // single key so existing CI setups keep working.
+  const apiKey = process.env.GEMINI_EMBED_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.error('GEMINI_API_KEY not set; aborting.');
+    console.error('GEMINI_EMBED_KEY (or GEMINI_API_KEY) not set; aborting.');
     process.exit(1);
   }
 
