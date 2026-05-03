@@ -33,6 +33,7 @@ function corsHeaders(env, origin) {
     'access-control-allow-origin': allow,
     'access-control-allow-methods': 'POST, OPTIONS',
     'access-control-allow-headers': 'content-type',
+    'access-control-expose-headers': 'x-model-used',
     'access-control-max-age': '86400',
     vary: 'origin',
   };
