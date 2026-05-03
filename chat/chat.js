@@ -14,7 +14,7 @@ const CONFIG = {
   bm25K: 14,
   semanticK: 14,
   fuseK: 6,
-  neighborRadius: 2,
+  neighborRadius: 1,
   maxContextChars: 17000, // worker hard caps at 20000; leave headroom for headings/preamble
   hardContextCap: 19500,
 };

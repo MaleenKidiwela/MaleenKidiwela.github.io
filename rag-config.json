@@ -1,15 +1,15 @@
 {
   "embedDim": 768,
   "chunking": {
-    "minChunkWords": 100,
-    "maxChunkWords": 375,
-    "overlapWords": 75
+    "minChunkWords": 180,
+    "maxChunkWords": 500,
+    "overlapWords": 100
   },
   "retrieval": {
     "bm25K": 14,
     "semanticK": 14,
     "fuseK": 6,
-    "neighborRadius": 2,
+    "neighborRadius": 1,
     "maxContextChars": 17000,
     "hardContextCap": 19500
   }
