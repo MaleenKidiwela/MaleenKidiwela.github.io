@@ -12,9 +12,9 @@ const EMBED_DIM = 768;
 const CHAT_MODELS = [
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
-  'gemini-3.1-flash-preview',
+  'gemini-3-flash-preview',
   'gemini-3.1-flash-lite-preview',
-  'gemma-4-31b',
+  'gemma-4-31b-it',
 ];
 const MAX_QUERY_LEN = 2000;
 const MAX_CONTEXT_LEN = 20000;
@@ -96,6 +96,31 @@ export default {
 
     if (req.method !== 'POST') {
       return json({ error: 'method not allowed' }, 405, cors);
+    }
+
+    if (url.pathname === '/models') {
+      // Password-gated proxy to the Gemini models list. Returns the canonical
+      // IDs available on this API key so we can verify which fallbacks resolve.
+      const body = await readJson(req);
+      if (!body) return json({ error: 'invalid json' }, 400, cors);
+      if (!env.CHAT_PASSWORD || !timingSafeEqual(String(body.password || ''), env.CHAT_PASSWORD)) {
+        return json({ error: 'unauthorized' }, 401, cors);
+      }
+      if (!env.GEMINI_API_KEY) return json({ error: 'server misconfigured' }, 500, cors);
+      const upstream = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${env.GEMINI_API_KEY}`,
+      );
+      if (!upstream.ok) {
+        const detail = await upstream.text().catch(() => '');
+        return json({ error: 'models upstream failed', status: upstream.status, detail: detail.slice(0, 500) }, 502, cors);
+      }
+      const j = await upstream.json();
+      const models = (j.models || []).map((m) => ({
+        name: m.name,
+        displayName: m.displayName,
+        supportedGenerationMethods: m.supportedGenerationMethods,
+      }));
+      return json({ models }, 200, cors);
     }
 
     const body = await readJson(req);
