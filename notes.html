@@ -1545,6 +1545,7 @@ const PROJECTS = {
     color:  'coszo',
     accent: '#f5a833',
     desc:   'OOI tidal pressure data pipeline\nfrom instrument to EarthScope archive.',
+    anchor: "Cascadia Offshore Subduction Zone Observatory.md", // AUTO-ANCHOR:COSZO
     files: [ // AUTO-FILES:COSZO:START
       "04-01-26 Notes.md",
       "04-02-26 Notes.md",
@@ -1588,6 +1589,7 @@ const PROJECTS = {
     color:  'bransfield',
     accent: '#a37cff',
     desc:   'Seismicity analysis of the\nBransfield Basin, Antarctica.',
+    anchor: "Bransfield Basin Earthquakes.md", // AUTO-ANCHOR:BransfieldEQ
     files: [ // AUTO-FILES:BransfieldEQ:START
       "04-20-26 Notes.md",
       "Bransfield Basin Earthquakes.md",
@@ -1598,6 +1600,7 @@ const PROJECTS = {
     color:  'earthnote',
     accent: '#38dba0',
     desc:   'Cascadia dv/v ambient noise\ncorrelation and velocity changes.',
+    anchor: "Cascadia dv.v.md", // AUTO-ANCHOR:Earthnote
     files: [ // AUTO-FILES:Earthnote:START
       "04-13-26 Notes.md",
       "04-14-26 Notes.md",
@@ -1735,7 +1738,9 @@ function buildConstellationNodes() {
       const d = parseNoteDate(filename);
       const isHtml = filename.endsWith('.html');
       // Pinned project anchors get a bigger radius
-      const isAnchor = /^(Cascadia dv\.v|Cascadia Offshore|Bransfield Basin Earthquakes)/i.test(filename);
+      // Anchor = the file with the most outgoing wikilinks in the project,
+      // computed at sync time and written into cfg.anchor by the regenerator.
+      const isAnchor = !!cfg.anchor && cfg.anchor === filename;
       nodes.push({
         id: `${proj}/${filename}`,
         project: proj,
@@ -1747,6 +1752,7 @@ function buildConstellationNodes() {
         isAnchor,
         isHtml,
         r: isAnchor ? 9 : (d ? 5.2 : 6),
+        pinned: isAnchor,
         x: 0, y: 0, vx: 0, vy: 0
       });
     });
@@ -2029,7 +2035,14 @@ function tickConstellation() {
 
   // Integrate
   for (const n of nodes) {
-    if (n.pinned) { n.vx = n.vy = 0; continue; }
+    if (n.pinned) {
+      // Anchor nodes ride the project's centroid so the project's most
+      // central note literally sits at the center of its node cloud.
+      const c0 = centroids[n.projectIdx];
+      if (c0) { n.x = c0.x; n.y = c0.y; }
+      n.vx = n.vy = 0;
+      continue;
+    }
     n.vx *= DAMPING; n.vy *= DAMPING;
     n.x += n.vx; n.y += n.vy;
     // Soft bounds
