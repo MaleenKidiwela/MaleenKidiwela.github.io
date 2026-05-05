@@ -241,6 +241,14 @@ header::after {
   border-color: var(--earthnote-dim);
 }
 
+.tab[data-project="Concepts"].active {
+  color: var(--text);
+  background: var(--bg3);
+  border-color: var(--border-2);
+}
+
+.tab-concepts-icon { font-size: 14px; opacity: 0.85; }
+
 .tab-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
@@ -1483,6 +1491,99 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
     white-space: pre;
   }
 }
+
+/* ── Concepts view ────────────────────────────────────────────────────── */
+.concepts-view {
+  padding: 28px 32px 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+}
+.concepts-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.concepts-title {
+  font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.01em;
+}
+.concepts-meta {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+}
+.concepts-controls {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px;
+  align-items: center;
+}
+.concepts-search {
+  flex: 1; min-width: 220px;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text); padding: 8px 12px; border-radius: 6px;
+  font-family: var(--font-mono); font-size: 13px;
+}
+.concepts-search:focus { outline: none; border-color: var(--border-2); }
+.concept-filter {
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--muted); padding: 6px 12px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 11px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.concept-filter.active {
+  color: var(--text); background: var(--bg3); border-color: var(--border-2);
+}
+.concept-list { display: flex; flex-direction: column; gap: 6px; }
+.concept-row {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+  overflow: hidden; transition: border-color 0.15s;
+}
+.concept-row:hover { border-color: var(--border-2); }
+.concept-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; cursor: pointer;
+}
+.concept-kind {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  min-width: 80px;
+}
+.concept-label {
+  flex: 1; color: var(--text); font-size: 14px; font-weight: 500;
+}
+.concept-projects { display: flex; gap: 4px; }
+.concept-proj-dot { width: 6px; height: 6px; border-radius: 50%; }
+.concept-count {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+  min-width: 24px; text-align: right;
+}
+.concept-chevron { color: var(--muted); font-size: 11px; transition: transform 0.15s; }
+.concept-row.open .concept-chevron { transform: rotate(90deg); }
+.concept-body {
+  display: none; padding: 4px 14px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.concept-row.open .concept-body { display: block; }
+.concept-chunk {
+  padding: 10px 0; border-bottom: 1px dashed var(--border);
+  font-family: var(--font-mono); font-size: 12px;
+}
+.concept-chunk:last-child { border-bottom: none; }
+.concept-chunk-head {
+  display: flex; gap: 8px; align-items: center; margin-bottom: 4px;
+  color: var(--muted);
+}
+.concept-chunk-link {
+  color: var(--text); cursor: pointer; text-decoration: none;
+}
+.concept-chunk-link:hover { color: var(--accent); text-decoration: underline; }
+.concept-chunk-snippet {
+  color: var(--text); opacity: 0.85; line-height: 1.55;
+  font-family: var(--font-sans); font-size: 13px;
+  white-space: pre-wrap; word-wrap: break-word;
+}
+.concepts-empty {
+  text-align: center; color: var(--muted);
+  font-family: var(--font-mono); font-size: 13px;
+  padding: 60px 20px;
+}
 </style>
 </head>
 <body>
@@ -1504,6 +1605,10 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
     </button>
     <button class="tab" data-project="Earthnote" onclick="selectProject('Earthnote', this)">
       <span class="tab-dot dot-earthnote"></span>Earthnote
+    </button>
+    <div class="tab-sep"></div>
+    <button class="tab" data-project="Concepts" onclick="selectProject('Concepts', this)">
+      <span class="tab-concepts-icon">◈</span>Concepts
     </button>
   </nav>
   <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
@@ -2413,6 +2518,15 @@ function selectProject(project, tabEl) {
     return;
   }
 
+  if (project === 'Concepts') {
+    document.getElementById('sidebar-toggle').style.display = 'none';
+    stopConstellation();
+    document.querySelector('.layout').classList.remove('dashboard-mode');
+    document.querySelector('main').classList.remove('dashboard-active');
+    showConcepts();
+    return;
+  }
+
   stopConstellation();
   document.getElementById('sidebar-toggle').style.display = '';
 
@@ -2671,6 +2785,167 @@ function toggleTheme() {
 marked.setOptions({ breaks: true, gfm: true });
 
 // Hash routing — open a specific file if URL contains #Project/filename
+// ── Concepts view ──────────────────────────────────────────────────────────
+let __conceptsData = null;     // { concepts, byChunk, generatedAt }
+let __conceptsChunks = null;   // array of chunk records, indexed by id
+let __conceptsState = { kind: 'all', query: '', open: new Set() };
+
+async function loadConceptsData() {
+  if (__conceptsData && __conceptsChunks) return;
+  const [cRes, kRes] = await Promise.all([
+    fetch('/public/concepts.json', { cache: 'no-cache' }),
+    fetch('/public/chunks.json',  { cache: 'no-cache' }),
+  ]);
+  if (!cRes.ok) throw new Error(`concepts.json: ${cRes.status}`);
+  if (!kRes.ok) throw new Error(`chunks.json: ${kRes.status}`);
+  __conceptsData = await cRes.json();
+  const arr = await kRes.json();
+  __conceptsChunks = new Map();
+  for (const c of arr) __conceptsChunks.set(c.id, c);
+}
+
+function projectDotColor(project) {
+  return ({
+    COSZO:        'var(--coszo)',
+    BransfieldEQ: 'var(--bransfield)',
+    Earthnote:    'var(--earthnote)',
+  })[project] || 'var(--muted)';
+}
+
+function renderConceptsList() {
+  const area = document.getElementById('content-area');
+  const data = __conceptsData;
+  if (!data || !data.concepts) return;
+
+  const q = __conceptsState.query.trim().toLowerCase();
+  const kind = __conceptsState.kind;
+  const filtered = data.concepts.filter((c) => {
+    if (kind !== 'all' && c.kind !== kind) return false;
+    if (q && !c.label.includes(q)) return false;
+    return true;
+  });
+
+  const listEl = document.getElementById('concept-list');
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="concepts-empty">No concepts match.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map((c) => {
+    const open = __conceptsState.open.has(c.id);
+    const dots = c.projects.map((p) =>
+      `<span class="concept-proj-dot" style="background:${projectDotColor(p)}" title="${p}"></span>`
+    ).join('');
+    const body = open ? renderConceptBody(c) : '';
+    const safeId = c.id.replace(/"/g, '&quot;');
+    return `
+      <div class="concept-row ${open ? 'open' : ''}" data-id="${safeId}">
+        <div class="concept-header" onclick="toggleConcept('${safeId}')">
+          <span class="concept-kind">${c.kind}</span>
+          <span class="concept-label">${escHtml(c.label)}</span>
+          <span class="concept-projects">${dots}</span>
+          <span class="concept-count">${c.count}</span>
+          <span class="concept-chevron">▸</span>
+        </div>
+        <div class="concept-body">${body}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderConceptBody(concept) {
+  const chunkHTMLs = concept.chunkIds.map((cid) => {
+    const ch = __conceptsChunks.get(cid);
+    if (!ch) return '';
+    const snippet = (ch.text || '').slice(0, 320) + (ch.text && ch.text.length > 320 ? '…' : '');
+    const sectionPath = Array.isArray(ch.sectionPath) && ch.sectionPath.length
+      ? ch.sectionPath.join(' / ') : (ch.sectionTitle || '');
+    const fname = ch.filePath ? ch.filePath.split('/').slice(-1)[0] : '';
+    const proj = ch.project || '';
+    const projColor = projectDotColor(proj);
+    const args = `'${proj}','${(fname || '').replace(/'/g, "\\'")}'`;
+    return `
+      <div class="concept-chunk">
+        <div class="concept-chunk-head">
+          <span class="concept-proj-dot" style="background:${projColor}"></span>
+          <a class="concept-chunk-link" onclick="openNoteFromConcepts(${args})">${escHtml(ch.noteTitle || fname)}</a>
+          ${sectionPath ? `<span>· ${escHtml(sectionPath)}</span>` : ''}
+        </div>
+        <div class="concept-chunk-snippet">${escHtml(snippet)}</div>
+      </div>`;
+  }).join('');
+  return chunkHTMLs || `<div class="concepts-empty">No chunks loaded.</div>`;
+}
+
+function toggleConcept(id) {
+  if (__conceptsState.open.has(id)) __conceptsState.open.delete(id);
+  else __conceptsState.open.add(id);
+  renderConceptsList();
+}
+
+function openNoteFromConcepts(project, filename) {
+  const tabEl = document.querySelector(`.tab[data-project="${project}"]`);
+  if (!tabEl) return;
+  selectProject(project, tabEl);
+  setTimeout(() => loadFileByName(project, filename), 0);
+}
+
+function setConceptKind(k) {
+  __conceptsState.kind = k;
+  document.querySelectorAll('.concept-filter').forEach((el) => {
+    el.classList.toggle('active', el.dataset.kind === k);
+  });
+  renderConceptsList();
+}
+
+async function showConcepts() {
+  const area = document.getElementById('content-area');
+  document.getElementById('bc-project').textContent = 'Concepts';
+  document.getElementById('status-text').textContent = 'Loading concepts…';
+
+  area.innerHTML = `
+    <div class="concepts-view">
+      <div class="concepts-head">
+        <div class="concepts-title">Concepts</div>
+        <div class="concepts-meta" id="concepts-meta">loading…</div>
+      </div>
+      <div class="concepts-controls">
+        <input class="concepts-search" id="concepts-search" placeholder="filter by name…" autocomplete="off"/>
+        <button class="concept-filter active" data-kind="all"        onclick="setConceptKind('all')">All</button>
+        <button class="concept-filter"        data-kind="method"     onclick="setConceptKind('method')">Methods</button>
+        <button class="concept-filter"        data-kind="instrument" onclick="setConceptKind('instrument')">Instruments</button>
+        <button class="concept-filter"        data-kind="dataset"    onclick="setConceptKind('dataset')">Datasets</button>
+        <button class="concept-filter"        data-kind="quantity"   onclick="setConceptKind('quantity')">Quantities</button>
+      </div>
+      <div class="concept-list" id="concept-list"></div>
+    </div>`;
+
+  try {
+    await loadConceptsData();
+  } catch (err) {
+    document.getElementById('concept-list').innerHTML =
+      `<div class="concepts-empty">Couldn't load concepts: ${escHtml(err.message)}.<br>` +
+      `Run the indexer to generate <code>public/concepts.json</code>.</div>`;
+    document.getElementById('concepts-meta').textContent = 'unavailable';
+    document.getElementById('status-text').textContent = 'Concepts unavailable';
+    return;
+  }
+
+  const total = __conceptsData.concepts.length;
+  const when  = __conceptsData.generatedAt
+    ? new Date(__conceptsData.generatedAt).toISOString().slice(0, 10) : '';
+  document.getElementById('concepts-meta').textContent =
+    `${total} concepts · ${__conceptsChunks.size} chunks${when ? ' · ' + when : ''}`;
+  document.getElementById('status-text').textContent = `${total} concepts`;
+
+  const search = document.getElementById('concepts-search');
+  search.addEventListener('input', (e) => {
+    __conceptsState.query = e.target.value;
+    renderConceptsList();
+  });
+
+  renderConceptsList();
+}
+
 (function () {
   const hash = location.hash.slice(1);
   if (!hash) { showDashboard(); return; }

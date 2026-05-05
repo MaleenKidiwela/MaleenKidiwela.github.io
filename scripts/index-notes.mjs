@@ -20,10 +20,13 @@ const CONFIG_PATH = path.join(ROOT, 'rag-config.json');
 
 const PROJECT_FOLDERS = ['COSZO', 'BransfieldEQ', 'Earthnote'];
 const EMBED_MODEL = 'gemini-embedding-001';
+const CONCEPT_MODEL = 'gemini-2.5-flash';
 const BATCH_SIZE = 25;
 const MAX_RETRIES = 6;
 const BASE_BACKOFF_MS = 4000;
 const INTER_BATCH_DELAY_MS = 1500;
+const CONCEPT_INTER_CALL_MS = 200;
+const CONCEPT_MIN_CHUNKS = 1; // include even singletons; UI can filter
 
 const DEFAULTS = {
   embedDim: 768,
@@ -317,6 +320,200 @@ async function embedBatch(texts, apiKey, embedDim) {
   throw lastErr;
 }
 
+// ── Concept extraction ──────────────────────────────────────────────────────
+// One Gemini 2.5 Flash call per chunk pulls out methods/instruments/datasets/
+// quantities as structured JSON. Cached by sha1(text) so daily syncs only
+// re-extract changed chunks.
+
+const CONCEPT_KINDS = ['methods', 'instruments', 'datasets', 'quantities'];
+
+const CONCEPT_SYSTEM_PROMPT = [
+  'You extract a structured concept inventory from a chunk of a geophysics research note.',
+  'Return only items SUBSTANTIVELY used, applied, computed, or discussed in the excerpt.',
+  'Exclude items that are merely name-dropped, cited, or listed as background.',
+  'Use canonical short names (e.g. "cross-correlation" not "the cross-correlation method";',
+  '"OOI broadband seismometer" not "OOI\'s broadband instrument"). Lowercase unless it is a',
+  'proper noun, acronym, or station code. Prefer the most common form.',
+  'Categories:',
+  '- methods: techniques, algorithms, procedures (e.g. cross-correlation, spectral whitening, RANSAC)',
+  '- instruments: physical sensors or platforms (e.g. OOI broadband seismometer, RBR pressure gauge)',
+  '- datasets: named data products or archives (e.g. ETOPO1, IRIS DMC, OOI cabled array)',
+  '- quantities: physical observables or derived measures (e.g. dv/v, travel-time residual, PSD)',
+  'Return an empty array for any category with no qualifying items.',
+].join('\n');
+
+const CONCEPT_RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: Object.fromEntries(
+    CONCEPT_KINDS.map((k) => [k, { type: 'array', items: { type: 'string' } }]),
+  ),
+  required: CONCEPT_KINDS,
+};
+
+function canonicalizeLabel(s) {
+  return String(s)
+    .trim()
+    .replace(/^the\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[‐-―]/g, '-') // unicode dashes → ascii
+    .toLowerCase();
+}
+
+function chunkTextHash(c) {
+  return sha1(`${c.project}::${c.noteTitle}::${c.text}`);
+}
+
+async function loadConceptCache(outDir) {
+  try {
+    const raw = await fs.readFile(path.join(outDir, 'concepts-cache.json'), 'utf8');
+    const j = JSON.parse(raw);
+    return j && typeof j === 'object' ? j : {};
+  } catch {
+    return {};
+  }
+}
+
+async function extractConceptsForChunk(chunk, apiKey) {
+  const body = {
+    systemInstruction: { parts: [{ text: CONCEPT_SYSTEM_PROMPT }] },
+    contents: [{
+      role: 'user',
+      parts: [{
+        text: [
+          `Note: ${chunk.noteTitle}`,
+          `Project: ${chunk.project}`,
+          chunk.sectionTitle ? `Section: ${chunk.sectionTitle}` : '',
+          '',
+          chunk.text,
+        ].filter(Boolean).join('\n'),
+      }],
+    }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: CONCEPT_RESPONSE_SCHEMA,
+      temperature: 0,
+      maxOutputTokens: 512,
+    },
+  };
+
+  let lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${CONCEPT_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    );
+    if (res.ok) {
+      const j = await res.json();
+      const text = j?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join('') || '';
+      try {
+        const parsed = JSON.parse(text);
+        const out = {};
+        for (const k of CONCEPT_KINDS) out[k] = Array.isArray(parsed[k]) ? parsed[k] : [];
+        return out;
+      } catch (e) {
+        return { methods: [], instruments: [], datasets: [], quantities: [] };
+      }
+    }
+    const txt = await res.text().catch(() => '');
+    lastErr = new Error(`Concept call failed (${res.status}): ${txt.slice(0, 500)}`);
+    if (res.status !== 429 && res.status < 500) throw lastErr;
+    if (attempt === MAX_RETRIES) throw lastErr;
+    let wait = BASE_BACKOFF_MS * Math.pow(2, attempt);
+    const retryHdr = res.headers.get('retry-after');
+    if (retryHdr && !Number.isNaN(parseInt(retryHdr, 10))) {
+      wait = Math.max(wait, parseInt(retryHdr, 10) * 1000);
+    }
+    console.warn(`  ${res.status} from concept API; retrying in ${Math.round(wait / 1000)}s (attempt ${attempt + 1}/${MAX_RETRIES})`);
+    await sleep(wait);
+  }
+  throw lastErr;
+}
+
+async function buildConceptIndex(savedChunks, outDir, apiKey) {
+  const cache = await loadConceptCache(outDir);
+  const nextCache = {};
+  const byChunk = {};
+  let hits = 0;
+  let calls = 0;
+
+  for (const c of savedChunks) {
+    const key = chunkTextHash(c);
+    let extracted = cache[key];
+    if (extracted) {
+      hits++;
+    } else {
+      try {
+        extracted = await extractConceptsForChunk(c, apiKey);
+        calls++;
+        if (calls % 10 === 0) console.log(`  concepts: ${calls} chunks extracted`);
+      } catch (err) {
+        console.error(`  concept extraction failed for chunk ${c.id}: ${err.message}`);
+        extracted = { methods: [], instruments: [], datasets: [], quantities: [] };
+      }
+      await sleep(CONCEPT_INTER_CALL_MS);
+    }
+    nextCache[key] = extracted;
+    byChunk[c.id] = extracted;
+  }
+
+  // Build inverted index: (kind, canonical-label) → chunk ids.
+  const conceptMap = new Map();
+  for (const c of savedChunks) {
+    const ex = byChunk[c.id];
+    if (!ex) continue;
+    for (const kind of CONCEPT_KINDS) {
+      const seen = new Set();
+      for (const raw of ex[kind] || []) {
+        const label = canonicalizeLabel(raw);
+        if (!label || seen.has(label)) continue;
+        seen.add(label);
+        const id = `${kind}:${label}`;
+        let entry = conceptMap.get(id);
+        if (!entry) {
+          entry = {
+            id,
+            label,
+            display: String(raw).trim(),
+            kind: kind.replace(/s$/, ''),
+            chunkIds: [],
+            noteIds: new Set(),
+            projects: new Set(),
+          };
+          conceptMap.set(id, entry);
+        }
+        entry.chunkIds.push(c.id);
+        entry.noteIds.add(c.noteId);
+        entry.projects.add(c.project);
+      }
+    }
+  }
+
+  const concepts = [...conceptMap.values()]
+    .filter((e) => e.chunkIds.length >= CONCEPT_MIN_CHUNKS)
+    .map((e) => ({
+      id: e.id,
+      label: e.label,
+      display: e.display,
+      kind: e.kind,
+      chunkIds: e.chunkIds,
+      noteIds: [...e.noteIds],
+      projects: [...e.projects],
+      count: e.chunkIds.length,
+    }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+  return {
+    concepts,
+    byChunk,
+    cache: nextCache,
+    stats: { hits, calls, totalConcepts: concepts.length },
+  };
+}
+
 async function main() {
   // Prefer the dedicated embedding key (paid tier); fall back to the legacy
   // single key so existing CI setups keep working.
@@ -469,6 +666,37 @@ async function main() {
   if (abortError) {
     console.error(`Saved partial index (missing ${dropped} chunks). Re-run after quota reset to fill in.`);
     process.exit(1);
+  }
+
+  // ── Concept extraction (best-effort) ─────────────────────────────────────
+  // Runs after the RAG artifacts are safely on disk. A failure here only
+  // skips the Concepts tab; the chat pipeline is unaffected.
+  if (process.env.SKIP_CONCEPTS === '1') {
+    console.log('SKIP_CONCEPTS=1 set; skipping concept extraction.');
+    return;
+  }
+  const conceptKey = process.env.GEMINI_CONCEPT_KEY || apiKey;
+  try {
+    console.log('Extracting concepts via gemini-2.5-flash …');
+    const t0 = Date.now();
+    const { concepts, byChunk, cache: nextCache, stats } = await buildConceptIndex(savedChunks, OUT_DIR, conceptKey);
+    const generatedAt = new Date().toISOString();
+    await fs.writeFile(
+      path.join(OUT_DIR, 'concepts.json'),
+      JSON.stringify({ generatedAt, concepts, byChunk }),
+    );
+    await fs.writeFile(
+      path.join(OUT_DIR, 'concepts-cache.json'),
+      JSON.stringify(nextCache),
+    );
+    const ms = Date.now() - t0;
+    console.log(
+      `Concepts: ${stats.totalConcepts} unique across ${savedChunks.length} chunks ` +
+      `(cache=${stats.hits}, new=${stats.calls}, ${Math.round(ms / 1000)}s).`,
+    );
+  } catch (err) {
+    console.error(`Concept extraction failed: ${err.message}`);
+    console.error('RAG artifacts are still saved; Concepts tab may be stale.');
   }
 }
 
