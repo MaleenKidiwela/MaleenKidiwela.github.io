@@ -1,11 +1,8 @@
-# HYS14 — Full Correction Method
 
 End-to-end pipeline that detects the HYS14 (OOI Hydrate Ridge OBS) clock
 error from ambient-noise cross-correlation and applies a per-sample
 timestamp correction to the raw MiniSEED data, with closed-loop
-validation. Companion document to `HYS14 — Timing Diagnostic.md`
-(diagnosis-only) and `Chronos — Implementation Plan.md` (project
-context).
+validation.
 
 ---
 
