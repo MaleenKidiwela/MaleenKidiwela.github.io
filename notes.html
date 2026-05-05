@@ -2055,7 +2055,7 @@ function tickConstellation() {
     ctx.stroke();
   }
 
-  // Cross-project links on same date
+  // Same-date links — kept within a project only, never across projects.
   const byDate = {};
   for (const n of nodes) {
     if (!n.date) continue;
@@ -2069,6 +2069,7 @@ function tickConstellation() {
     ctx.strokeStyle = dimmed ? 'rgba(232,232,234,0.02)' : 'rgba(232,232,234,0.10)';
     for (let i = 0; i < group.length - 1; i++) {
       for (let j = i + 1; j < group.length; j++) {
+        if (group[i].project !== group[j].project) continue;
         ctx.beginPath();
         ctx.moveTo(group[i].x, group[i].y);
         ctx.lineTo(group[j].x, group[j].y);
