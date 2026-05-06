@@ -1584,6 +1584,72 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
   font-family: var(--font-mono); font-size: 13px;
   padding: 60px 20px;
 }
+
+/* ── Concepts: List/Graph view toggle ─────────────────────────────────── */
+.concepts-view-toggle {
+  display: inline-flex; border: 1px solid var(--border); border-radius: 6px;
+  overflow: hidden; background: var(--bg2);
+}
+.concepts-view-btn {
+  background: transparent; border: 0; color: var(--muted);
+  padding: 6px 14px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.concepts-view-btn.active { color: var(--text); background: var(--bg3); }
+.concepts-view-btn + .concepts-view-btn { border-left: 1px solid var(--border); }
+
+/* ── Concepts: Graph view ─────────────────────────────────────────────── */
+.concepts-graph-wrap {
+  position: relative; width: 100%; height: 70vh; min-height: 460px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg2); overflow: hidden;
+}
+.concepts-graph-svg { width: 100%; height: 100%; cursor: grab; display: block; }
+.concepts-graph-svg:active { cursor: grabbing; }
+.cg-link { stroke: var(--border-2); stroke-opacity: 0.55; stroke-width: 1; }
+.cg-link.dim { stroke-opacity: 0.1; }
+.cg-link.hot { stroke: var(--accent); stroke-opacity: 0.9; stroke-width: 1.6; }
+.cg-node circle { stroke: var(--bg); stroke-width: 1.5; cursor: pointer; transition: opacity 0.15s; }
+.cg-node.dim circle { opacity: 0.18; }
+.cg-node text {
+  font-family: var(--font-mono); font-size: 10px; fill: var(--text);
+  pointer-events: none; user-select: none;
+}
+.cg-node.dim text { opacity: 0.18; }
+.cg-legend {
+  position: absolute; top: 12px; left: 12px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px; font-family: var(--font-mono);
+  font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 4px;
+}
+.cg-legend-row { display: flex; align-items: center; gap: 8px; }
+.cg-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+.cg-tip {
+  position: absolute; pointer-events: none;
+  background: var(--bg); border: 1px solid var(--border-2);
+  border-radius: 4px; padding: 6px 10px; font-family: var(--font-mono);
+  font-size: 11px; color: var(--text); display: none; max-width: 260px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  z-index: 5;
+}
+.cg-side {
+  position: absolute; top: 12px; right: 12px; bottom: 12px; width: 320px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; overflow-y: auto; display: none;
+  font-family: var(--font-sans); font-size: 13px;
+}
+.cg-side.open { display: block; }
+.cg-side-close {
+  position: absolute; top: 8px; right: 10px; cursor: pointer;
+  background: transparent; border: 0; color: var(--muted); font-size: 16px;
+}
+.cg-side-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.cg-side-kind {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
+}
+.cg-side-list { display: flex; flex-direction: column; gap: 10px; }
 </style>
 </head>
 <body>
@@ -2788,7 +2854,9 @@ marked.setOptions({ breaks: true, gfm: true });
 // ── Concepts view ──────────────────────────────────────────────────────────
 let __conceptsData = null;     // { concepts, byChunk, generatedAt }
 let __conceptsChunks = null;   // array of chunk records, indexed by id
-let __conceptsState = { kind: 'all', query: '', open: new Set() };
+let __conceptsState = { kind: 'all', query: '', open: new Set(), view: 'list' };
+let __d3LoadPromise = null;
+let __conceptsGraph = null; // { simulation, svg } so we can stop on view-switch
 
 async function loadConceptsData() {
   if (__conceptsData && __conceptsChunks) return;
@@ -2825,6 +2893,9 @@ function renderConceptsList() {
     return true;
   });
 
+  const host = document.getElementById('concepts-render');
+  if (!host) return;
+  host.innerHTML = `<div class="concept-list" id="concept-list"></div>`;
   const listEl = document.getElementById('concept-list');
   if (!filtered.length) {
     listEl.innerHTML = `<div class="concepts-empty">No concepts match.</div>`;
@@ -2894,7 +2965,7 @@ function setConceptKind(k) {
   document.querySelectorAll('.concept-filter').forEach((el) => {
     el.classList.toggle('active', el.dataset.kind === k);
   });
-  renderConceptsList();
+  renderConcepts();
 }
 
 async function showConcepts() {
@@ -2909,6 +2980,10 @@ async function showConcepts() {
         <div class="concepts-meta" id="concepts-meta">loading…</div>
       </div>
       <div class="concepts-controls">
+        <div class="concepts-view-toggle">
+          <button class="concepts-view-btn ${__conceptsState.view === 'list' ? 'active' : ''}" data-view="list"  onclick="setConceptView('list')">List</button>
+          <button class="concepts-view-btn ${__conceptsState.view === 'graph' ? 'active' : ''}" data-view="graph" onclick="setConceptView('graph')">Graph</button>
+        </div>
         <input class="concepts-search" id="concepts-search" placeholder="filter by name…" autocomplete="off"/>
         <button class="concept-filter active" data-kind="all"        onclick="setConceptKind('all')">All</button>
         <button class="concept-filter"        data-kind="method"     onclick="setConceptKind('method')">Methods</button>
@@ -2916,13 +2991,13 @@ async function showConcepts() {
         <button class="concept-filter"        data-kind="dataset"    onclick="setConceptKind('dataset')">Datasets</button>
         <button class="concept-filter"        data-kind="quantity"   onclick="setConceptKind('quantity')">Quantities</button>
       </div>
-      <div class="concept-list" id="concept-list"></div>
+      <div id="concepts-render"></div>
     </div>`;
 
   try {
     await loadConceptsData();
   } catch (err) {
-    document.getElementById('concept-list').innerHTML =
+    document.getElementById('concepts-render').innerHTML =
       `<div class="concepts-empty">Couldn't load concepts: ${escHtml(err.message)}.<br>` +
       `Run the indexer to generate <code>public/concepts.json</code>.</div>`;
     document.getElementById('concepts-meta').textContent = 'unavailable';
@@ -2940,10 +3015,252 @@ async function showConcepts() {
   const search = document.getElementById('concepts-search');
   search.addEventListener('input', (e) => {
     __conceptsState.query = e.target.value;
-    renderConceptsList();
+    renderConcepts();
   });
 
-  renderConceptsList();
+  renderConcepts();
+}
+
+// ── Concepts: list/graph dispatcher ────────────────────────────────────────
+function renderConcepts() {
+  if (__conceptsGraph) {
+    try { __conceptsGraph.simulation && __conceptsGraph.simulation.stop(); } catch {}
+    __conceptsGraph = null;
+  }
+  if (__conceptsState.view === 'graph') renderConceptsGraph();
+  else renderConceptsList();
+}
+
+function setConceptView(v) {
+  if (__conceptsState.view === v) return;
+  __conceptsState.view = v;
+  document.querySelectorAll('.concepts-view-btn').forEach((b) => {
+    b.classList.toggle('active', b.dataset.view === v);
+  });
+  renderConcepts();
+}
+
+// ── Concepts: graph view ───────────────────────────────────────────────────
+function ensureD3() {
+  if (window.d3 && window.d3.forceSimulation) return Promise.resolve();
+  if (__d3LoadPromise) return __d3LoadPromise;
+  __d3LoadPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js';
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Failed to load d3'));
+    document.head.appendChild(s);
+  });
+  return __d3LoadPromise;
+}
+
+function conceptKindColor(kind) {
+  return ({
+    method:     '#7aa2f7',
+    instrument: '#bb9af7',
+    dataset:    '#9ece6a',
+    quantity:   '#e0af68',
+  })[kind] || '#888';
+}
+
+function buildGraphData() {
+  const q = __conceptsState.query.trim().toLowerCase();
+  const kindFilter = __conceptsState.kind;
+
+  const concepts = __conceptsData.concepts.filter((c) => {
+    if (kindFilter !== 'all' && c.kind !== kindFilter) return false;
+    if (q && !c.label.includes(q)) return false;
+    return true;
+  });
+
+  const noteIds = new Set();
+  for (const c of concepts) for (const n of c.noteIds) noteIds.add(n);
+
+  const noteMeta = new Map();
+  for (const ch of __conceptsChunks.values()) {
+    if (!noteIds.has(ch.noteId)) continue;
+    if (noteMeta.has(ch.noteId)) continue;
+    noteMeta.set(ch.noteId, { title: ch.noteTitle || ch.filePath, project: ch.project, filePath: ch.filePath });
+  }
+
+  const nodes = [];
+  for (const c of concepts) {
+    nodes.push({
+      id: 'c::' + c.id,
+      type: 'concept',
+      label: c.label,
+      kind: c.kind,
+      count: c.count,
+      raw: c,
+    });
+  }
+  for (const [nid, meta] of noteMeta) {
+    nodes.push({
+      id: 'n::' + nid,
+      type: 'note',
+      label: meta.title,
+      project: meta.project,
+      filePath: meta.filePath,
+      noteId: nid,
+    });
+  }
+
+  const links = [];
+  for (const c of concepts) {
+    for (const nid of c.noteIds) {
+      if (!noteMeta.has(nid)) continue;
+      links.push({ source: 'c::' + c.id, target: 'n::' + nid });
+    }
+  }
+  return { nodes, links };
+}
+
+function renderConceptsGraph() {
+  const host = document.getElementById('concepts-render');
+  host.innerHTML = `
+    <div class="concepts-graph-wrap" id="cg-wrap">
+      <div class="cg-legend">
+        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#7aa2f7"></span>method</div>
+        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#bb9af7"></span>instrument</div>
+        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#9ece6a"></span>dataset</div>
+        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#e0af68"></span>quantity</div>
+        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:var(--coszo)"></span>COSZO note</div>
+        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:var(--bransfield)"></span>Bransfield note</div>
+        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:var(--earthnote)"></span>Earthnote note</div>
+      </div>
+      <svg class="concepts-graph-svg" id="cg-svg"></svg>
+      <div class="cg-tip" id="cg-tip"></div>
+      <aside class="cg-side" id="cg-side">
+        <button class="cg-side-close" onclick="closeGraphSide()">×</button>
+        <div class="cg-side-title" id="cg-side-title"></div>
+        <div class="cg-side-kind" id="cg-side-kind"></div>
+        <div class="cg-side-list" id="cg-side-list"></div>
+      </aside>
+    </div>`;
+
+  ensureD3()
+    .then(() => mountGraph(buildGraphData()))
+    .catch((err) => {
+      host.innerHTML = `<div class="concepts-empty">Couldn't load d3: ${escHtml(err.message)}</div>`;
+    });
+}
+
+function mountGraph(data) {
+  const d3 = window.d3;
+  const wrap = document.getElementById('cg-wrap');
+  const svgEl = document.getElementById('cg-svg');
+  const width = wrap.clientWidth;
+  const height = wrap.clientHeight;
+
+  const svg = d3.select(svgEl).attr('viewBox', [0, 0, width, height]);
+  svg.selectAll('*').remove();
+
+  const g = svg.append('g');
+  const zoom = d3.zoom().scaleExtent([0.2, 4]).on('zoom', (e) => g.attr('transform', e.transform));
+  svg.call(zoom);
+
+  const link = g.append('g').selectAll('line')
+    .data(data.links).enter()
+    .append('line').attr('class', 'cg-link');
+
+  const node = g.append('g').selectAll('g')
+    .data(data.nodes).enter()
+    .append('g').attr('class', 'cg-node');
+
+  node.append('circle')
+    .attr('r', (d) => d.type === 'concept' ? Math.min(14, 5 + Math.sqrt(d.count) * 2.5) : 5)
+    .attr('fill', (d) => d.type === 'concept' ? conceptKindColor(d.kind) : projectDotColor(d.project));
+
+  node.append('text')
+    .attr('dx', (d) => d.type === 'concept' ? 10 : 8)
+    .attr('dy', '0.32em')
+    .text((d) => d.label.length > 32 ? d.label.slice(0, 30) + '…' : d.label);
+
+  const tip = document.getElementById('cg-tip');
+  node
+    .on('mouseenter', (e, d) => {
+      tip.style.display = 'block';
+      tip.textContent = d.type === 'concept'
+        ? `${d.kind} · ${d.label} · ${d.count} chunk${d.count === 1 ? '' : 's'}`
+        : `${d.project} · ${d.label}`;
+      highlightNeighbors(d, true);
+    })
+    .on('mousemove', (e) => {
+      const r = wrap.getBoundingClientRect();
+      tip.style.left = (e.clientX - r.left + 12) + 'px';
+      tip.style.top  = (e.clientY - r.top  + 12) + 'px';
+    })
+    .on('mouseleave', () => {
+      tip.style.display = 'none';
+      highlightNeighbors(null, false);
+    })
+    .on('click', (e, d) => {
+      if (d.type === 'note') openNoteFromConcepts(d.project, d.filePath.split('/').slice(-1)[0]);
+      else openConceptSide(d.raw);
+    });
+
+  function highlightNeighbors(d, on) {
+    if (!on || !d) {
+      node.classed('dim', false);
+      link.classed('dim', false).classed('hot', false);
+      return;
+    }
+    const neighbors = new Set([d.id]);
+    data.links.forEach((l) => {
+      const sId = typeof l.source === 'object' ? l.source.id : l.source;
+      const tId = typeof l.target === 'object' ? l.target.id : l.target;
+      if (sId === d.id) neighbors.add(tId);
+      if (tId === d.id) neighbors.add(sId);
+    });
+    node.classed('dim', (n) => !neighbors.has(n.id));
+    link
+      .classed('hot', (l) => {
+        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+        return sId === d.id || tId === d.id;
+      })
+      .classed('dim', (l) => {
+        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+        return !(sId === d.id || tId === d.id);
+      });
+  }
+
+  const sim = d3.forceSimulation(data.nodes)
+    .force('link', d3.forceLink(data.links).id((d) => d.id).distance(70).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(-180))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius((d) => d.type === 'concept' ? 18 : 10))
+    .on('tick', () => {
+      link
+        .attr('x1', (d) => d.source.x).attr('y1', (d) => d.source.y)
+        .attr('x2', (d) => d.target.x).attr('y2', (d) => d.target.y);
+      node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    });
+
+  node.call(d3.drag()
+    .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on('end',   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+  __conceptsGraph = { simulation: sim, svg };
+}
+
+function openConceptSide(concept) {
+  const side  = document.getElementById('cg-side');
+  const title = document.getElementById('cg-side-title');
+  const kind  = document.getElementById('cg-side-kind');
+  const list  = document.getElementById('cg-side-list');
+  if (!side) return;
+  title.textContent = concept.label;
+  kind.textContent  = `${concept.kind} · ${concept.count} chunk${concept.count === 1 ? '' : 's'}`;
+  list.innerHTML = renderConceptBody(concept);
+  side.classList.add('open');
+}
+function closeGraphSide() {
+  const side = document.getElementById('cg-side');
+  if (side) side.classList.remove('open');
 }
 
 (function () {
