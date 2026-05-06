@@ -309,11 +309,30 @@ header::after {
 main.concepts-active .content-header { display: none; }
 main.concepts-active .content-scroll { padding: 0; height: 100%; }
 main.concepts-active #content-area  { padding: 0; height: 100%; }
-/* Hide the mobile sandwich button + any leftover overlay when in concepts
-   mode — there's nothing for them to reveal. */
-.layout.concepts-mode ~ * .sidebar-toggle,
-body:has(.layout.concepts-mode) .sidebar-toggle { display: none !important; }
-body:has(.layout.concepts-mode) .sidebar-overlay { display: none !important; }
+
+/* Mobile section menu inside the aside — hidden on desktop. */
+.mobile-tabs { display: none; }
+.mobile-tabs-eyebrow {
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--text-3); letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 16px 16px 8px;
+}
+.mobile-tab {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; margin: 0;
+  background: transparent; border: 0;
+  color: var(--text-2); cursor: pointer;
+  font-family: var(--font-sans); font-size: 14px;
+  text-align: left; width: 100%;
+  border-left: 2px solid transparent;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.mobile-tab:hover { background: var(--bg3); color: var(--text); }
+.mobile-tab.active {
+  background: var(--bg3); color: var(--text);
+  border-left-color: var(--accent);
+}
 
 /* ── Sidebar ── */
 aside {
@@ -1500,6 +1519,36 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
     word-break: normal;
     white-space: pre;
   }
+
+  /* Mobile: hide horizontal project-tabs strip, show vertical menu in aside.
+     The sandwich button is the way to switch tabs on small viewports. */
+  header .project-tabs { display: none; }
+  .sidebar-toggle { display: flex !important; }
+  .mobile-tabs { display: flex; flex-direction: column; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+
+  /* Concepts view: tighter padding on mobile */
+  .concepts-view { padding: 14px 14px 18px; }
+
+  /* Graph HUD: compact + collapsible (starts collapsed on mobile via JS) */
+  .cg-hud { top: 10px; left: 10px; padding: 10px 12px; max-width: 200px; }
+  .cg-hud.is-collapsed { padding: 7px 12px; }
+  .cg-hud-title { font-size: 13px; margin-bottom: 8px; }
+  .cg-hud-eyebrow { font-size: 9px; }
+  .cg-hud-row { font-size: 10px; gap: 7px; }
+  .cg-hud-stats { row-gap: 3px; column-gap: 10px; padding-bottom: 9px; margin-bottom: 9px; }
+  .cg-hud-section + .cg-hud-section { margin-top: 8px; padding-top: 8px; }
+
+  /* Side panel becomes a bottom sheet on mobile */
+  .cg-side {
+    top: auto; right: 10px; bottom: 10px; left: 10px;
+    width: auto; max-width: none;
+    max-height: 60vh;
+    padding: 22px 18px 18px;
+  }
+  .cg-side-title { font-size: 21px; }
+
+  /* Status hint shrinks */
+  .cg-status { bottom: 10px; right: 12px; font-size: 9px; max-width: 50%; }
 }
 
 /* ── Concepts view ────────────────────────────────────────────────────── */
@@ -1799,9 +1848,28 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px 16px 12px;
-  pointer-events: none;
   min-width: 168px;
+  max-width: 240px;
+  z-index: 4;
 }
+.cg-hud-toggle {
+  position: absolute; top: 6px; right: 8px;
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--text-3); font-size: 16px; line-height: 1;
+  padding: 4px 6px;
+  font-family: var(--font-sans);
+}
+.cg-hud-toggle:hover { color: var(--text); }
+.cg-hud.is-collapsed { padding: 8px 14px; min-width: 0; }
+.cg-hud.is-collapsed > :not(.cg-hud-toggle):not(.cg-hud-collapsed-label) { display: none; }
+.cg-hud-collapsed-label {
+  display: none;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2); letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding-right: 22px;
+}
+.cg-hud.is-collapsed .cg-hud-collapsed-label { display: block; }
 .cg-hud-eyebrow {
   font-family: var(--font-mono); font-size: 9.5px;
   color: var(--text-3);
@@ -2001,6 +2069,24 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div class="layout">
   <aside>
+    <nav class="mobile-tabs" id="mobile-tabs">
+      <div class="mobile-tabs-eyebrow">Sections</div>
+      <button class="mobile-tab" data-project="Dashboard"    onclick="selectProject('Dashboard', this)">
+        <span class="tab-dash-icon">⊞</span><span>Dashboard</span>
+      </button>
+      <button class="mobile-tab" data-project="COSZO"        onclick="selectProject('COSZO', this)">
+        <span class="tab-dot dot-coszo"></span><span>COSZO</span>
+      </button>
+      <button class="mobile-tab" data-project="BransfieldEQ" onclick="selectProject('BransfieldEQ', this)">
+        <span class="tab-dot dot-bransfield"></span><span>BransfieldEQ</span>
+      </button>
+      <button class="mobile-tab" data-project="Earthnote"    onclick="selectProject('Earthnote', this)">
+        <span class="tab-dot dot-earthnote"></span><span>Earthnote</span>
+      </button>
+      <button class="mobile-tab" data-project="Concepts"     onclick="selectProject('Concepts', this)">
+        <span class="tab-concepts-icon">◈</span><span>Concepts</span>
+      </button>
+    </nav>
     <div class="sidebar-header" id="sidebar-label">Explorer</div>
     <div class="file-tree" id="file-tree"></div>
   </aside>
@@ -2889,8 +2975,13 @@ function renderSidebar(project) {
 
 // ── Project switch ─────────────────────────────────────────────────────────
 function selectProject(project, tabEl) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
+  // Sync active state across both the header tabs and the mobile-menu tabs.
+  document.querySelectorAll('.tab, .mobile-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll(
+    `.tab[data-project="${project}"], .mobile-tab[data-project="${project}"]`,
+  ).forEach(t => t.classList.add('active'));
+  // Close the mobile sheet after a tap.
+  closeSidebar();
 
   if (project === 'Dashboard') {
     document.getElementById('sidebar-toggle').style.display = 'none';
@@ -3265,6 +3356,14 @@ function renderConceptBody(concept) {
   return chunkHTMLs || `<div class="concepts-empty">No chunks loaded.</div>`;
 }
 
+function toggleGraphHud() {
+  const hud = document.getElementById('cg-hud');
+  if (!hud) return;
+  const collapsed = hud.classList.toggle('is-collapsed');
+  const btn = document.getElementById('cg-hud-toggle');
+  if (btn) btn.textContent = collapsed ? '▸' : '×';
+}
+
 function toggleConcept(id) {
   if (__conceptsState.open.has(id)) __conceptsState.open.delete(id);
   else __conceptsState.open.add(id);
@@ -3467,7 +3566,9 @@ function renderConceptsGraph() {
   host.innerHTML = `
     <div class="concepts-graph-wrap" id="cg-wrap">
       <svg class="concepts-graph-svg" id="cg-svg"></svg>
-      <div class="cg-hud">
+      <div class="cg-hud" id="cg-hud">
+        <button class="cg-hud-toggle" id="cg-hud-toggle" onclick="toggleGraphHud()" aria-label="Toggle legend">×</button>
+        <div class="cg-hud-collapsed-label">Legend</div>
         <div class="cg-hud-eyebrow">Plate · I</div>
         <div class="cg-hud-title">Concept atlas</div>
         <div class="cg-hud-stats" id="cg-hud-stats"></div>
@@ -3697,6 +3798,14 @@ function mountGraph(data) {
   // Initial summary-mode state. Recomputed on filter/search changes via
   // updateGraphSummaryMode().
   setTimeout(updateGraphSummaryMode, 0);
+
+  // Start HUD collapsed on small viewports — it covers too much of the canvas.
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    const hud = document.getElementById('cg-hud');
+    const btn = document.getElementById('cg-hud-toggle');
+    if (hud) hud.classList.add('is-collapsed');
+    if (btn) btn.textContent = '▸';
+  }
 }
 
 // Fit the entire force-laid-out graph into the canvas with a small margin.
