@@ -49,11 +49,21 @@ jobs:
           if git diff --staged --quiet; then
             echo "No index changes."
             echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "chore: rebuild RAG index"
-            git push
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          git commit -m "chore: rebuild RAG index"
+          # Push with rebase-on-conflict retry. Two pushes can race when an
+          # author lands a follow-up commit while the indexer is running.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "push attempt $attempt rejected; rebasing onto origin/main"
+            git pull --rebase --autostash origin main
+          done
+          echo "::error::failed to push rebuilt index after 5 attempts"
+          exit 1
 
       # GITHUB_TOKEN pushes don't cascade into other workflows, so the
       # deploy-pages workflow won't fire on its own when we push public/.
