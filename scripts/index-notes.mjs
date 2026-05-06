@@ -329,16 +329,49 @@ const CONCEPT_KINDS = ['methods', 'instruments', 'datasets', 'quantities'];
 
 const CONCEPT_SYSTEM_PROMPT = [
   'You extract a structured concept inventory from a chunk of a geophysics research note.',
-  'Return only items SUBSTANTIVELY used, applied, computed, or discussed in the excerpt.',
-  'Exclude items that are merely name-dropped, cited, or listed as background.',
-  'Use canonical short names (e.g. "cross-correlation" not "the cross-correlation method";',
-  '"OOI broadband seismometer" not "OOI\'s broadband instrument"). Lowercase unless it is a',
-  'proper noun, acronym, or station code. Prefer the most common form.',
-  'Categories:',
-  '- methods: techniques, algorithms, procedures (e.g. cross-correlation, spectral whitening, RANSAC)',
-  '- instruments: physical sensors or platforms (e.g. OOI broadband seismometer, RBR pressure gauge)',
-  '- datasets: named data products or archives (e.g. ETOPO1, IRIS DMC, OOI cabled array)',
-  '- quantities: physical observables or derived measures (e.g. dv/v, travel-time residual, PSD)',
+  '',
+  'CATEGORIES',
+  '- methods: techniques, algorithms, procedures, processing steps',
+  '  (e.g. cross-correlation, spectral whitening, RANSAC, traveltime tomography, beamforming)',
+  '- instruments: physical sensors, platforms, deployments',
+  '  (e.g. OOI broadband seismometer, RBR pressure gauge, 3-D single-point current meter, ADCP, OBS)',
+  '- datasets: named data products, archives, registries, surveys, or instrument inventories',
+  '  (e.g. ETOPO1, IRIS DMC, OOI cabled array, USGS ANSS catalog)',
+  '- quantities: physical observables and measured or derived quantities',
+  '  (e.g. dv/v, travel-time residual, PSD, sea-floor pressure, RMS amplitude)',
+  '',
+  'WHAT TO INCLUDE — extract any named item that is SUBSTANTIVELY present.',
+  'Substantive means AT LEAST ONE of:',
+  '  (a) Used, applied, computed, fit, inverted, stacked, processed, measured, or compared',
+  '      in the work described in the excerpt.',
+  '  (b) Described, characterized, or attributed with concrete details — location, deployment,',
+  '      manufacturer, type, status, configuration, depth, sampling rate, time span, frequency',
+  '      band, parameters, units, etc.',
+  '  (c) The explicit subject of an enumeration, when the excerpt\'s purpose is to catalog,',
+  '      inventory, or register items of that category. In a catalog or reference note, every',
+  '      named entry with even a brief characterizing detail counts — do NOT exclude items just',
+  '      because they appear in a list or table.',
+  '',
+  'WHAT TO EXCLUDE',
+  '- Items mentioned only in passing prose with no characterization or use.',
+  '- Items appearing only as citations to outside sources ("as in Smith 2019",',
+  '  "following Aki & Richards", "see Wapenaar et al."), or in "see also" / cross-reference',
+  '  lists, or in bibliographies.',
+  '- Generic, non-named entities ("a seismometer", "the dataset", "the survey") with no',
+  '  proper name attached.',
+  '- Software libraries / packages unless they ARE a method or processing step. For example,',
+  '  extract "cross-correlation" not "ObsPy"; extract "Bayesian inversion" not "PyMC".',
+  '- Authors, institutions, projects, vessels, or people — those are not concepts.',
+  '',
+  'NAMING',
+  '- Use canonical short names: "cross-correlation" not "the cross-correlation method";',
+  '  "OOI broadband seismometer" not "OOI\'s broadband instrument".',
+  '- Lowercase unless the term is a proper noun, an acronym, or a station/instrument code',
+  '  (e.g. "ADCP", "HYS14", "ETOPO1", "IRIS DMC").',
+  '- If an item appears under both a full name and its acronym in the same excerpt, return',
+  '  the form most commonly used in the literature; do NOT include both.',
+  '- Each item should appear at most once across all four categories.',
+  '',
   'Return an empty array for any category with no qualifying items.',
 ].join('\n');
 
@@ -373,7 +406,29 @@ async function loadConceptCache(outDir) {
   }
 }
 
+// Detect whether a chunk is a catalog/inventory section vs narrative prose.
+// Three independent signals; any one trips the flag. We surface this to the
+// LLM via the user message so its (c) "explicit subject of enumeration" rule
+// activates with high confidence.
+function isCatalogChunk(chunk) {
+  const path = (chunk.filePath || chunk.noteId || '').toLowerCase();
+  const filenameHint =
+    /(catalog|catalogue|inventory|registry|index[_\s-]of|list[_\s-]of|_list\b|instruments|datasets|data[_\s-]?notes|reference[_\s-]?notes)/.test(path);
+  if (filenameHint) return true;
+
+  const sectionStr = (Array.isArray(chunk.sectionPath) ? chunk.sectionPath.join(' ') : '').toLowerCase();
+  if (/(catalog|catalogue|inventory|registry|list of|table of|reference)/.test(sectionStr)) return true;
+
+  const lines = String(chunk.text || '').split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length >= 4) {
+    const listish = lines.filter((l) => /^([-*+]\s|\d+[.)]\s|\|)/.test(l)).length;
+    if (listish / lines.length >= 0.4) return true;
+  }
+  return false;
+}
+
 async function extractConceptsForChunk(chunk, apiKey) {
+  const catalog = isCatalogChunk(chunk);
   const body = {
     systemInstruction: { parts: [{ text: CONCEPT_SYSTEM_PROMPT }] },
     contents: [{
@@ -383,6 +438,9 @@ async function extractConceptsForChunk(chunk, apiKey) {
           `Note: ${chunk.noteTitle}`,
           `Project: ${chunk.project}`,
           chunk.sectionTitle ? `Section: ${chunk.sectionTitle}` : '',
+          catalog
+            ? 'Mode: CATALOG / INVENTORY — this excerpt\'s purpose is to enumerate or characterize items. Apply the (c) substantive-criterion liberally: every named entry with any characterizing detail (location, parameters, status, type, etc.) is in scope. Do NOT exclude items just because they appear in a list or table.'
+            : '',
           '',
           chunk.text,
         ].filter(Boolean).join('\n'),
