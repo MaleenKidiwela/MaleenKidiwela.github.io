@@ -548,6 +548,28 @@ async function buildConceptIndex(savedChunks, outDir, apiKey) {
     }
   }
 
+  // Canonicalize network.station code duplicates: when both "uw.cbs" and "cbs"
+  // appear as instruments, merge the bare form into the network-prefixed form.
+  // Pattern: 1-3 letter network, dot, alnum station (uw.cbs, cn.clrs, iu.cor).
+  const NETWORK_RE = /^([a-z]{1,3})\.([a-z0-9]+)$/;
+  const bareToFull = new Map();
+  for (const entry of conceptMap.values()) {
+    if (entry.kind !== 'instrument') continue;
+    const m = entry.label.match(NETWORK_RE);
+    if (m) bareToFull.set(m[2], entry.id);
+  }
+  for (const [bareLabel, fullId] of bareToFull) {
+    const bareId   = `instruments:${bareLabel}`;
+    if (bareId === fullId) continue;
+    const bareEntry = conceptMap.get(bareId);
+    const fullEntry = conceptMap.get(fullId);
+    if (!bareEntry || !fullEntry) continue;
+    for (const c of bareEntry.chunkIds) fullEntry.chunkIds.push(c);
+    for (const n of bareEntry.noteIds)  fullEntry.noteIds.add(n);
+    for (const p of bareEntry.projects) fullEntry.projects.add(p);
+    conceptMap.delete(bareId);
+  }
+
   const concepts = [...conceptMap.values()]
     .filter((e) => e.chunkIds.length >= CONCEPT_MIN_CHUNKS)
     .map((e) => ({
@@ -555,10 +577,10 @@ async function buildConceptIndex(savedChunks, outDir, apiKey) {
       label: e.label,
       display: e.display,
       kind: e.kind,
-      chunkIds: e.chunkIds,
+      chunkIds: [...new Set(e.chunkIds)],
       noteIds: [...e.noteIds],
       projects: [...e.projects],
-      count: e.chunkIds.length,
+      count: new Set(e.chunkIds).size,
     }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
