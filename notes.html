@@ -1599,139 +1599,303 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
 .concepts-view-btn.active { color: var(--text); background: var(--bg3); }
 .concepts-view-btn + .concepts-view-btn { border-left: 1px solid var(--border); }
 
-/* ── Concepts: Graph view ─────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────────────────────
+   Concepts · Graph view  —  "Editorial Atlas"
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Theme-aware concept-kind palette: derived from the existing palette,
+   so light/dark switching is automatic and contrast is hand-tuned. */
+:root {
+  --kind-method:     var(--accent);
+  --kind-instrument: var(--bransfield);
+  --kind-dataset:    var(--earthnote);
+  --kind-quantity:   var(--coszo);
+
+  --cg-grid:         var(--border);
+  --cg-link:         var(--text-3);
+  --cg-link-focus:   var(--accent);
+  --cg-halo-opacity: 0.55;
+  --cg-halo-blur:    7px;
+}
+:root[data-theme="light"] {
+  --cg-halo-opacity: 0.30;     /* warm bright halos look ghostly on cream — pull back */
+  --cg-halo-blur:    5px;
+  --cg-link:         var(--text-3);
+}
+
+/* Outer canvas: large editorial plate with a faint engraved dot-grid.
+   Solid var(--bg2) — no rgba ghosting in light mode. */
 .concepts-graph-wrap {
-  position: relative; width: 100%; height: 76vh; min-height: 520px;
-  border: 1px solid var(--border); border-radius: 12px;
-  background:
-    radial-gradient(ellipse 60% 80% at 30% 20%, rgba(122, 162, 247, 0.06), transparent 60%),
-    radial-gradient(ellipse 50% 70% at 80% 80%, rgba(187, 154, 247, 0.05), transparent 60%),
-    var(--bg2);
+  position: relative;
+  width: 100%; height: 84vh; min-height: 600px;
+  background-color: var(--bg2);
+  background-image: radial-gradient(circle, var(--cg-grid) 0.9px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: 0 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   overflow: hidden;
   isolation: isolate;
 }
+
 .concepts-graph-svg {
-  width: 100%; height: 100%; cursor: grab; display: block;
-  font-family: var(--font-mono);
+  width: 100%; height: 100%; display: block;
+  cursor: grab;
 }
 .concepts-graph-svg:active { cursor: grabbing; }
 
-/* Edges: curved, faint by default. Selection promotes a stratum. */
+/* ── Edges ─────────────────────────────────────────────────────────────── */
 .cg-link {
-  fill: none; stroke: currentColor; stroke-opacity: 0.18;
-  stroke-width: 1; color: var(--border-2);
-  transition: stroke-opacity 220ms ease, stroke-width 220ms ease;
+  fill: none;
+  stroke: var(--cg-link);
+  stroke-opacity: 0.32;
+  stroke-width: 1.1;
+  transition: stroke 200ms ease, stroke-opacity 220ms ease, stroke-width 220ms ease;
 }
-.cg-link.is-faded   { stroke-opacity: 0.04; }
-.cg-link.is-focused { stroke-opacity: 0.85; stroke-width: 1.4; }
+.cg-link.is-faded   { stroke-opacity: 0.06; }
+.cg-link.is-focused {
+  stroke: var(--cg-link-focus);
+  stroke-opacity: 0.85;
+  stroke-width: 1.5;
+}
 
-/* Nodes */
+/* ── Nodes ─────────────────────────────────────────────────────────────── */
 .cg-node { cursor: pointer; transition: opacity 220ms ease; }
-.cg-node.is-faded { opacity: 0.15; }
+.cg-node.is-faded { opacity: 0.18; }
 
 .cg-node-halo {
-  fill: var(--node-color, #888);
-  filter: blur(8px); opacity: 0.45;
+  fill: var(--node-color, var(--text-3));
+  filter: blur(var(--cg-halo-blur));
+  opacity: var(--cg-halo-opacity);
   transition: opacity 220ms ease;
 }
-.cg-node.is-focused .cg-node-halo { opacity: 0.9; }
-.cg-node:hover .cg-node-halo      { opacity: 0.75; }
+.cg-node:hover       .cg-node-halo { opacity: calc(var(--cg-halo-opacity) + 0.25); }
+.cg-node.is-focused  .cg-node-halo { opacity: calc(var(--cg-halo-opacity) + 0.35); }
 
 .cg-node-core {
-  fill: var(--node-color, #888);
-  stroke: rgba(255, 255, 255, 0.18); stroke-width: 1;
-  transition: stroke 200ms ease;
+  fill: var(--node-color, var(--text-3));
+  stroke: var(--bg2); stroke-width: 1.5;
+  transition: stroke 180ms ease, stroke-width 180ms ease;
 }
-.cg-node.is-focused .cg-node-core { stroke: rgba(255, 255, 255, 0.7); stroke-width: 1.5; }
+.cg-node.is-focused .cg-node-core { stroke: var(--text); stroke-width: 1.8; }
 
-/* Note nodes: ring style, more delicate */
+/* Note nodes: hollow rings — quieter than concepts, higher visual weight when focused */
 .cg-node-note .cg-node-core {
-  fill: var(--bg); stroke: var(--node-color, #888); stroke-width: 1.6;
+  fill: var(--bg2);
+  stroke: var(--node-color, var(--text-3));
+  stroke-width: 1.8;
 }
-.cg-node-note .cg-node-halo { opacity: 0.25; }
-.cg-node-note.is-focused .cg-node-core { fill: var(--node-color, #888); }
-
-/* Labels */
-.cg-label {
-  fill: var(--text); font-size: 11px; letter-spacing: 0.01em;
-  pointer-events: none; user-select: none; paint-order: stroke;
-  stroke: var(--bg2); stroke-width: 3; stroke-linejoin: round;
+.cg-node-note.is-focused .cg-node-core {
+  fill: var(--node-color, var(--text-3));
+  stroke: var(--bg2);
 }
-.cg-label.is-note    { font-size: 10px; fill: var(--muted); opacity: 0; transition: opacity 180ms ease; }
-.cg-node.is-focused .cg-label.is-note { opacity: 1; }
-.cg-node:hover       .cg-label.is-note { opacity: 1; }
-.cg-label.is-faded   { opacity: 0.15; }
 
-/* Pulse for the selected concept — opacity only, no SVG transform-origin issues */
+/* Pulse on the actively selected node — opacity only (SVG transform-origin trap) */
 @keyframes cg-pulse {
-  0%, 100% { opacity: 0.95; }
-  50%      { opacity: 0.55; }
+  0%, 100% { opacity: calc(var(--cg-halo-opacity) + 0.40); }
+  50%      { opacity: calc(var(--cg-halo-opacity) + 0.10); }
 }
 .cg-node.is-selected .cg-node-halo { animation: cg-pulse 2.4s ease-in-out infinite; }
 
-/* HUD: legend + status + tip */
+/* ── Labels ────────────────────────────────────────────────────────────── */
+/* Concept labels: italic serif — they are the *subjects* of this atlas */
+.cg-label {
+  pointer-events: none; user-select: none;
+  paint-order: stroke fill;
+  stroke: var(--bg2); stroke-width: 4px; stroke-linejoin: round;
+}
+.cg-label.is-concept {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  fill: var(--text);
+}
+.cg-label.is-note {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  fill: var(--text-2);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.cg-node:hover       .cg-label.is-note,
+.cg-node.is-focused  .cg-label.is-note { opacity: 1; }
+.cg-label.is-faded { opacity: 0.18; }
+
+/* ── HUD: editorial chart key ──────────────────────────────────────────── */
 .cg-hud {
-  position: absolute; top: 14px; left: 14px;
-  display: flex; flex-direction: column; gap: 8px;
-  font-family: var(--font-mono); font-size: 10px;
-  color: var(--muted); pointer-events: none;
-  letter-spacing: 0.06em; text-transform: uppercase;
-}
-.cg-hud-card {
-  background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 9px 11px; display: flex; flex-direction: column; gap: 4px;
-}
-.cg-hud-row { display: flex; align-items: center; gap: 8px; }
-.cg-hud-dot { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
-.cg-hud-num { font-size: 10px; color: var(--text); opacity: 0.8; }
-
-.cg-status {
-  position: absolute; bottom: 14px; left: 14px;
-  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
-  letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6;
+  position: absolute; top: 18px; left: 20px;
+  display: flex; flex-direction: column; gap: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px 12px;
   pointer-events: none;
+  min-width: 168px;
+}
+.cg-hud-eyebrow {
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.18em;
+  margin-bottom: 6px;
+}
+.cg-hud-title {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 15px; font-weight: 500; color: var(--text);
+  letter-spacing: -0.005em; margin-bottom: 12px;
+}
+.cg-hud-stats {
+  display: grid; grid-template-columns: auto 1fr;
+  column-gap: 12px; row-gap: 4px;
+  padding-bottom: 12px; margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.cg-hud-stat-num {
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--text); font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cg-hud-stat-label {
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--text-2); letter-spacing: 0.06em;
+  text-transform: uppercase;
+  align-self: center;
+}
+.cg-hud-section {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.cg-hud-section + .cg-hud-section {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.cg-hud-section-eyebrow {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.16em;
+  margin-bottom: 2px;
+}
+.cg-hud-row {
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-2); letter-spacing: 0.02em;
+}
+.cg-hud-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--swatch, var(--text-3));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--swatch, var(--text-3)) 18%, transparent);
 }
 
-/* Side panel — hidden via display:none so backdrop-filter doesn't render */
+/* Status hint, bottom-right corner of the plate */
+.cg-status {
+  position: absolute; bottom: 16px; right: 20px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  pointer-events: none;
+  text-align: right;
+  max-width: 60%;
+}
+
+/* ── Side panel: opaque editorial card ────────────────────────────────── */
 .cg-side {
-  position: absolute; top: 14px; right: 14px; bottom: 14px; width: 340px;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid var(--border-2); border-radius: 12px;
-  padding: 22px 22px 18px; overflow-y: auto;
-  font-family: var(--font-sans); font-size: 13px; color: var(--text);
+  position: absolute; top: 18px; right: 18px; bottom: 18px;
+  width: 360px; max-width: calc(100% - 36px);
+  background: var(--bg);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  padding: 28px 26px 22px;
+  overflow-y: auto;
+  color: var(--text);
   display: none;
-  animation: cg-side-in 240ms cubic-bezier(.2,.7,.2,1);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+}
+:root[data-theme="light"] .cg-side {
+  box-shadow: 0 12px 36px rgba(40, 40, 60, 0.10);
 }
 .cg-side.open {
   display: block;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  animation: cg-side-in 280ms cubic-bezier(.2,.7,.2,1);
 }
 @keyframes cg-side-in {
-  from { transform: translateX(18px); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+  from { transform: translateX(14px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
 }
 .cg-side-close {
-  position: absolute; top: 12px; right: 14px; cursor: pointer;
-  background: transparent; border: 0; color: var(--muted);
-  font-size: 18px; line-height: 1; padding: 4px;
+  position: absolute; top: 14px; right: 16px;
+  cursor: pointer;
+  background: transparent; border: 0;
+  color: var(--text-3);
+  font-size: 22px; line-height: 1; padding: 4px 6px;
+  font-family: var(--font-sans);
 }
 .cg-side-close:hover { color: var(--text); }
+
 .cg-side-kind {
-  font-family: var(--font-mono); font-size: 10px; color: var(--accent);
-  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px;
+  font-family: var(--font-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  margin-bottom: 10px;
+  color: var(--text-3);
 }
 .cg-side-title {
-  font-size: 19px; font-weight: 600; color: var(--text);
-  letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1.25;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 26px; font-weight: 500;
+  color: var(--text);
+  line-height: 1.15; letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  word-break: break-word;
 }
 .cg-side-meta {
-  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--text-2);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
-.cg-side-list { display: flex; flex-direction: column; gap: 12px; }
+.cg-side-list { display: flex; flex-direction: column; gap: 14px; }
+
+.cg-side-open-btn {
+  appearance: none; cursor: pointer;
+  background: var(--bg3);
+  border: 1px solid var(--border-2);
+  color: var(--text);
+  padding: 10px 14px; border-radius: 6px;
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  width: 100%; margin-bottom: 16px;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.cg-side-open-btn:hover {
+  background: var(--bg4);
+  border-color: var(--text-3);
+}
+.cg-side-conceptrow {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+  font-family: var(--font-sans);
+}
+.cg-side-conceptrow:last-child { border-bottom: 0; }
+.cg-side-conceptrow-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+}
+.cg-side-conceptrow-label {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 14px; color: var(--text);
+}
+.cg-side-conceptrow-kind {
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
 </style>
 </head>
 <body>
@@ -3138,12 +3302,13 @@ function ensureD3() {
 }
 
 function conceptKindColor(kind) {
+  // Theme-aware: returns CSS var() so dark/light switching is automatic.
   return ({
-    method:     '#7dd3fc',  // cyan
-    instrument: '#c4b5fd',  // violet
-    dataset:    '#86efac',  // mint
-    quantity:   '#fde68a',  // amber
-  })[kind] || '#9ca3af';
+    method:     'var(--kind-method)',
+    instrument: 'var(--kind-instrument)',
+    dataset:    'var(--kind-dataset)',
+    quantity:   'var(--kind-quantity)',
+  })[kind] || 'var(--text-3)';
 }
 
 function buildGraphData() {
@@ -3204,20 +3369,24 @@ function renderConceptsGraph() {
     <div class="concepts-graph-wrap" id="cg-wrap">
       <svg class="concepts-graph-svg" id="cg-svg"></svg>
       <div class="cg-hud">
-        <div class="cg-hud-card" id="cg-hud-stats"></div>
-        <div class="cg-hud-card">
-          <div class="cg-hud-row" style="color:#7dd3fc"><span class="cg-hud-dot" style="background:#7dd3fc"></span><span style="color:var(--muted)">method</span></div>
-          <div class="cg-hud-row" style="color:#c4b5fd"><span class="cg-hud-dot" style="background:#c4b5fd"></span><span style="color:var(--muted)">instrument</span></div>
-          <div class="cg-hud-row" style="color:#86efac"><span class="cg-hud-dot" style="background:#86efac"></span><span style="color:var(--muted)">dataset</span></div>
-          <div class="cg-hud-row" style="color:#fde68a"><span class="cg-hud-dot" style="background:#fde68a"></span><span style="color:var(--muted)">quantity</span></div>
+        <div class="cg-hud-eyebrow">Plate · I</div>
+        <div class="cg-hud-title">Concept atlas</div>
+        <div class="cg-hud-stats" id="cg-hud-stats"></div>
+        <div class="cg-hud-section">
+          <div class="cg-hud-section-eyebrow">Concept · kind</div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--kind-method)"></span>method</div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--kind-instrument)"></span>instrument</div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--kind-dataset)"></span>dataset</div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--kind-quantity)"></span>quantity</div>
         </div>
-        <div class="cg-hud-card">
-          <div class="cg-hud-row"><span class="cg-hud-dot" style="background:var(--coszo); color:var(--coszo)"></span><span style="color:var(--muted)">COSZO</span></div>
-          <div class="cg-hud-row"><span class="cg-hud-dot" style="background:var(--bransfield); color:var(--bransfield)"></span><span style="color:var(--muted)">Bransfield</span></div>
-          <div class="cg-hud-row"><span class="cg-hud-dot" style="background:var(--earthnote); color:var(--earthnote)"></span><span style="color:var(--muted)">Earthnote</span></div>
+        <div class="cg-hud-section">
+          <div class="cg-hud-section-eyebrow">Note · project</div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--coszo)"></span>COSZO</div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--bransfield)"></span>Bransfield</div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--earthnote)"></span>Earthnote</div>
         </div>
       </div>
-      <div class="cg-status" id="cg-status">click a node · drag to move · scroll to zoom</div>
+      <div class="cg-status">click · drag · scroll · double-click empty to release</div>
       <aside class="cg-side" id="cg-side" onclick="event.stopPropagation()">
         <button class="cg-side-close" onclick="closeGraphSide()" aria-label="Close">×</button>
         <div class="cg-side-kind" id="cg-side-kind"></div>
@@ -3245,9 +3414,9 @@ function mountGraph(data) {
   const conceptCount = data.nodes.filter((n) => n.type === 'concept').length;
   const noteCount    = data.nodes.filter((n) => n.type === 'note').length;
   stats.innerHTML = `
-    <div class="cg-hud-row"><span class="cg-hud-num">${conceptCount}</span><span style="color:var(--muted)">concepts</span></div>
-    <div class="cg-hud-row"><span class="cg-hud-num">${noteCount}</span><span style="color:var(--muted)">notes</span></div>
-    <div class="cg-hud-row"><span class="cg-hud-num">${data.links.length}</span><span style="color:var(--muted)">links</span></div>`;
+    <span class="cg-hud-stat-num">${String(conceptCount).padStart(2, '0')}</span><span class="cg-hud-stat-label">Concepts</span>
+    <span class="cg-hud-stat-num">${String(noteCount).padStart(2, '0')}</span><span class="cg-hud-stat-label">Notes</span>
+    <span class="cg-hud-stat-num">${String(data.links.length).padStart(2, '0')}</span><span class="cg-hud-stat-label">Links</span>`;
 
   const svg = d3.select(svgEl).attr('viewBox', [0, 0, width, height]);
   svg.selectAll('*').remove();
@@ -3414,6 +3583,7 @@ function openConceptSide(concept) {
   meta.textContent  = `${concept.count} chunk${concept.count === 1 ? '' : 's'} · ${concept.projects.join(' · ')}`;
   list.innerHTML = renderConceptBody(concept);
   side.classList.add('open');
+  side.scrollTop = 0;
 }
 
 function openNoteSide(noteNode, graphData) {
@@ -3441,19 +3611,16 @@ function openNoteSide(noteNode, graphData) {
   const fname = noteNode.filePath ? noteNode.filePath.split('/').slice(-1)[0] : '';
   const args = `'${noteNode.project}','${(fname || '').replace(/'/g, "\\'")}'`;
   const conceptList = concepts.map((c) => `
-    <div style="display:flex; align-items:center; gap:8px; padding: 6px 0; border-bottom: 1px dashed var(--border);">
-      <span style="width:8px;height:8px;border-radius:50%;background:${conceptKindColor(c.kind)}"></span>
-      <span style="flex:1;color:var(--text);font-size:13px;">${escHtml(c.label)}</span>
-      <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">${c.kind}</span>
+    <div class="cg-side-conceptrow">
+      <span class="cg-side-conceptrow-dot" style="background:${conceptKindColor(c.kind)}"></span>
+      <span class="cg-side-conceptrow-label">${escHtml(c.label)}</span>
+      <span class="cg-side-conceptrow-kind">${c.kind}</span>
     </div>`).join('');
   list.innerHTML = `
-    <button onclick="openNoteFromConcepts(${args})"
-            style="background:var(--bg3);border:1px solid var(--border-2);color:var(--text);
-                   padding:8px 12px;border-radius:6px;font-family:var(--font-mono);font-size:11px;
-                   cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;width:100%;
-                   margin-bottom:14px;">Open note →</button>
-    ${conceptList || '<div class="concepts-empty">No concepts on this note.</div>'}`;
+    <button class="cg-side-open-btn" onclick="openNoteFromConcepts(${args})">Open note →</button>
+    ${conceptList || '<div class="concepts-empty" style="padding:20px 0;">No concepts on this note.</div>'}`;
   side.classList.add('open');
+  side.scrollTop = 0;
 }
 
 function closeGraphSide() {
