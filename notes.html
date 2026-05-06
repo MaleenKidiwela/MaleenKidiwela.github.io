@@ -304,6 +304,16 @@ header::after {
 }
 
 .layout.dashboard-mode aside { display: none; }
+.layout.concepts-mode  aside { display: none; }
+.layout.concepts-mode  main  { padding: 0; }
+main.concepts-active .content-header { display: none; }
+main.concepts-active .content-scroll { padding: 0; height: 100%; }
+main.concepts-active #content-area  { padding: 0; height: 100%; }
+/* Hide the mobile sandwich button + any leftover overlay when in concepts
+   mode — there's nothing for them to reveal. */
+.layout.concepts-mode ~ * .sidebar-toggle,
+body:has(.layout.concepts-mode) .sidebar-toggle { display: none !important; }
+body:has(.layout.concepts-mode) .sidebar-overlay { display: none !important; }
 
 /* ── Sidebar ── */
 aside {
@@ -1494,10 +1504,21 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
 
 /* ── Concepts view ────────────────────────────────────────────────────── */
 .concepts-view {
-  padding: 28px 32px 80px;
-  max-width: 1100px;
+  padding: 24px 28px 32px;
   margin: 0 auto;
   font-family: var(--font-sans);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.concepts-view #concepts-render {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.concepts-view .concepts-graph-wrap {
+  height: 100%;
+  min-height: 480px;
 }
 .concepts-head {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -2122,6 +2143,8 @@ let __constellation = null; // { nodes, rafId, canvas, ctx, tooltip, dpr, w, h, 
 
 // ── Show dashboard ─────────────────────────────────────────────────────────
 function showDashboard() {
+  document.querySelector('.layout').classList.remove('concepts-mode');
+  document.querySelector('main').classList.remove('concepts-active');
   document.querySelector('.layout').classList.add('dashboard-mode');
   document.querySelector('main').classList.add('dashboard-active');
   document.getElementById('status-text').textContent = 'Dashboard';
@@ -2878,9 +2901,12 @@ function selectProject(project, tabEl) {
 
   if (project === 'Concepts') {
     document.getElementById('sidebar-toggle').style.display = 'none';
+    closeSidebar();
     stopConstellation();
     document.querySelector('.layout').classList.remove('dashboard-mode');
     document.querySelector('main').classList.remove('dashboard-active');
+    document.querySelector('.layout').classList.add('concepts-mode');
+    document.querySelector('main').classList.add('concepts-active');
     showConcepts();
     return;
   }
@@ -2888,9 +2914,9 @@ function selectProject(project, tabEl) {
   stopConstellation();
   document.getElementById('sidebar-toggle').style.display = '';
 
-  // Exit dashboard mode
-  document.querySelector('.layout').classList.remove('dashboard-mode');
-  document.querySelector('main').classList.remove('dashboard-active');
+  // Exit dashboard / concepts modes
+  document.querySelector('.layout').classList.remove('dashboard-mode', 'concepts-mode');
+  document.querySelector('main').classList.remove('dashboard-active', 'concepts-active');
 
   activeProject = project;
   activeFile    = null;
@@ -3146,7 +3172,7 @@ marked.setOptions({ breaks: true, gfm: true });
 // ── Concepts view ──────────────────────────────────────────────────────────
 let __conceptsData = null;     // { concepts, byChunk, generatedAt }
 let __conceptsChunks = null;   // array of chunk records, indexed by id
-let __conceptsState = { kind: 'all', query: '', open: new Set(), view: 'list' };
+let __conceptsState = { kind: 'all', query: '', open: new Set(), view: 'graph' };
 let __d3LoadPromise = null;
 let __conceptsGraph = null; // { simulation, svg } so we can stop on view-switch
 
