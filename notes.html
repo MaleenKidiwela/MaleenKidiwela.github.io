@@ -3526,7 +3526,11 @@ function mountGraph(data) {
     degree.set(sId, (degree.get(sId) || 0) + 1);
     degree.set(tId, (degree.get(tId) || 0) + 1);
   });
-  const TOP_DEGREE = 5;
+  // Concept-note graph is structurally lopsided: notes mention many concepts,
+  // concepts often live on few notes. Use type-specific thresholds so summary
+  // mode surfaces both kinds of hubs.
+  const TOP_DEGREE_CONCEPT = 3;
+  const TOP_DEGREE_NOTE    = 5;
 
   const node = root.append('g').attr('class', 'cg-nodes').selectAll('g')
     .data(data.nodes).enter()
@@ -3536,7 +3540,8 @@ function mountGraph(data) {
       const tier = d.type === 'concept'
         ? `cg-kind-${d.kind}`
         : `cg-proj-${d.project}`;
-      const top  = (degree.get(d.id) || 0) >= TOP_DEGREE ? 'is-top' : '';
+      const threshold = d.type === 'concept' ? TOP_DEGREE_CONCEPT : TOP_DEGREE_NOTE;
+      const top = (degree.get(d.id) || 0) >= threshold ? 'is-top' : '';
       return [base, tier, top].filter(Boolean).join(' ');
     });
 
