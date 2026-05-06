@@ -201,9 +201,16 @@ export default {
         }
         lastStatus = res.status;
         lastDetail = await res.text().catch(() => '');
-        // Fall through on 429 (quota) or 404 (model not on this account).
-        // Other errors stop the chain so they surface immediately.
-        if (res.status !== 429 && res.status !== 404) break;
+        // Fall through to the next model on transient/availability errors:
+        // 429 (rate limit), 404 (model not on this account), 408 (timeout),
+        // and any 5xx (UNAVAILABLE, internal, gateway). Real client errors
+        // (400/401/403) break the chain since a different model won't help.
+        const fallthrough =
+          res.status === 429 ||
+          res.status === 404 ||
+          res.status === 408 ||
+          (res.status >= 500 && res.status < 600);
+        if (!fallthrough) break;
       }
 
       if (!upstream) {
