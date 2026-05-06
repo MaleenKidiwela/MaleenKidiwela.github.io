@@ -1601,55 +1601,131 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
 
 /* ── Concepts: Graph view ─────────────────────────────────────────────── */
 .concepts-graph-wrap {
-  position: relative; width: 100%; height: 70vh; min-height: 460px;
-  border: 1px solid var(--border); border-radius: 8px;
-  background: var(--bg2); overflow: hidden;
+  position: relative; width: 100%; height: 76vh; min-height: 520px;
+  border: 1px solid var(--border); border-radius: 12px;
+  background:
+    radial-gradient(ellipse 60% 80% at 30% 20%, rgba(122, 162, 247, 0.06), transparent 60%),
+    radial-gradient(ellipse 50% 70% at 80% 80%, rgba(187, 154, 247, 0.05), transparent 60%),
+    var(--bg2);
+  overflow: hidden;
+  isolation: isolate;
 }
-.concepts-graph-svg { width: 100%; height: 100%; cursor: grab; display: block; }
+.concepts-graph-svg {
+  width: 100%; height: 100%; cursor: grab; display: block;
+  font-family: var(--font-mono);
+}
 .concepts-graph-svg:active { cursor: grabbing; }
-.cg-link { stroke: var(--border-2); stroke-opacity: 0.55; stroke-width: 1; }
-.cg-link.dim { stroke-opacity: 0.1; }
-.cg-link.hot { stroke: var(--accent); stroke-opacity: 0.9; stroke-width: 1.6; }
-.cg-node circle { stroke: var(--bg); stroke-width: 1.5; cursor: pointer; transition: opacity 0.15s; }
-.cg-node.dim circle { opacity: 0.18; }
-.cg-node text {
-  font-family: var(--font-mono); font-size: 10px; fill: var(--text);
-  pointer-events: none; user-select: none;
+
+/* Edges: curved, faint by default. Selection promotes a stratum. */
+.cg-link {
+  fill: none; stroke: currentColor; stroke-opacity: 0.18;
+  stroke-width: 1; color: var(--border-2);
+  transition: stroke-opacity 220ms ease, stroke-width 220ms ease;
 }
-.cg-node.dim text { opacity: 0.18; }
-.cg-legend {
-  position: absolute; top: 12px; left: 12px;
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px 12px; font-family: var(--font-mono);
-  font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 4px;
+.cg-link.is-faded   { stroke-opacity: 0.04; }
+.cg-link.is-focused { stroke-opacity: 0.85; stroke-width: 1.4; }
+
+/* Nodes */
+.cg-node { cursor: pointer; transition: opacity 220ms ease; }
+.cg-node.is-faded { opacity: 0.15; }
+
+.cg-node-halo {
+  fill: var(--node-color, #888);
+  filter: blur(8px); opacity: 0.55;
+  transition: opacity 220ms ease, transform 280ms ease;
+  transform-origin: center;
 }
-.cg-legend-row { display: flex; align-items: center; gap: 8px; }
-.cg-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
-.cg-tip {
-  position: absolute; pointer-events: none;
-  background: var(--bg); border: 1px solid var(--border-2);
-  border-radius: 4px; padding: 6px 10px; font-family: var(--font-mono);
-  font-size: 11px; color: var(--text); display: none; max-width: 260px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-  z-index: 5;
+.cg-node.is-focused .cg-node-halo { opacity: 0.95; transform: scale(1.35); }
+.cg-node:hover .cg-node-halo      { opacity: 0.8;  transform: scale(1.18); }
+
+.cg-node-core {
+  fill: var(--node-color, #888);
+  stroke: rgba(255, 255, 255, 0.18); stroke-width: 1;
+  transition: stroke 200ms ease;
 }
-.cg-side {
-  position: absolute; top: 12px; right: 12px; bottom: 12px; width: 320px;
-  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-  padding: 14px 16px; overflow-y: auto; display: none;
-  font-family: var(--font-sans); font-size: 13px;
+.cg-node.is-focused .cg-node-core { stroke: rgba(255, 255, 255, 0.7); stroke-width: 1.5; }
+
+/* Note nodes: ring style, more delicate */
+.cg-node-note .cg-node-core {
+  fill: var(--bg); stroke: var(--node-color, #888); stroke-width: 1.6;
 }
-.cg-side.open { display: block; }
-.cg-side-close {
-  position: absolute; top: 8px; right: 10px; cursor: pointer;
-  background: transparent; border: 0; color: var(--muted); font-size: 16px;
+.cg-node-note .cg-node-halo { opacity: 0.25; }
+.cg-node-note.is-focused .cg-node-core { fill: var(--node-color, #888); }
+
+/* Labels */
+.cg-label {
+  fill: var(--text); font-size: 11px; letter-spacing: 0.01em;
+  pointer-events: none; user-select: none; paint-order: stroke;
+  stroke: var(--bg2); stroke-width: 3; stroke-linejoin: round;
 }
-.cg-side-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.cg-side-kind {
+.cg-label.is-note    { font-size: 10px; fill: var(--muted); opacity: 0; transition: opacity 180ms ease; }
+.cg-node.is-focused .cg-label.is-note { opacity: 1; }
+.cg-node:hover       .cg-label.is-note { opacity: 1; }
+.cg-label.is-faded   { opacity: 0.15; }
+
+/* Pulse for the selected concept */
+@keyframes cg-pulse {
+  0%, 100% { transform: scale(1.35); opacity: 0.95; }
+  50%      { transform: scale(1.55); opacity: 0.6; }
+}
+.cg-node.is-selected .cg-node-halo { animation: cg-pulse 2.4s ease-in-out infinite; }
+
+/* HUD: legend + status + tip */
+.cg-hud {
+  position: absolute; top: 14px; left: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--muted); pointer-events: none;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cg-hud-card {
+  background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 11px; display: flex; flex-direction: column; gap: 4px;
+}
+.cg-hud-row { display: flex; align-items: center; gap: 8px; }
+.cg-hud-dot { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+.cg-hud-num { font-size: 10px; color: var(--text); opacity: 0.8; }
+
+.cg-status {
+  position: absolute; bottom: 14px; left: 14px;
   font-family: var(--font-mono); font-size: 10px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
+  letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6;
+  pointer-events: none;
 }
-.cg-side-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* Side panel — slides in on selection */
+.cg-side {
+  position: absolute; top: 14px; right: 14px; bottom: 14px; width: 340px;
+  background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-2); border-radius: 12px;
+  padding: 22px 22px 18px; overflow-y: auto;
+  font-family: var(--font-sans); font-size: 13px; color: var(--text);
+  transform: translateX(20px); opacity: 0; pointer-events: none;
+  transition: transform 280ms cubic-bezier(.2,.7,.2,1), opacity 220ms ease;
+}
+.cg-side.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.cg-side-close {
+  position: absolute; top: 12px; right: 14px; cursor: pointer;
+  background: transparent; border: 0; color: var(--muted);
+  font-size: 18px; line-height: 1; padding: 4px;
+}
+.cg-side-close:hover { color: var(--text); }
+.cg-side-kind {
+  font-family: var(--font-mono); font-size: 10px; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px;
+}
+.cg-side-title {
+  font-size: 19px; font-weight: 600; color: var(--text);
+  letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1.25;
+}
+.cg-side-meta {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px;
+}
+.cg-side-list { display: flex; flex-direction: column; gap: 12px; }
 </style>
 </head>
 <body>
@@ -3057,11 +3133,11 @@ function ensureD3() {
 
 function conceptKindColor(kind) {
   return ({
-    method:     '#7aa2f7',
-    instrument: '#bb9af7',
-    dataset:    '#9ece6a',
-    quantity:   '#e0af68',
-  })[kind] || '#888';
+    method:     '#7dd3fc',  // cyan
+    instrument: '#c4b5fd',  // violet
+    dataset:    '#86efac',  // mint
+    quantity:   '#fde68a',  // amber
+  })[kind] || '#9ca3af';
 }
 
 function buildGraphData() {
@@ -3120,21 +3196,27 @@ function renderConceptsGraph() {
   const host = document.getElementById('concepts-render');
   host.innerHTML = `
     <div class="concepts-graph-wrap" id="cg-wrap">
-      <div class="cg-legend">
-        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#7aa2f7"></span>method</div>
-        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#bb9af7"></span>instrument</div>
-        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#9ece6a"></span>dataset</div>
-        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:#e0af68"></span>quantity</div>
-        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:var(--coszo)"></span>COSZO note</div>
-        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:var(--bransfield)"></span>Bransfield note</div>
-        <div class="cg-legend-row"><span class="cg-legend-dot" style="background:var(--earthnote)"></span>Earthnote note</div>
-      </div>
       <svg class="concepts-graph-svg" id="cg-svg"></svg>
-      <div class="cg-tip" id="cg-tip"></div>
-      <aside class="cg-side" id="cg-side">
-        <button class="cg-side-close" onclick="closeGraphSide()">×</button>
-        <div class="cg-side-title" id="cg-side-title"></div>
+      <div class="cg-hud">
+        <div class="cg-hud-card" id="cg-hud-stats"></div>
+        <div class="cg-hud-card">
+          <div class="cg-hud-row" style="color:#7dd3fc"><span class="cg-hud-dot" style="background:#7dd3fc"></span><span style="color:var(--muted)">method</span></div>
+          <div class="cg-hud-row" style="color:#c4b5fd"><span class="cg-hud-dot" style="background:#c4b5fd"></span><span style="color:var(--muted)">instrument</span></div>
+          <div class="cg-hud-row" style="color:#86efac"><span class="cg-hud-dot" style="background:#86efac"></span><span style="color:var(--muted)">dataset</span></div>
+          <div class="cg-hud-row" style="color:#fde68a"><span class="cg-hud-dot" style="background:#fde68a"></span><span style="color:var(--muted)">quantity</span></div>
+        </div>
+        <div class="cg-hud-card">
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="background:var(--coszo); color:var(--coszo)"></span><span style="color:var(--muted)">COSZO</span></div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="background:var(--bransfield); color:var(--bransfield)"></span><span style="color:var(--muted)">Bransfield</span></div>
+          <div class="cg-hud-row"><span class="cg-hud-dot" style="background:var(--earthnote); color:var(--earthnote)"></span><span style="color:var(--muted)">Earthnote</span></div>
+        </div>
+      </div>
+      <div class="cg-status" id="cg-status">click a node · drag to move · scroll to zoom</div>
+      <aside class="cg-side" id="cg-side" onclick="event.stopPropagation()">
+        <button class="cg-side-close" onclick="closeGraphSide()" aria-label="Close">×</button>
         <div class="cg-side-kind" id="cg-side-kind"></div>
+        <div class="cg-side-title" id="cg-side-title"></div>
+        <div class="cg-side-meta" id="cg-side-meta"></div>
         <div class="cg-side-list" id="cg-side-list"></div>
       </aside>
     </div>`;
@@ -3153,96 +3235,162 @@ function mountGraph(data) {
   const width = wrap.clientWidth;
   const height = wrap.clientHeight;
 
+  const stats = document.getElementById('cg-hud-stats');
+  const conceptCount = data.nodes.filter((n) => n.type === 'concept').length;
+  const noteCount    = data.nodes.filter((n) => n.type === 'note').length;
+  stats.innerHTML = `
+    <div class="cg-hud-row"><span class="cg-hud-num">${conceptCount}</span><span style="color:var(--muted)">concepts</span></div>
+    <div class="cg-hud-row"><span class="cg-hud-num">${noteCount}</span><span style="color:var(--muted)">notes</span></div>
+    <div class="cg-hud-row"><span class="cg-hud-num">${data.links.length}</span><span style="color:var(--muted)">links</span></div>`;
+
   const svg = d3.select(svgEl).attr('viewBox', [0, 0, width, height]);
   svg.selectAll('*').remove();
 
-  const g = svg.append('g');
-  const zoom = d3.zoom().scaleExtent([0.2, 4]).on('zoom', (e) => g.attr('transform', e.transform));
-  svg.call(zoom);
+  const root = svg.append('g');
 
-  const link = g.append('g').selectAll('line')
+  // Adjacency for fast neighbor highlight.
+  const adj = new Map();
+  data.nodes.forEach((n) => adj.set(n.id, new Set([n.id])));
+  data.links.forEach((l) => {
+    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+    adj.get(sId).add(tId);
+    adj.get(tId).add(sId);
+  });
+
+  const link = root.append('g').attr('class', 'cg-links').selectAll('path')
     .data(data.links).enter()
-    .append('line').attr('class', 'cg-link');
+    .append('path').attr('class', 'cg-link');
 
-  const node = g.append('g').selectAll('g')
+  const node = root.append('g').attr('class', 'cg-nodes').selectAll('g')
     .data(data.nodes).enter()
-    .append('g').attr('class', 'cg-node');
+    .append('g')
+    .attr('class', (d) => 'cg-node ' + (d.type === 'note' ? 'cg-node-note' : 'cg-node-concept'))
+    .style('--node-color', (d) => d.type === 'concept' ? conceptKindColor(d.kind) : projectDotColor(d.project));
 
-  node.append('circle')
-    .attr('r', (d) => d.type === 'concept' ? Math.min(14, 5 + Math.sqrt(d.count) * 2.5) : 5)
-    .attr('fill', (d) => d.type === 'concept' ? conceptKindColor(d.kind) : projectDotColor(d.project));
+  // Halo (blurred filled circle) under each node.
+  node.append('circle').attr('class', 'cg-node-halo')
+    .attr('r', (d) => d.type === 'concept'
+      ? 8 + Math.sqrt(d.count) * 4
+      : 6);
 
+  // Core node.
+  node.append('circle').attr('class', 'cg-node-core')
+    .attr('r', (d) => d.type === 'concept'
+      ? 4 + Math.sqrt(d.count) * 2
+      : 3.5);
+
+  // Concept labels always visible; note labels appear on focus/hover.
   node.append('text')
-    .attr('dx', (d) => d.type === 'concept' ? 10 : 8)
+    .attr('class', (d) => 'cg-label ' + (d.type === 'note' ? 'is-note' : 'is-concept'))
+    .attr('dx', (d) => (d.type === 'concept' ? 4 + Math.sqrt(d.count) * 2 : 4) + 6)
     .attr('dy', '0.32em')
-    .text((d) => d.label.length > 32 ? d.label.slice(0, 30) + '…' : d.label);
-
-  const tip = document.getElementById('cg-tip');
-  node
-    .on('mouseenter', (e, d) => {
-      tip.style.display = 'block';
-      tip.textContent = d.type === 'concept'
-        ? `${d.kind} · ${d.label} · ${d.count} chunk${d.count === 1 ? '' : 's'}`
-        : `${d.project} · ${d.label}`;
-      highlightNeighbors(d, true);
-    })
-    .on('mousemove', (e) => {
-      const r = wrap.getBoundingClientRect();
-      tip.style.left = (e.clientX - r.left + 12) + 'px';
-      tip.style.top  = (e.clientY - r.top  + 12) + 'px';
-    })
-    .on('mouseleave', () => {
-      tip.style.display = 'none';
-      highlightNeighbors(null, false);
-    })
-    .on('click', (e, d) => {
-      if (d.type === 'note') openNoteFromConcepts(d.project, d.filePath.split('/').slice(-1)[0]);
-      else openConceptSide(d.raw);
+    .text((d) => {
+      const max = d.type === 'concept' ? 28 : 24;
+      return d.label.length > max ? d.label.slice(0, max - 1) + '…' : d.label;
     });
 
-  function highlightNeighbors(d, on) {
-    if (!on || !d) {
-      node.classed('dim', false);
-      link.classed('dim', false).classed('hot', false);
+  // Selection state lives outside d3 so click-to-select and click-empty-to-clear behave.
+  let selectedId = null;
+
+  function applyHighlight(focusId) {
+    if (!focusId) {
+      node.classed('is-faded', false).classed('is-focused', false).classed('is-selected', false);
+      link.classed('is-faded', false).classed('is-focused', false);
       return;
     }
-    const neighbors = new Set([d.id]);
-    data.links.forEach((l) => {
+    const ns = adj.get(focusId) || new Set([focusId]);
+    node.classed('is-faded',   (n) => !ns.has(n.id));
+    node.classed('is-focused', (n) => ns.has(n.id) && n.id !== focusId);
+    node.classed('is-selected', (n) => n.id === focusId)
+        .classed('is-focused', (n) => ns.has(n.id)); // include the selected itself in halo treatment
+    link.classed('is-faded',   (l) => {
       const sId = typeof l.source === 'object' ? l.source.id : l.source;
       const tId = typeof l.target === 'object' ? l.target.id : l.target;
-      if (sId === d.id) neighbors.add(tId);
-      if (tId === d.id) neighbors.add(sId);
+      return !(sId === focusId || tId === focusId);
     });
-    node.classed('dim', (n) => !neighbors.has(n.id));
-    link
-      .classed('hot', (l) => {
-        const sId = typeof l.source === 'object' ? l.source.id : l.source;
-        const tId = typeof l.target === 'object' ? l.target.id : l.target;
-        return sId === d.id || tId === d.id;
-      })
-      .classed('dim', (l) => {
-        const sId = typeof l.source === 'object' ? l.source.id : l.source;
-        const tId = typeof l.target === 'object' ? l.target.id : l.target;
-        return !(sId === d.id || tId === d.id);
-      });
+    link.classed('is-focused', (l) => {
+      const sId = typeof l.source === 'object' ? l.source.id : l.source;
+      const tId = typeof l.target === 'object' ? l.target.id : l.target;
+      return sId === focusId || tId === focusId;
+    });
   }
 
+  function selectNode(d) {
+    selectedId = d ? d.id : null;
+    applyHighlight(selectedId);
+    if (!d) {
+      closeGraphSide();
+    } else if (d.type === 'concept') {
+      openConceptSide(d.raw);
+    } else {
+      openNoteSide(d, data);
+    }
+  }
+
+  node
+    .on('mouseenter', (e, d) => { if (!selectedId) applyHighlight(d.id); })
+    .on('mouseleave', ()    => { if (!selectedId) applyHighlight(null);  })
+    .on('click', (e, d) => {
+      e.stopPropagation();
+      if (selectedId === d.id) selectNode(null);
+      else selectNode(d);
+    })
+    .on('dblclick', (e, d) => {
+      e.stopPropagation();
+      if (d.type === 'note') openNoteFromConcepts(d.project, d.filePath.split('/').slice(-1)[0]);
+    });
+
+  svgEl.addEventListener('click', () => { if (selectedId) selectNode(null); });
+
+  // Curved edges (gentle arc) to read better than straight lines.
+  function pathFor(d) {
+    const dx = d.target.x - d.source.x;
+    const dy = d.target.y - d.source.y;
+    const dr = Math.hypot(dx, dy) * 1.4 || 1;
+    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+  }
+
+  // Calmer simulation: settles, then stops. No perpetual jitter.
   const sim = d3.forceSimulation(data.nodes)
-    .force('link', d3.forceLink(data.links).id((d) => d.id).distance(70).strength(0.5))
-    .force('charge', d3.forceManyBody().strength(-180))
-    .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide().radius((d) => d.type === 'concept' ? 18 : 10))
+    .alpha(0.9)
+    .alphaDecay(0.035)
+    .velocityDecay(0.45)
+    .force('link', d3.forceLink(data.links).id((d) => d.id)
+      .distance((l) => l.source.type === 'concept' ? 64 : 72)
+      .strength(0.55))
+    .force('charge', d3.forceManyBody().strength(-260).distanceMax(420))
+    .force('center', d3.forceCenter(width / 2, height / 2).strength(0.08))
+    .force('x', d3.forceX(width / 2).strength(0.04))
+    .force('y', d3.forceY(height / 2).strength(0.06))
+    .force('collide', d3.forceCollide().radius((d) =>
+      d.type === 'concept' ? 12 + Math.sqrt(d.count) * 2 : 9).strength(0.9))
     .on('tick', () => {
-      link
-        .attr('x1', (d) => d.source.x).attr('y1', (d) => d.source.y)
-        .attr('x2', (d) => d.target.x).attr('y2', (d) => d.target.y);
+      link.attr('d', pathFor);
       node.attr('transform', (d) => `translate(${d.x},${d.y})`);
     });
 
+  // Auto-stop after settle to kill background drift.
+  setTimeout(() => sim.alphaTarget(0).stop(), 5500);
+
+  // Drag pins; double-click on background releases all pins.
   node.call(d3.drag()
-    .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.15).restart(); d.fx = d.x; d.fy = d.y; })
     .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
-    .on('end',   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+    .on('end',   (e, d) => { if (!e.active) sim.alphaTarget(0); }));
+
+  svgEl.addEventListener('dblclick', () => {
+    data.nodes.forEach((n) => { n.fx = null; n.fy = null; });
+    sim.alpha(0.3).restart();
+    setTimeout(() => sim.alphaTarget(0).stop(), 3500);
+  });
+
+  // Smooth zoom/pan.
+  const zoom = d3.zoom()
+    .scaleExtent([0.3, 4])
+    .filter((event) => !event.target.closest('.cg-side') && !event.button)
+    .on('zoom', (e) => root.attr('transform', e.transform));
+  svg.call(zoom);
 
   __conceptsGraph = { simulation: sim, svg };
 }
@@ -3251,13 +3399,57 @@ function openConceptSide(concept) {
   const side  = document.getElementById('cg-side');
   const title = document.getElementById('cg-side-title');
   const kind  = document.getElementById('cg-side-kind');
+  const meta  = document.getElementById('cg-side-meta');
   const list  = document.getElementById('cg-side-list');
   if (!side) return;
   title.textContent = concept.label;
-  kind.textContent  = `${concept.kind} · ${concept.count} chunk${concept.count === 1 ? '' : 's'}`;
+  kind.textContent  = concept.kind;
+  kind.style.color  = conceptKindColor(concept.kind);
+  meta.textContent  = `${concept.count} chunk${concept.count === 1 ? '' : 's'} · ${concept.projects.join(' · ')}`;
   list.innerHTML = renderConceptBody(concept);
   side.classList.add('open');
 }
+
+function openNoteSide(noteNode, graphData) {
+  const side  = document.getElementById('cg-side');
+  const title = document.getElementById('cg-side-title');
+  const kind  = document.getElementById('cg-side-kind');
+  const meta  = document.getElementById('cg-side-meta');
+  const list  = document.getElementById('cg-side-list');
+  if (!side) return;
+  // Concepts present on this note = neighbors of the note node that are concepts.
+  const concepts = [];
+  for (const l of graphData.links) {
+    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+    if (sId === noteNode.id || tId === noteNode.id) {
+      const otherId = sId === noteNode.id ? tId : sId;
+      const otherNode = graphData.nodes.find((n) => n.id === otherId);
+      if (otherNode && otherNode.type === 'concept') concepts.push(otherNode.raw);
+    }
+  }
+  title.textContent = noteNode.label;
+  kind.textContent  = noteNode.project;
+  kind.style.color  = projectDotColor(noteNode.project);
+  meta.textContent  = `${concepts.length} concept${concepts.length === 1 ? '' : 's'}`;
+  const fname = noteNode.filePath ? noteNode.filePath.split('/').slice(-1)[0] : '';
+  const args = `'${noteNode.project}','${(fname || '').replace(/'/g, "\\'")}'`;
+  const conceptList = concepts.map((c) => `
+    <div style="display:flex; align-items:center; gap:8px; padding: 6px 0; border-bottom: 1px dashed var(--border);">
+      <span style="width:8px;height:8px;border-radius:50%;background:${conceptKindColor(c.kind)}"></span>
+      <span style="flex:1;color:var(--text);font-size:13px;">${escHtml(c.label)}</span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">${c.kind}</span>
+    </div>`).join('');
+  list.innerHTML = `
+    <button onclick="openNoteFromConcepts(${args})"
+            style="background:var(--bg3);border:1px solid var(--border-2);color:var(--text);
+                   padding:8px 12px;border-radius:6px;font-family:var(--font-mono);font-size:11px;
+                   cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;width:100%;
+                   margin-bottom:14px;">Open note →</button>
+    ${conceptList || '<div class="concepts-empty">No concepts on this note.</div>'}`;
+  side.classList.add('open');
+}
+
 function closeGraphSide() {
   const side = document.getElementById('cg-side');
   if (side) side.classList.remove('open');
