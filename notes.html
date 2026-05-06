@@ -1690,6 +1690,52 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
   stroke: var(--bg2);
 }
 
+/* Class-based palette — set --node-color so summary mode can override in CSS */
+.cg-kind-method     { --node-color: var(--kind-method); }
+.cg-kind-instrument { --node-color: var(--kind-instrument); }
+.cg-kind-dataset    { --node-color: var(--kind-dataset); }
+.cg-kind-quantity   { --node-color: var(--kind-quantity); }
+.cg-proj-COSZO        { --node-color: var(--coszo); }
+.cg-proj-BransfieldEQ { --node-color: var(--bransfield); }
+.cg-proj-Earthnote    { --node-color: var(--earthnote); }
+
+/* Summary mode: collapse non-hub nodes to neutral dots, hide their labels and
+   halos, and dim edges. Active when nothing is filtered or searched. Hubs
+   (is-top, degree >= 5) keep their color and label so the chart remains
+   navigable at a glance. Selected/focused/hovered nodes also pop back. */
+.cg-summary .cg-node:not(.is-top):not(.is-focused):not(.is-selected) {
+  --node-color: var(--text-3);
+}
+.cg-summary .cg-node:not(.is-top):not(.is-focused):not(.is-selected) .cg-node-halo {
+  opacity: 0;
+}
+.cg-summary .cg-node:not(.is-top):not(.is-focused):not(.is-selected) .cg-label {
+  display: none;
+}
+.cg-summary .cg-link:not(.is-focused) { stroke-opacity: 0.07; }
+.cg-summary .cg-node:not(.is-top):not(.is-focused):not(.is-selected) .cg-node-core {
+  stroke-width: 1;
+}
+.cg-summary .cg-node-note:not(.is-top):not(.is-focused):not(.is-selected) .cg-node-core {
+  fill: var(--text-3);
+  stroke: var(--bg2);
+}
+
+/* Search input wrap + clear button (× appears once user has typed) */
+.concepts-search-wrap {
+  position: relative; flex: 1; min-width: 220px;
+}
+.concepts-search-wrap .concepts-search { width: 100%; padding-right: 32px; }
+.concepts-search-clear {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--text-3); font-size: 16px; line-height: 1;
+  padding: 4px 8px; display: none;
+  font-family: var(--font-sans);
+}
+.concepts-search-clear:hover { color: var(--text); }
+.concepts-search-wrap.has-text .concepts-search-clear { display: block; }
+
 /* Pulse on the actively selected node — opacity only (SVG transform-origin trap) */
 @keyframes cg-pulse {
   0%, 100% { opacity: calc(var(--cg-halo-opacity) + 0.40); }
@@ -3212,6 +3258,7 @@ function setConceptKind(k) {
     el.classList.toggle('active', el.dataset.kind === k);
   });
   renderConcepts();
+  updateGraphSummaryMode();
 }
 
 async function showConcepts() {
@@ -3230,7 +3277,10 @@ async function showConcepts() {
           <button class="concepts-view-btn ${__conceptsState.view === 'list' ? 'active' : ''}" data-view="list"  onclick="setConceptView('list')">List</button>
           <button class="concepts-view-btn ${__conceptsState.view === 'graph' ? 'active' : ''}" data-view="graph" onclick="setConceptView('graph')">Graph</button>
         </div>
-        <input class="concepts-search" id="concepts-search" placeholder="filter by name…" autocomplete="off"/>
+        <div class="concepts-search-wrap" id="concepts-search-wrap">
+          <input class="concepts-search" id="concepts-search" placeholder="filter by name…" autocomplete="off"/>
+          <button class="concepts-search-clear" id="concepts-search-clear" onclick="clearConceptSearch()" aria-label="Clear search">×</button>
+        </div>
         <button class="concept-filter active" data-kind="all"        onclick="setConceptKind('all')">All</button>
         <button class="concept-filter"        data-kind="method"     onclick="setConceptKind('method')">Methods</button>
         <button class="concept-filter"        data-kind="instrument" onclick="setConceptKind('instrument')">Instruments</button>
@@ -3259,12 +3309,35 @@ async function showConcepts() {
   document.getElementById('status-text').textContent = `${total} concepts`;
 
   const search = document.getElementById('concepts-search');
+  const searchWrap = document.getElementById('concepts-search-wrap');
   search.addEventListener('input', (e) => {
     __conceptsState.query = e.target.value;
+    if (searchWrap) searchWrap.classList.toggle('has-text', !!e.target.value);
     renderConcepts();
+  });
+  search.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') clearConceptSearch();
   });
 
   renderConcepts();
+}
+
+function clearConceptSearch() {
+  __conceptsState.query = '';
+  const input = document.getElementById('concepts-search');
+  if (input) input.value = '';
+  document.getElementById('concepts-search-wrap')?.classList.remove('has-text');
+  renderConcepts();
+}
+
+// Toggle summary mode on the graph when neither a kind filter nor a search
+// is active. Called whenever state changes that affect what should be visible.
+function updateGraphSummaryMode() {
+  if (__conceptsState.view !== 'graph') return;
+  const wrap = document.getElementById('cg-wrap');
+  if (!wrap) return;
+  const isSummary = !__conceptsState.query.trim() && __conceptsState.kind === 'all';
+  wrap.classList.toggle('cg-summary', isSummary);
 }
 
 // ── Concepts: list/graph dispatcher ────────────────────────────────────────
@@ -3423,6 +3496,13 @@ function mountGraph(data) {
 
   const root = svg.append('g');
 
+  // Smooth zoom/pan — define early so post-settle fit-to-view can use it.
+  const zoom = d3.zoom()
+    .scaleExtent([0.15, 4])
+    .filter((event) => !event.target.closest('.cg-side') && !event.button)
+    .on('zoom', (e) => root.attr('transform', e.transform));
+  svg.call(zoom);
+
   // Adjacency for fast neighbor highlight.
   const adj = new Map();
   data.nodes.forEach((n) => adj.set(n.id, new Set([n.id])));
@@ -3437,11 +3517,28 @@ function mountGraph(data) {
     .data(data.links).enter()
     .append('path').attr('class', 'cg-link');
 
+  // Pre-compute degree so we can mark "top" hub nodes for summary-mode emphasis.
+  const degree = new Map();
+  data.nodes.forEach((n) => degree.set(n.id, 0));
+  data.links.forEach((l) => {
+    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+    degree.set(sId, (degree.get(sId) || 0) + 1);
+    degree.set(tId, (degree.get(tId) || 0) + 1);
+  });
+  const TOP_DEGREE = 5;
+
   const node = root.append('g').attr('class', 'cg-nodes').selectAll('g')
     .data(data.nodes).enter()
     .append('g')
-    .attr('class', (d) => 'cg-node ' + (d.type === 'note' ? 'cg-node-note' : 'cg-node-concept'))
-    .style('--node-color', (d) => d.type === 'concept' ? conceptKindColor(d.kind) : projectDotColor(d.project));
+    .attr('class', (d) => {
+      const base = d.type === 'note' ? 'cg-node cg-node-note' : 'cg-node cg-node-concept';
+      const tier = d.type === 'concept'
+        ? `cg-kind-${d.kind}`
+        : `cg-proj-${d.project}`;
+      const top  = (degree.get(d.id) || 0) >= TOP_DEGREE ? 'is-top' : '';
+      return [base, tier, top].filter(Boolean).join(' ');
+    });
 
   // Halo (blurred filled circle) under each node.
   node.append('circle').attr('class', 'cg-node-halo')
@@ -3545,8 +3642,12 @@ function mountGraph(data) {
       node.attr('transform', (d) => `translate(${d.x},${d.y})`);
     });
 
-  // Auto-stop after settle to kill background drift.
-  setTimeout(() => sim.alphaTarget(0).stop(), 5500);
+  // Auto-stop after settle to kill background drift, then fit the whole
+  // graph into the viewport so users start zoomed-out.
+  setTimeout(() => {
+    sim.alphaTarget(0).stop();
+    fitGraphToView(svg, root, wrap, zoom, d3);
+  }, 4000);
 
   // Drag pins; double-click on background releases all pins.
   node.call(d3.drag()
@@ -3560,14 +3661,34 @@ function mountGraph(data) {
     setTimeout(() => sim.alphaTarget(0).stop(), 3500);
   });
 
-  // Smooth zoom/pan.
-  const zoom = d3.zoom()
-    .scaleExtent([0.3, 4])
-    .filter((event) => !event.target.closest('.cg-side') && !event.button)
-    .on('zoom', (e) => root.attr('transform', e.transform));
-  svg.call(zoom);
-
   __conceptsGraph = { simulation: sim, svg };
+
+  // Initial summary-mode state. Recomputed on filter/search changes via
+  // updateGraphSummaryMode().
+  setTimeout(updateGraphSummaryMode, 0);
+}
+
+// Fit the entire force-laid-out graph into the canvas with a small margin.
+// Called once after the simulation cools so users see the whole atlas.
+function fitGraphToView(svg, root, wrap, zoom, d3) {
+  try {
+    const bbox = root.node().getBBox();
+    if (!bbox.width || !bbox.height) return;
+    const W = wrap.clientWidth;
+    const H = wrap.clientHeight;
+    const pad = 80;
+    const scale = Math.min(
+      (W - pad * 2) / bbox.width,
+      (H - pad * 2) / bbox.height,
+      1.0,
+    );
+    const tx = W / 2 - (bbox.x + bbox.width  / 2) * scale;
+    const ty = H / 2 - (bbox.y + bbox.height / 2) * scale;
+    svg.transition().duration(700)
+      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+  } catch (_) {
+    // getBBox may throw on detached nodes; safe to ignore.
+  }
 }
 
 function openConceptSide(concept) {
