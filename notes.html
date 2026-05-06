@@ -303,8 +303,15 @@ header::after {
   z-index: 1;
 }
 
-.layout.dashboard-mode aside { display: none; }
-.layout.concepts-mode  aside { display: none; }
+/* On desktop, hide the aside entirely in dashboard / concepts modes so
+   main fills the canvas. On mobile we want the aside to remain available
+   as the slide-in nav sheet, so this is gated to >=769px. */
+@media (min-width: 769px) {
+  .layout.dashboard-mode aside { display: none; }
+  .layout.concepts-mode  aside { display: none; }
+  body:has(.layout.concepts-mode) .sidebar-toggle { display: none !important; }
+  body:has(.layout.concepts-mode) .sidebar-overlay { display: none !important; }
+}
 .layout.concepts-mode  main  { padding: 0; }
 main.concepts-active .content-header { display: none; }
 main.concepts-active .content-scroll { padding: 0; height: 100%; }
