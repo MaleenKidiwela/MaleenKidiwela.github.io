@@ -40,13 +40,25 @@ jobs:
         run: node scripts/index-notes.mjs
 
       - name: Commit index back to main
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/
           if git diff --staged --quiet; then
             echo "No index changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore: rebuild RAG index"
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # GITHUB_TOKEN pushes don't cascade into other workflows, so the
+      # deploy-pages workflow won't fire on its own when we push public/.
+      # Trigger it explicitly so the new artifacts reach Pages.
+      - name: Trigger Pages deploy
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy-pages.yml --ref main
