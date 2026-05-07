@@ -1,3 +1,13 @@
+> [!warning] Superseded
+> This is the first writeup of the Chronos → Chronfix pipeline.
+> A picker-quantum staircase in the cleaned hourly Δt was injecting
+> sub-second false time-warp into every CCF window after correction.
+> The current canonical pipeline (with per-segment robust Δt smoothing
+> and a boundary-snap fix in `_resample`) is in
+> [[HYS14 — Correction Method V2]]. The fix itself is documented in
+> [[05-04-26 Notes]]. See also the Chronos diagnostic methodology in
+> [[05-01-26 Notes]] and the project context in
+> [[ChronFix — Implementation Plan]].
 
 End-to-end pipeline that detects the HYS14 (OOI Hydrate Ridge OBS) clock
 error from ambient-noise cross-correlation and applies a per-sample

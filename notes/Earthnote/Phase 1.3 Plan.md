@@ -2,12 +2,12 @@
 ### Phase 1.3 Pilot Quality Screening (design doc)
 
 **Date:** 2026-04-22
-**Phase:** 1.3 (per `PROJECT_PLAN.md`)
+**Phase:** 1.3 (per [[PROJECT_PLAN]])
 **Pilot scope:** **29 stations · January 2020 · Z + E components · 1–3 Hz band · single-station cross-component (SC) — no autocorrelations**
 **Output:** `data/phase13/qc_metrics_jan2020.csv` + per-station diagnostic plots + stacked CC files
 **Script:** `src/phase13_pilot.py`
 
-**This document captures the pre-execution design.** For the actual run results (two rounds — initial and fresh-with-hourly-dv/v), see **`step_03_results.md`**. Pipeline constants below (e.g. coda window `[2, 30]`) were revised during execution; the final pipeline used `[2, 10]` and added hourly-resolution dv/v — see results doc for the final form.
+**This document captures the pre-execution design.** For the actual run results (two rounds — initial and fresh-with-hourly-dv/v), see [[Phase 1.3 Results]]. Pipeline constants below (e.g. coda window `[2, 30]`) were revised during execution; the final pipeline used `[2, 10]` and added hourly-resolution dv/v — see the results doc for the final form. The stretching-grid quantization seen in the results motivated the move to [[Phase 2.0]]. Project anchor: [[Cascadia dv.v]].
 
 ---
 

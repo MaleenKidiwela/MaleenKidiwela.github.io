@@ -417,9 +417,10 @@ These need explicit answers before we default to `anomaly`:
 
 ## 6. Related context
 
-- The `temporal_anomaly_investigator` implements the integer-step algorithm per the 10-step procedure in `timestamp variability assessment plan.md`.
+- The `temporal_anomaly_investigator` implements the integer-step algorithm per the 10-step procedure in [[timestamp variability assessment plan]].
 - `plot_from_netcdf.py` already has a pipeline-faithful legacy gap-detection copy (`estimate_sp_and_gaps`) that can become the reference implementation for `detect_gaps_legacy` during Phase 1.
 - `--save-nc` on the investigator means we already have local NetCDF archives to feed Phase 0 comparisons without re-hitting OOI.
+- Project anchor and overall narrative across daily notes: [[Cascadia Offshore Subduction Zone Observatory]].
 
 ---
 

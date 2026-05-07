@@ -1,13 +1,12 @@
 # Single-Station Cross-Component dv/v pipeline 
 
-This methodology uses Tim Clements exact workflow for California
-This will be Phase 2 replacing the earlier workflow described in 
+This methodology uses Tim Clements' exact workflow for California. This is Phase 2, replacing the earlier workflow in [[Phase 1.3 Plan]] / [[Phase 1.3 Results]]. Project anchor: [[Cascadia dv.v]].
 
 **Status:** recipe frozen 2026-04-22. Target run: `src/phase13_pilot.py` on the 29-station Phase 1.3 pilot pool, January 2020, Z·E, 2–4 Hz.
 
 ## Context
 
-Phase 1.3 produced a 29-station pilot pool at 1–3 Hz with a dv/v pipeline that hit a stretching-grid ceiling: the hourly-QC dv/v series quantized visibly around ±0.1 %. Phase 2 moves the science band to 2–4 Hz, adopts a more standard broadband-whitened preprocessing recipe, refines the stretching grid, adds MWCS as an independent method, and splits coda-domain dv/v measurements into positive-lag, negative-lag, and combined variants.
+[[Phase 1.3 Results]] produced a 29-station pilot pool at 1–3 Hz with a dv/v pipeline that hit a stretching-grid ceiling: the hourly-QC dv/v series quantized visibly around ±0.1 %. Phase 2 moves the science band to 2–4 Hz, adopts a more standard broadband-whitened preprocessing recipe, refines the stretching grid, adds MWCS as an independent method, and splits coda-domain dv/v measurements into positive-lag, negative-lag, and combined variants. The internals walkthrough is in [[04-28-26 Notes]]; the adaptive-coda extension (Phase 2.1) is in [[04-29-26 Notes]].
 
 ---
 

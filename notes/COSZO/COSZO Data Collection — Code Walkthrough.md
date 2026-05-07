@@ -15,7 +15,7 @@ Specifically:
 
 This is an **automated data pipeline** that pulls ocean-floor geophysical sensor data from the [Ocean Observatories Initiative (OOI)](https://oceanobservatories.org/) and converts it into **seismology-standard formats** (MiniSEED and StationXML) for archival at EarthScope (formerly IRIS).
 
-The sensors are **cabled seafloor pressure instruments (PREST)** deployed on the Juan de Fuca plate off the US Pacific Northwest coast, sampling at **≤8 Hz** ("Tier-3" data). A broader non-Tier-1 channel/station inventory is at [[non_tier1_ooi_instrument_data_notes]].
+The sensors are **cabled seafloor pressure instruments (PREST)** deployed on the Juan de Fuca plate off the US Pacific Northwest coast, sampling at **≤8 Hz** ("Tier-3" data). A broader non-Tier-1 channel/station inventory is at [[non tier1 ooi instrument data notes]].
 
 ---
 

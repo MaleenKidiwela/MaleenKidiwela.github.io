@@ -4,6 +4,7 @@
 **Pilot scope:** 29 stations · January 2020 · Z + E components · 1–3 Hz band · single-station cross-component (SC), no autocorrelations
 **Script:** `src/phase13_pilot.py`
 **Input station list:** `data/inventory/suitable_1to3Hz_SC.csv` (4 BH + 25 HH)
+**See also:** pre-execution design in [[Phase 1.3 Plan]]; the stretching-grid ceiling found here motivated the move to [[Phase 2.0]]. Project anchor: [[Cascadia dv.v]].
 
 This document captures the results of **two pilot runs** on the same 29 stations. Run 1 locked in the pipeline; Run 2 refined the coda window, added hourly dv/v, and restored per-day PSD plots. Artifacts from Run 1 live in `data/phase13/old_stacks/` + `qc_metrics_jan2020.prev.csv`; Run 2 artifacts overwrite the active paths.
 

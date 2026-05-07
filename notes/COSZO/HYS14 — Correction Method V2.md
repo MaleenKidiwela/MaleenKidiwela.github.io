@@ -2,9 +2,10 @@
 End-to-end pipeline that detects the HYS14 (OOI Hydrate Ridge OBS) clock
 error from ambient-noise cross-correlation and applies a per-sample
 timestamp correction to the raw MiniSEED data, with closed-loop
-validation. Companion document to HYS14 — Timing Diagnostic [[05-01-26 Notes]]
-(diagnosis-only) and `Chronos — Implementation Plan.md` (project
-context).
+validation. Supersedes [[HYS14 — Correction Method V1]] (picker-quantum
+staircase fix, see [[05-04-26 Notes]]). Companion document to the
+Chronos diagnostic methodology in [[05-01-26 Notes]] and the project
+context in [[ChronFix — Implementation Plan]].
 
 ---
 

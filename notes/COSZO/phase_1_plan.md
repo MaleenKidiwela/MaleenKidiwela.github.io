@@ -128,5 +128,5 @@ This mismatch would cause a KeyError when trying to read dep-1 channel variables
 - Extend pipeline to **current meter** data (new parameter files)
 - Extend pipeline to **SCPR** data (daily script from PI NAS)
 - Evaluate **vector current** data quality (identify bad data)
-- Information about instruments are found in [[non_tier1_ooi_instrument_data_notes]]
+- Information about instruments are found in [[non tier1 ooi instrument data notes]]
 - Consider requesting additional VM for other data types
