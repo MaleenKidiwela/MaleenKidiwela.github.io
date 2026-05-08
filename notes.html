@@ -1946,6 +1946,27 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
   max-width: 60%;
 }
 
+.cg-controls {
+  position: absolute; top: 14px; right: 14px;
+  display: flex; gap: 6px;
+  z-index: 10;
+}
+.cg-ctrl-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  transition: border-color 0.14s, color 0.14s;
+}
+.cg-ctrl-btn:hover { border-color: var(--border-2); color: var(--text); }
+#cg-wrap:fullscreen { background: var(--bg); }
+#cg-wrap:-webkit-full-screen { background: var(--bg); }
+
 /* ── Side panel: opaque editorial card ────────────────────────────────── */
 .cg-side {
   position: absolute; top: 18px; right: 18px; bottom: 18px;
@@ -3603,6 +3624,10 @@ function renderConceptsGraph() {
           <div class="cg-hud-row"><span class="cg-hud-dot" style="--swatch: var(--earthnote)"></span>Earthnote</div>
         </div>
       </div>
+      <div class="cg-controls">
+        <button class="cg-ctrl-btn" id="cg-fit-btn" onclick="cgFitToView()" title="Zoom out to fit" aria-label="Zoom out to fit">⤢</button>
+        <button class="cg-ctrl-btn" id="cg-fullscreen-btn" onclick="cgToggleFullscreen()" title="Fullscreen" aria-label="Fullscreen">⛶</button>
+      </div>
       <div class="cg-status">click · drag · scroll · double-click empty to release</div>
       <aside class="cg-side" id="cg-side" onclick="event.stopPropagation()">
         <button class="cg-side-close" onclick="closeGraphSide()" aria-label="Close">×</button>
@@ -3785,25 +3810,15 @@ function mountGraph(data) {
     .force('x', d3.forceX(width / 2).strength(0.04))
     .force('y', d3.forceY(height / 2).strength(0.06))
     .force('collide', d3.forceCollide().radius((d) =>
-      d.type === 'concept' ? 12 + Math.sqrt(d.count) * 2 : 9).strength(0.9));
+      d.type === 'concept' ? 12 + Math.sqrt(d.count) * 2 : 9).strength(0.9))
+    .on('tick', () => {
+      link.attr('d', pathFor);
+      node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    });
 
-  // Pre-tick synchronously so we know final-ish positions before first paint.
-  // Avoids the previous 4s lag where users watched the graph settle then zoom.
-  for (let i = 0; i < 200; i++) sim.tick();
-
-  // Render initial positions and fit instantly, then let the simulation keep
-  // running visibly for a smooth post-mount settle.
-  link.attr('d', pathFor);
-  node.attr('transform', (d) => `translate(${d.x},${d.y})`);
-  fitGraphToView(svg, root, wrap, zoom, d3, /*instant=*/true);
-
-  sim.on('tick', () => {
-    link.attr('d', pathFor);
-    node.attr('transform', (d) => `translate(${d.x},${d.y})`);
-  });
-
-  // Stop background drift after the visible settle.
-  setTimeout(() => sim.alphaTarget(0).stop(), 1500);
+  // Auto-stop background drift after settle. No auto fit-to-view —
+  // users use the zoom-out button when they want it.
+  setTimeout(() => sim.alphaTarget(0).stop(), 4000);
 
   // Drag pins; double-click on background releases all pins.
   node.call(d3.drag()
@@ -3817,7 +3832,7 @@ function mountGraph(data) {
     setTimeout(() => sim.alphaTarget(0).stop(), 3500);
   });
 
-  __conceptsGraph = { simulation: sim, svg };
+  __conceptsGraph = { simulation: sim, svg, root, wrap, zoom, d3 };
 
   // Initial summary-mode state. Recomputed on filter/search changes via
   // updateGraphSummaryMode().
@@ -3834,7 +3849,25 @@ function mountGraph(data) {
 
 // Fit the entire force-laid-out graph into the canvas with a small margin.
 // Called once after the simulation cools so users see the whole atlas.
-function fitGraphToView(svg, root, wrap, zoom, d3, instant) {
+function cgFitToView() {
+  if (!__conceptsGraph) return;
+  const { svg, root, wrap, zoom, d3 } = __conceptsGraph;
+  fitGraphToView(svg, root, wrap, zoom, d3);
+}
+
+function cgToggleFullscreen() {
+  const wrap = document.getElementById('cg-wrap');
+  if (!wrap) return;
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (wrap.requestFullscreen) {
+    wrap.requestFullscreen();
+  } else if (wrap.webkitRequestFullscreen) {
+    wrap.webkitRequestFullscreen();
+  }
+}
+
+function fitGraphToView(svg, root, wrap, zoom, d3) {
   try {
     const bbox = root.node().getBBox();
     if (!bbox.width || !bbox.height) return;
@@ -3848,9 +3881,8 @@ function fitGraphToView(svg, root, wrap, zoom, d3, instant) {
     );
     const tx = W / 2 - (bbox.x + bbox.width  / 2) * scale;
     const ty = H / 2 - (bbox.y + bbox.height / 2) * scale;
-    const transform = d3.zoomIdentity.translate(tx, ty).scale(scale);
-    if (instant) svg.call(zoom.transform, transform);
-    else svg.transition().duration(700).call(zoom.transform, transform);
+    svg.transition().duration(500)
+      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
   } catch (_) {
     // getBBox may throw on detached nodes; safe to ignore.
   }
