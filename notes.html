@@ -3478,7 +3478,7 @@ function updateGraphSummaryMode() {
   if (__conceptsState.view !== 'graph') return;
   const wrap = document.getElementById('cg-wrap');
   if (!wrap) return;
-  const isSummary = !__conceptsState.query.trim() && __conceptsState.kind === 'all';
+  const isSummary = !__conceptsState.query.trim();
   wrap.classList.toggle('cg-summary', isSummary);
 }
 
