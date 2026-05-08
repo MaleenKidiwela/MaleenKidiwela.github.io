@@ -3478,7 +3478,7 @@ function updateGraphSummaryMode() {
   if (__conceptsState.view !== 'graph') return;
   const wrap = document.getElementById('cg-wrap');
   if (!wrap) return;
-  const isSummary = !__conceptsState.query.trim() && __conceptsState.kind === 'all';
+  const isSummary = !__conceptsState.query.trim();
   wrap.classList.toggle('cg-summary', isSummary);
 }
 
@@ -3528,10 +3528,8 @@ function conceptKindColor(kind) {
 
 function buildGraphData() {
   const q = __conceptsState.query.trim().toLowerCase();
-  const kindFilter = __conceptsState.kind;
 
   const concepts = __conceptsData.concepts.filter((c) => {
-    if (kindFilter !== 'all' && c.kind !== kindFilter) return false;
     if (q && !c.label.includes(q)) return false;
     return true;
   });
