@@ -736,6 +736,15 @@ async function main() {
     path.join(OUT_DIR, 'embeddings.bin'),
     Buffer.from(savedEmbView.buffer, savedEmbView.byteOffset, savedEmbView.byteLength),
   );
+  // Cache-busting key. Chat fetches this with cache:no-store and appends
+  // ?v=<key> to the three asset URLs so a new build invalidates atomically.
+  const versionKey = crypto
+    .createHash('sha1')
+    .update(String(savedChunks.length))
+    .update(Buffer.from(savedEmbView.buffer, savedEmbView.byteOffset, savedEmbView.byteLength))
+    .digest('hex')
+    .slice(0, 12);
+  await fs.writeFile(path.join(OUT_DIR, 'index-version.txt'), versionKey);
 
   const dropped = allChunks.length - savedChunks.length;
   console.log(

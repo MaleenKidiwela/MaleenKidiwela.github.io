@@ -88,10 +88,17 @@ $('pwForm').addEventListener('submit', async (e) => {
 async function loadAssets() {
   setStatus('Loading index…', 'loading');
   try {
+    // Fetch the build's version key first (uncached) so the three asset URLs
+    // get a ?v=<key> suffix that invalidates atomically across CDN+browser.
+    let versionSuffix = '';
+    try {
+      const v = await fetch('/public/index-version.txt', { cache: 'no-store' });
+      if (v.ok) versionSuffix = '?v=' + (await v.text()).trim();
+    } catch (_) { /* fall back to unversioned URLs on first deploy */ }
     const [idxText, chunkData, embBuf] = await Promise.all([
-      fetchText(CONFIG.indexPath, 'search-index.json'),
-      fetchJson(CONFIG.chunksPath, 'chunks.json'),
-      fetchBuffer(CONFIG.embeddingsPath, 'embeddings.bin'),
+      fetchText(CONFIG.indexPath + versionSuffix, 'search-index.json'),
+      fetchJson(CONFIG.chunksPath + versionSuffix, 'chunks.json'),
+      fetchBuffer(CONFIG.embeddingsPath + versionSuffix, 'embeddings.bin'),
     ]);
     mini = MiniSearch.loadJSON(idxText, {
       fields: ['text', 'noteTitle', 'sectionTitle', 'project'],
