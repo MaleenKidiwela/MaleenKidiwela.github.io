@@ -3785,18 +3785,25 @@ function mountGraph(data) {
     .force('x', d3.forceX(width / 2).strength(0.04))
     .force('y', d3.forceY(height / 2).strength(0.06))
     .force('collide', d3.forceCollide().radius((d) =>
-      d.type === 'concept' ? 12 + Math.sqrt(d.count) * 2 : 9).strength(0.9))
-    .on('tick', () => {
-      link.attr('d', pathFor);
-      node.attr('transform', (d) => `translate(${d.x},${d.y})`);
-    });
+      d.type === 'concept' ? 12 + Math.sqrt(d.count) * 2 : 9).strength(0.9));
 
-  // Auto-stop after settle to kill background drift, then fit the whole
-  // graph into the viewport so users start zoomed-out.
-  setTimeout(() => {
-    sim.alphaTarget(0).stop();
-    fitGraphToView(svg, root, wrap, zoom, d3);
-  }, 4000);
+  // Pre-tick synchronously so we know final-ish positions before first paint.
+  // Avoids the previous 4s lag where users watched the graph settle then zoom.
+  for (let i = 0; i < 200; i++) sim.tick();
+
+  // Render initial positions and fit instantly, then let the simulation keep
+  // running visibly for a smooth post-mount settle.
+  link.attr('d', pathFor);
+  node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+  fitGraphToView(svg, root, wrap, zoom, d3, /*instant=*/true);
+
+  sim.on('tick', () => {
+    link.attr('d', pathFor);
+    node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+  });
+
+  // Stop background drift after the visible settle.
+  setTimeout(() => sim.alphaTarget(0).stop(), 1500);
 
   // Drag pins; double-click on background releases all pins.
   node.call(d3.drag()
@@ -3827,7 +3834,7 @@ function mountGraph(data) {
 
 // Fit the entire force-laid-out graph into the canvas with a small margin.
 // Called once after the simulation cools so users see the whole atlas.
-function fitGraphToView(svg, root, wrap, zoom, d3) {
+function fitGraphToView(svg, root, wrap, zoom, d3, instant) {
   try {
     const bbox = root.node().getBBox();
     if (!bbox.width || !bbox.height) return;
@@ -3841,8 +3848,9 @@ function fitGraphToView(svg, root, wrap, zoom, d3) {
     );
     const tx = W / 2 - (bbox.x + bbox.width  / 2) * scale;
     const ty = H / 2 - (bbox.y + bbox.height / 2) * scale;
-    svg.transition().duration(700)
-      .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    const transform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+    if (instant) svg.call(zoom.transform, transform);
+    else svg.transition().duration(700).call(zoom.transform, transform);
   } catch (_) {
     // getBBox may throw on detached nodes; safe to ignore.
   }
