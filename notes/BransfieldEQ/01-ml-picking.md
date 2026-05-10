@@ -143,7 +143,10 @@ Resource usage (35 station-days, CPU on M-series Mac):
 - Picking: **17 min wall, peak 3.1 GB RAM**.
 - Full-year extrapolation: ~135 h sequential / ~17 h with 8-way SLURM array / ~2 h with GPU.
 
-### PhaseNet caught a missed event at +25 s — validation win
+### PhaseNet caught a second event at +24 s — validation win
+
+> [!note] Not necessarily an "aftershock"
+> Earlier framing called this an aftershock; without magnitudes or locations that's overclaiming. More likely **swarm pair** for Bransfield's rift+volcanic context. Pin down via Stage 4 magnitudes + locations + waveform CC.
 
 A 4-station cluster fired at **23:51:34–36** (~25 s after the 23:51:10 manual event 2 on Dec 26):
 
