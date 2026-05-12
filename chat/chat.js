@@ -532,7 +532,8 @@ async function streamClaude({ model, query, context, textEl, stopThinking }) {
       body: JSON.stringify({
         model,
         max_tokens: ANTHROPIC_MAX_TOKENS,
-        temperature: 0.3,
+        // Opus 4.7 dropped the `temperature` param; omit it for that model.
+        ...(model === 'claude-opus-4-7' ? {} : { temperature: 0.3 }),
         system: CLAUDE_SYSTEM_PROMPT,
         stream: true,
         messages: [{ role: 'user', content: userText }],
