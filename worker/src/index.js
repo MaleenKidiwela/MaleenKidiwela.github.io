@@ -1,7 +1,8 @@
 // Cloudflare Worker: password-gated proxy to Gemini for the notes RAG chat.
 // Endpoints:
-//   POST /embed  { password, text }                -> { embedding: number[] }
-//   POST /chat   { password, query, context }      -> SSE stream of Gemini output
+//   POST /embed        { password, text }                   -> { embedding: number[] }
+//   POST /chat         { password, query, context, model? } -> SSE stream of Gemini output
+//   POST /chat-models  { password }                         -> { models, default }
 
 const EMBED_MODEL = 'gemini-embedding-001';
 const EMBED_DIM = 768;
@@ -99,6 +100,15 @@ export default {
       return json({ error: 'method not allowed' }, 405, cors);
     }
 
+    if (url.pathname === '/chat-models') {
+      const body = await readJson(req);
+      if (!body) return json({ error: 'invalid json' }, 400, cors);
+      if (!env.CHAT_PASSWORD || !timingSafeEqual(String(body.password || ''), env.CHAT_PASSWORD)) {
+        return json({ error: 'unauthorized' }, 401, cors);
+      }
+      return json({ models: CHAT_MODELS, default: 'auto' }, 200, cors);
+    }
+
     if (url.pathname === '/models') {
       // Password-gated proxy to the Gemini models list. Returns the canonical
       // IDs available on this API key so we can verify which fallbacks resolve.
@@ -181,11 +191,21 @@ export default {
         generationConfig: { temperature: 0.3 },
       });
 
+      const requestedModel = typeof body.model === 'string' ? body.model.trim() : '';
+      let modelChain;
+      if (!requestedModel || requestedModel === 'auto') {
+        modelChain = CHAT_MODELS;
+      } else if (CHAT_MODELS.includes(requestedModel)) {
+        modelChain = [requestedModel];
+      } else {
+        return json({ error: 'invalid model', model: requestedModel }, 400, cors);
+      }
+
       let upstream = null;
       let lastStatus = 0;
       let lastDetail = '';
       let usedModel = '';
-      for (const model of CHAT_MODELS) {
+      for (const model of modelChain) {
         const res = await fetchWithRetry(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${chatKey}`,
           {

@@ -57,6 +57,12 @@
       <span class="status__dot" aria-hidden="true"></span>
       <span id="statusText" class="status__text">Loading index&hellip;</span>
     </div>
+    <div class="model-row">
+      <label for="modelSelect" class="model-row__label">Model</label>
+      <select id="modelSelect" class="model-select" aria-label="Chat model">
+        <option value="auto">Auto (fallback chain)</option>
+      </select>
+    </div>
     <div id="messages" class="messages" aria-live="polite">
       <div id="emptyState" class="empty-state">
         <span class="overline">Try asking</span>
