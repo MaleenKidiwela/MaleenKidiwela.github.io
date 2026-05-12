@@ -25,6 +25,13 @@ const CONFIG = {
 // `anthropic-dangerous-direct-browser-access` header — it never touches the
 // worker.
 const CLAUDE_MODELS = ['claude-sonnet-4-6', 'claude-opus-4-7'];
+
+// Known project tags from the index. When a query mentions one by name,
+// retrieval pre-seeds the most-recent chunks for that project so a
+// dominant-project bias (COSZO is ~70% of the vault) can't crowd out
+// less-represented projects like Earthnote.
+const PROJECT_NAMES = ['Earthnote', 'BransfieldEQ', 'COSZO'];
+const PROJECT_SEED_SIZE = 6;
 const ANTHROPIC_VERSION = '2023-06-01';
 const ANTHROPIC_MAX_TOKENS = 2048;
 const ANTHROPIC_KEY_STORAGE = 'notes-rag.anthropic-key';
@@ -385,10 +392,12 @@ async function ask(query) {
   const today = todayISO();
   const intentDates = extractDateIntent(query, today);
   const dateSeed = chunksMatchingDates(intentDates);
+  const projectSeed = chunksMatchingProject(query);
 
   const seenIds = new Set();
   const fused = [];
   for (const c of dateSeed) { if (!seenIds.has(c.id)) { fused.push(c); seenIds.add(c.id); } }
+  for (const c of projectSeed) { if (!seenIds.has(c.id)) { fused.push(c); seenIds.add(c.id); } }
   for (const c of fusedRRF) { if (!seenIds.has(c.id)) { fused.push(c); seenIds.add(c.id); } }
 
   if (fused.length === 0) {
@@ -687,6 +696,16 @@ function chunksMatchingDates(dateSet) {
     if (c.dateFromFilename && dateSet.has(c.dateFromFilename)) out.push(c);
   }
   return out;
+}
+
+function chunksMatchingProject(query) {
+  if (!chunks || !query) return [];
+  const named = PROJECT_NAMES.find((p) => new RegExp(`\\b${p}\\b`, 'i').test(query));
+  if (!named) return [];
+  return chunks
+    .filter((c) => c.project === named)
+    .sort((a, b) => (b.dateFromFilename || '').localeCompare(a.dateFromFilename || ''))
+    .slice(0, PROJECT_SEED_SIZE);
 }
 
 // ---------- Retrieval helpers ----------
