@@ -406,6 +406,20 @@ img { image-rendering: pixelated; }
   padding: 4px 4px 4px 0;
 }
 .model-select:focus { color: var(--accent); }
+.model-row__keybtn {
+  font: inherit;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-2);
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
+  padding: 2px 0 2px 10px;
+  margin-left: 2px;
+  cursor: pointer;
+}
+.model-row__keybtn:hover { color: var(--accent); }
 
 /* Messages stream */
 .messages {

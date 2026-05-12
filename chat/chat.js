@@ -19,7 +19,43 @@ const CONFIG = {
   hardContextCap: 19500,
 };
 
+// Claude models the client can call directly against api.anthropic.com using a
+// user-supplied API key (BYOK). The key lives only in this browser's
+// localStorage and is sent straight to Anthropic via the
+// `anthropic-dangerous-direct-browser-access` header — it never touches the
+// worker.
+const CLAUDE_MODELS = ['claude-sonnet-4-6'];
+const ANTHROPIC_VERSION = '2023-06-01';
+const ANTHROPIC_MAX_TOKENS = 2048;
+const ANTHROPIC_KEY_STORAGE = 'notes-rag.anthropic-key';
+const CLAUDE_SYSTEM_PROMPT = `You are a research assistant for a marine geophysicist named Maleen.
+Use ONLY the notes provided in the context to answer.
+If the answer isn't in the context, say so clearly and suggest what
+related topics might be worth searching for instead.
+Cite specific notes by title when you reference them.
+Do not use em dashes in your writing.`;
+
 const $ = (id) => document.getElementById(id);
+const isClaudeModel = (m) => CLAUDE_MODELS.includes(m);
+function getAnthropicKey() {
+  try { return localStorage.getItem(ANTHROPIC_KEY_STORAGE) || ''; } catch { return ''; }
+}
+function setAnthropicKey(k) {
+  try {
+    if (k) localStorage.setItem(ANTHROPIC_KEY_STORAGE, k);
+    else localStorage.removeItem(ANTHROPIC_KEY_STORAGE);
+  } catch {}
+}
+function promptForAnthropicKey(existing) {
+  const k = window.prompt(
+    'Anthropic API key (sk-ant-...). Stored only in this browser. Leave blank to clear.',
+    existing || '',
+  );
+  if (k === null) return null; // cancelled
+  const trimmed = k.trim();
+  setAnthropicKey(trimmed);
+  return trimmed;
+}
 
 let password = null;
 let mini = null;
@@ -85,23 +121,53 @@ $('pwForm').addEventListener('submit', async (e) => {
 });
 
 async function loadChatModels() {
+  const sel = $('modelSelect');
   try {
     const r = await fetch(`${CONFIG.workerUrl}/chat-models`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ password }),
     });
-    if (!r.ok) return;
-    const { models } = await r.json();
-    if (!Array.isArray(models)) return;
-    const sel = $('modelSelect');
-    for (const m of models) {
-      const opt = document.createElement('option');
-      opt.value = m;
-      opt.textContent = m;
-      sel.appendChild(opt);
+    if (r.ok) {
+      const { models } = await r.json();
+      if (Array.isArray(models)) {
+        for (const m of models) {
+          const opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = m;
+          sel.appendChild(opt);
+        }
+      }
     }
   } catch {}
+  // Append Claude (BYOK) entries; these route direct browser -> Anthropic.
+  for (const m of CLAUDE_MODELS) {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = `${m} (BYOK)`;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', onModelChange);
+  $('claudeKeyBtn').addEventListener('click', () => {
+    promptForAnthropicKey(getAnthropicKey());
+    onModelChange();
+  });
+  onModelChange();
+}
+
+function onModelChange() {
+  const sel = $('modelSelect');
+  const claude = isClaudeModel(sel.value);
+  $('claudeKeyBtn').hidden = !claude;
+  if (claude && !getAnthropicKey()) {
+    const k = promptForAnthropicKey('');
+    if (!k) {
+      // User cancelled or cleared. Revert to auto so we don't try to call
+      // Anthropic without a key on the next send.
+      sel.value = 'auto';
+      $('claudeKeyBtn').hidden = true;
+    }
+  }
 }
 
 // ---------- Asset loading ----------
@@ -359,6 +425,11 @@ async function ask(query) {
 
   // 5. stream
   textEl.textContent = '';
+  const selectedModel = $('modelSelect').value;
+  if (isClaudeModel(selectedModel)) {
+    await streamClaude({ model: selectedModel, query, context, textEl, stopThinking });
+    return;
+  }
   let gotText = false;
   let lastFinish = null;
   let upstreamErr = null;
@@ -366,7 +437,7 @@ async function ask(query) {
     const r = await fetch(`${CONFIG.workerUrl}/chat`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ password, query, context, model: $('modelSelect').value }),
+      body: JSON.stringify({ password, query, context, model: selectedModel }),
     });
     if (!r.ok || !r.body) {
       const t = await r.text().catch(() => '');
@@ -430,6 +501,90 @@ async function ask(query) {
         : (lastFinish || `no text — ${raw.length} raw bytes (see console)`);
       textEl.textContent = `(empty response — ${detail})`;
     }
+  } catch (e) {
+    textEl.textContent += `\n[stream error: ${e.message}]`;
+  } finally {
+    stopThinking();
+  }
+}
+
+async function streamClaude({ model, query, context, textEl, stopThinking }) {
+  let key = getAnthropicKey();
+  if (!key) {
+    key = promptForAnthropicKey('');
+    if (!key) {
+      textEl.textContent = 'Anthropic API key required for Claude models.';
+      stopThinking();
+      return;
+    }
+  }
+  const userText = `Context (retrieved notes):\n\n${context}\n\n---\n\nQuestion: ${query}`;
+  let gotText = false;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': ANTHROPIC_VERSION,
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: ANTHROPIC_MAX_TOKENS,
+        temperature: 0.3,
+        system: CLAUDE_SYSTEM_PROMPT,
+        stream: true,
+        messages: [{ role: 'user', content: userText }],
+      }),
+    });
+    if (r.status === 401 || r.status === 403) {
+      setAnthropicKey('');
+      textEl.textContent = `Claude auth failed (${r.status}). Click "Change API key" to re-enter.`;
+      return;
+    }
+    if (!r.ok || !r.body) {
+      const t = await r.text().catch(() => '');
+      textEl.textContent = `Claude error (${r.status}): ${t.slice(0, 300)}`;
+      return;
+    }
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    const handleBlock = (block) => {
+      let eventName = 'message';
+      let dataStr = '';
+      for (const line of block.split('\n')) {
+        if (line.startsWith('event:')) eventName = line.slice(6).trim();
+        else if (line.startsWith('data:')) dataStr += line.slice(5).trim();
+      }
+      if (!dataStr) return;
+      let j;
+      try { j = JSON.parse(dataStr); } catch { return; }
+      if (eventName === 'content_block_delta') {
+        const t = j?.delta?.text;
+        if (typeof t === 'string' && t) {
+          textEl.textContent += t;
+          gotText = true;
+          scrollDown();
+        }
+      } else if (eventName === 'error') {
+        textEl.textContent += `\n[claude error: ${JSON.stringify(j?.error || j)}]`;
+      }
+    };
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      buf = buf.replace(/\r\n/g, '\n');
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) !== -1) {
+        handleBlock(buf.slice(0, idx));
+        buf = buf.slice(idx + 2);
+      }
+    }
+    if (buf.trim()) handleBlock(buf);
+    if (!gotText) textEl.textContent = '(empty response from Claude)';
   } catch (e) {
     textEl.textContent += `\n[stream error: ${e.message}]`;
   } finally {
