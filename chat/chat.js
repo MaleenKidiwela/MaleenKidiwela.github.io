@@ -24,7 +24,7 @@ const CONFIG = {
 // localStorage and is sent straight to Anthropic via the
 // `anthropic-dangerous-direct-browser-access` header — it never touches the
 // worker.
-const CLAUDE_MODELS = ['claude-sonnet-4-6'];
+const CLAUDE_MODELS = ['claude-sonnet-4-6', 'claude-opus-4-7'];
 const ANTHROPIC_VERSION = '2023-06-01';
 const ANTHROPIC_MAX_TOKENS = 2048;
 const ANTHROPIC_KEY_STORAGE = 'notes-rag.anthropic-key';
