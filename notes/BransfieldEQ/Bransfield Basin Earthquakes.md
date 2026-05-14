@@ -1,5 +1,7 @@
 # Bransfield Basin Earthquakes
 
+> **Cranium:** [[cranium_bransfield]] — concise big-picture state (status, goals, key questions, decisions, issues, recent activity, timeline). Read this first; refresh daily.
+
 Anchor note for the Bransfield EQ project. End-to-end ML-assisted earthquake workflow tied to Dr. Shengji Wei's planned DAS + active-source experiment from Great Wall Station, King George Island, Antarctica.
 
 ## Workflow stages
@@ -18,7 +20,10 @@ Anchor note for the Bransfield EQ project. End-to-end ML-assisted earthquake wor
 - [[04-20-26 Notes]] — meeting with Dr. Shengji Wei (Chinese Academy of Sciences, Beijing)
 
 ## Daily notes
-- [[05-08-26 Notes]] — project kickoff, Stage 1 pipeline coded, manual picks loaded
+- [[05-08-26 Notes]] — project kickoff, Stage 1 pipeline coded, manual picks loaded; 22-OBS inventory + Dec 26 end-to-end test caught a missed +25 s event
+- [[05-09-26 Notes]] — OBS-domain DeepDenoiser + PhaseNet fine-tuning plan (Phases 0–5); 30 curated training days, August 2019 held out
+- [[05-11-26 Notes]] — Stage 1 picker pass complete (OBST 8.5 M + PhaseNet 3.7 M picks); velocity model rebuilt with sea-level datum + water layer; station geometry patched from Kidiwela+ Table S1
+- [[05-12-26 Notes]] — pyocto daily-chunk parallel scheduler launched; Stage 4 GrowClust validated end-to-end on 30-day partial (5,037 events relocated, 530-event Orca cluster, sub-100 m relative precision); bathymetry upgrade
 
 ## Code
 Methodology lives in this vault. Implementation lives at `~/Documents/bransfield-eq/` (see `PROJECT_PLAN` → "Repo / pipeline layout").

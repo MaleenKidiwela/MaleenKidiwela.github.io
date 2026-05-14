@@ -1,3 +1,4 @@
+> **Cranium:** [[cranium_earthnote]] — concise big-picture state (status, goals, key questions, decisions, issues, recent activity, timeline). Read this first; refresh daily.
 
 We start with the project plan here [[PROJECT_PLAN]] — single-station cross-component (SC) dv/v across all PNSN/PNW stations, validated on a small pool first and then scaled.
 
