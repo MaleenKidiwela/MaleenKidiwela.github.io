@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HypoDD Animations — Bransfield Basin</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #0f1115;
+    --fg: #e8eaed;
+    --muted: #9aa0a6;
+    --card: #181b22;
+    --border: #262a33;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#555; --card:#fff; --border:#e2e2e2; }
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  h1 { font-size: 1.75rem; margin: 0 0 .25rem; }
+  .lede { color: var(--muted); margin: 0 0 2rem; }
+  .video-card { background: var(--card); border: 1px solid var(--border);
+                border-radius: 10px; padding: 1rem 1rem 1.25rem; margin-bottom: 1.5rem; }
+  .video-card h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
+  video { width: 100%; height: auto; display: block; border-radius: 6px; background: #000; }
+  .caption { color: var(--muted); font-size: .9rem; margin-top: .6rem; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>HypoDD Relocation Animations</h1>
+  <p class="lede">Bransfield Basin earthquake catalog — HypoDD stage-B animations.</p>
+
+  <section class="video-card">
+    <h2>Stage B — full catalog</h2>
+    <video controls preload="metadata" playsinline>
+      <source src="hypodd_animation_stage_b.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+      <a href="hypodd_animation_stage_b.mp4">Download MP4</a>
+    </video>
+    <p class="caption">hypodd_animation_stage_b.mp4</p>
+  </section>
+
+  <section class="video-card">
+    <h2>Stage B — January 2019</h2>
+    <video controls preload="metadata" playsinline>
+      <source src="hypodd_animation_stage_b_jan2019.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+      <a href="hypodd_animation_stage_b_jan2019.mp4">Download MP4</a>
+    </video>
+    <p class="caption">hypodd_animation_stage_b_jan2019.mp4</p>
+  </section>
+</main>
+</body>
+</html>

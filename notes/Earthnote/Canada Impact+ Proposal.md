@@ -1,105 +1,116 @@
 ---
 tags: [proposal, funding, canada-impact-plus]
-status: draft-v3
+status: draft-v5-cleantech
 created: 2026-05-13
 updated: 2026-05-13
 ---
 
-# Canada Impact+ Research Training Awards — Proposal Draft v3
+# Canada Impact+ Research Training Awards, Proposal Draft v5 (Clean Tech pivot)
 
-> **Reframe:** drop "nation-wide PNSN-style map." Canada doesn't have that density. Instead: build a **multi-hazard subsurface digital twin** of Canadian land, using dv/v as the core geophysical proxy, fused with precipitation, earthquake, soil moisture, GRACE, permafrost-borehole, and river-discharge data.
+> **Reframe (per professor's feedback, 2026-05-13):** Drop Arctic and multi-hazard digital-twin framing. Lead with **geothermal energy** as the hook, in southern Saskatchewan, with comparator regions in BC, Alberta, and Yukon. Bring in helium production and emerging native-hydrogen exploration in southern SK as adjacent clean-energy plays sharing the same sedimentary infrastructure. Follow the four-step flow: target area → why now (new data) → what we will do (method) → significance.
 >
-> **Priority area:** Environment, Climate Resilience, and the Arctic (primary) + Advanced Digital Technologies (cross-cut).
+> **Priority area:** Clean Technology and Resource Value Chains (primary, broadly defined). Advanced Digital Technologies as cross-cut.
 >
-> **Data backbone:** FDSN networks **CN** (Canadian National Seismograph Network, NRCan, ~165 stations, multi-decade archives) + **QW** (Canadian National Earthquake Early Warning System, NRCan, 600+ new sensors deployed 2024–2025). Land stations only.
+> **Nominee stream:** postdoctoral researcher.
 >
-> **Project anchor:** [[Cascadia dv.v]] — Canadian extension of the Earthnote pipeline.
+> **Host institution:** University of Saskatchewan, Centre for Hydrology.
+>
+> **Co-supervisor candidates** (USask Geological Sciences geophysicists, per professor): **Sam Butler** and **Igor Morozov**. Need to indicate preference. Outreach to be initiated by professor.
+>
+> **Form-question answers (tri-council application page 4):**
+> - Human research subjects: **No**.
+> - Indigenous Peoples or communities: **Yes** (project to be co-designed with First Nations and Métis communities through USask's Global Water Futures partnerships, given Treaty-land siting of geothermal, helium, and hydrogen plays). Confirm with supervisor that this commitment can be made.
+> - CIHR-only items (sex, gender, stem cells): **No** / not applicable to NSERC-coded geophysics.
+> - EDI considerations: **Yes** (open-data pipeline, HQP recruitment and mentoring, Indigenous-territory engagement, accessible dissemination).
+>
+> **Data backbone:** FDSN networks **CN** (Canadian National Seismograph Network), **QW** (Canadian National EEW), **RV** (RAVEN, Alberta), **ATSN** (Alberta Telemetered Seismograph Network), plus the CaMI Field Research Station (academic partnership via U Calgary), Aquistore (PTRC partnership), DEEP Earth Energy 3D seismic baseline, and open international analogues at **Brady Hot Springs / PoroTomo** and **Utah FORGE** (via PubDAS, Geothermal Data Repository, IRIS DMC).
+>
+> **Project anchor:** [[Cascadia dv.v]], the Canadian extension of the Earthnote pipeline.
 
 ---
 
-## What Canada actually has (geometry constraints)
+## What Canada actually has (geometry constraints, Clean Tech framing)
 
-- **CN — Canadian National Seismograph Network** (~165 stations, NRCan). Sparse on a national grid, but multi-decade continuous archives at individual sites; ideal for **single-station longitudinal dv/v** in the Arctic, Subarctic, and Prairies.
-- **QW — Canadian National Earthquake Early Warning System** (NRCan). Two newly densified theatres:
-  - **Southwest BC** (operational May 2024): ~400 sensors across the Lower Mainland, south Vancouver Island, and the Sea-to-Sky corridor. First time BC has had PNSN-like density.
-  - **Ottawa River + St. Lawrence corridor** (operational autumn 2025): ~200 sensors deployed *along the rivers* from Ottawa–Gatineau through Montreal to Quebec City and Charlevoix.
-- **Mount Meager volcano station** (CN, installing spring 2026) — Canada's first real-time volcano monitor. Garibaldi belt otherwise sparse since 1981 (Whistler short-period).
+The methodology is national in scope. The natural centrepiece is the **Saskatchewan and Alberta co-located test bed** (DEEP geothermal and Aquistore CCS in the same Deadwood Formation, with overlapping monitoring), but every region of Canada hosts clean-energy infrastructure where the same single-station ambient-noise approach applies.
 
-→ **Land stations only. CN + QW. No offshore.**
+- **Saskatchewan (centrepiece).** DEEP Earth Energy Production (Canada's first deep geothermal plant, horizontal wells in the Deadwood Formation, southeast SK), Aquistore CO2 storage at SaskPower's Boundary Dam (CO2 injected into the same Deadwood Formation since 2015, permanent geophone array plus DAS fibre in the observation well), pervasive produced-water reinjection across the southeast SK oil and gas play, and emerging lithium-from-brine operations in the Williston Basin.
+- **Alberta.** Quest CCS (Shell, Scotford), the CaMI Field Research Station (Carbon Management Canada's dedicated CCS monitoring testbed near Newell County), the Alberta Carbon Trunk Line, and emerging hubs (Pathways, Polaris). RAVEN (network code RV) and ATSN provide open FDSN seismic coverage focused on induced-seismicity hotspots (Fox Creek, Crooked Lake).
+- **British Columbia.** Site C and Peace River hydro reservoirs (induced seismicity and reservoir-loading dv/v), Garibaldi-belt geothermal exploration (Mount Meager, South Meager), and run-of-river hydro along the south coast. The 400-sensor BC Earthquake Early Warning network (QW, since 2024) provides ambient-noise coverage across the southwest.
+- **Manitoba.** Manitoba Hydro's Nelson River system (Limestone, Kettle, Long Spruce) is one of the world's largest hydroelectric complexes; Tanco lithium and cesium mine; permafrost-fringe pipelines and grid.
+- **Ontario.** Nuclear sites (Bruce, Darlington, Pickering) require continuous geotechnical and groundwater monitoring; Marmora pumped-hydro proposal; Ring of Fire critical minerals; Lambton-area CCS hub emerging at Sarnia. Salt caverns in southwestern ON are leading hydrogen-storage candidates.
+- **Quebec.** Hydro-Québec's La Grande, Manicouagan, and Romaine complexes are global benchmarks for reservoir-induced seismicity and reservoir-loading effects. Quebec Lithium (Whabouchi, North American Lithium) and northern nickel and rare-earth deposits add critical-mineral monitoring. The 200-sensor QW Eastern network (since 2025) provides ambient-noise coverage along the populated St. Lawrence corridor.
+- **Atlantic Canada.** Bay of Fundy tidal energy installations (NS), proposed Goldboro and Bear Head green-hydrogen and ammonia projects (NS), Churchill Falls and Bull Arm hydrogen projects (NL), New Brunswick potash and salt-cavern hydrogen storage potential.
+- **Yukon, NWT, Nunavut.** Emerging geothermal prospects, the Nechalacho rare-earth project (NWT), and the Northern grid and Trans-Northern pipelines exposed to permafrost change. Long-running CN stations provide multi-decade baselines.
+
+→ **Land only. Pan-Canadian clean-energy infrastructure as the subject. Centrepiece in SK and AB; demonstrations across every province and territory with relevant assets.**
 
 ---
 
 ## 1. Summary of proposed research
-*(1,800 char max — current ~1,790)*
+*(1,800 character max in English, including spaces)*
 
-The ground beneath Canada is not silent. Wind, rivers, traffic, and storms generate a continuous low-amplitude vibration that every seismometer records. By cross-correlating this background hum, we can measure relative seismic-velocity changes (dv/v) of less than 0.1 % — a sensitive, non-invasive measure of how the subsurface is changing in response to water, ice, stress, and temperature.
+Canada has a large, untapped deep-geothermal resource. Southern Saskatchewan is its most promising frontier: kilometres of insulating sediment trap heat in the Cambrian Deadwood Formation, where Canada's first deep geothermal plant (DEEP Earth Energy Production) is now drawing 120 °C brine from horizontal wells at 3.5 km. Phase 2 will quadruple capacity by 2027. Comparable plays sit in Alberta, the volcanic systems of British Columbia (Garibaldi belt, Mount Meager), and the Whitehorse trough in Yukon. The same southern Saskatchewan basin also hosts active helium production and emerging native-hydrogen exploration in similar reservoirs.
+What is unknown is how each reservoir evolves under sustained production and injection: where the cooling front advances, how pore pressure communicates between wells, and what triggers induced seismicity. Operators today rely on costly downhole tools that see only their own well, or on episodic 3D seismic surveys that arrive years late. Continuous reservoir-scale information is missing.
+New data finally make this addressable. DEEP has completed a 56 km² 3D seismic baseline; the Aquistore CO2 storage facility, in the same Deadwood Formation since 2015, runs a permanent geophone array and DAS fibre; the CaMI Field Research Station in Alberta operates a fully instrumented CCS testbed; and the RAVEN and Alberta Telemetered networks cover regional seismicity. Most are accessible through FDSN or academic partnership. 
+This project will use single-station ambient noise interferometry to convert these continuous waveforms into multi-year, reservoir-scale records of how the subsurface is changing. The result is a low-cost monitoring framework that de-risks the scale-up of Canadian geothermal, hydrogen, and helium production.
 
-I propose to build a **Canadian Subsurface Digital Twin**: a continuous, multi-hazard model of the Canadian land surface and shallow crust, driven by dv/v from the Canadian National Seismograph Network (CN) and the Canadian National Earthquake Early Warning System (QW), and fused with precipitation, river discharge, GRACE terrestrial water storage, soil moisture, earthquake catalogues, and permafrost-borehole temperatures.
-
-The pipeline I have already built and validated on the Pacific Northwest network — broadband whitening, hourly stretching with adaptive coda windows, MWCS as a second method — will be applied to three Canadian theatres:
-
-1. **Southwest BC** (QW, 400 sensors since 2024): Cascadia slow slip, Garibaldi-belt volcanic unrest, Mount Meager debris-flow precursors, and Fraser/Squamish aquifer response to atmospheric rivers.
-2. **Ottawa River–St. Lawrence corridor** (QW, 200 sensors since 2025): Charlevoix and Western Quebec seismicity, spring-freshet flooding, St. Lawrence Lowlands aquifer drawdown, and seasonal frost.
-3. **Arctic and Subarctic** (CN, 15–25 yr archives): permafrost active-layer change, snowpack loading, and northern aquifer signals on a single-station longitudinal basis.
-
-The output is a public, near-real-time dashboard linking dv/v anomalies to climate forcings, hazards, and water resources — the first integrated subsurface observatory of its kind in Canada.
 
 ---
 
 ## 2. Keywords *(up to 10)*
 
 1. Ambient seismic noise
-2. Relative velocity change (dv/v)
-3. Subsurface digital twin
-4. Permafrost monitoring
-5. Cascadia slow slip
-6. Hydrogeophysics
-7. Drought and groundwater
-8. Volcanic and debris-flow precursors
+2. Seismic velocity change (dv/v)
+3. Geothermal reservoir monitoring
+4. Carbon dioxide storage (CCS)
+5. Induced seismicity
+6. Produced-water injection
+7. Critical and battery minerals
+8. Western Canadian Sedimentary Basin
 9. Multi-source data fusion
-10. Canadian National Seismograph Network
+10. Clean-energy infrastructure resilience
 
 ---
 
 ## 3. Alignment with priority research areas
-*(1,800 char max — current ~1,795)*
+*(1,800 character max in English, including spaces)*
 
-This research aligns directly with **Environment, Climate Resilience, and the Arctic**, and crosses into **Advanced Digital Technologies**.
+This research aligns directly with Clean Technology and Resource Value Chains, broadly defined.
 
-**Climate resilience.** Canada's exposure to Cascadia megathrust earthquakes, Garibaldi volcanism, atmospheric-river flooding, debris flows, and prolonged drought demands continuous, integrated subsurface monitoring. dv/v is sensitive to all of these forcings simultaneously: stress accumulation before earthquakes, magma migration before eruptions, slope saturation before debris flow, and aquifer depletion during drought. Fusing dv/v with precipitation, river discharge, and earthquake catalogues turns Canada's existing CN and QW infrastructure — including the 600+ EEW sensors deployed in 2024–2025 — into a continuous multi-hazard observatory at no incremental sensor cost.
+Canada's clean-energy transition depends on the sedimentary subsurface. Deep geothermal promises baseload renewable power; helium from the same basins underpins quantum and critical-technology supply chains; and native-hydrogen exploration in similar traps could open a domestic clean-fuel resource. Each depends on knowing how rocks and fluids behave kilometres below the surface as wells produce and inject fluids for years. Today this knowledge comes only from single-well downhole tools or from periodic 3D seismic surveys that arrive too late to inform operations.
 
-**Arctic.** Permafrost degradation is one of the largest unquantified climate feedbacks in the Canadian North. dv/v from ambient noise responds to seasonal active-layer freeze–thaw and decadal ground-ice loss, complementing the sparse and expensive borehole-temperature network. CN stations across Yukon, NWT, and Nunavut hold 15–25 year continuous archives that have never been processed for velocity change.
+This project closes the gap by extracting reservoir-scale information from data operators and public agencies already collect: the continuous background vibration recorded by every nearby seismometer and distributed acoustic sensing fibre. Single-station ambient noise interferometry converts that vibration into time series of velocity change that track temperature, pore pressure, and stress, with no active source and no new instruments. The method is mature on international geothermal benchmark sites; this project operationalises it for Canadian deep geothermal and transfers it to the adjacent helium and hydrogen plays sharing the same reservoirs.
 
-**Environment.** Recent literature (Zhang 2023, Lu 2025) confirms dv/v can monitor groundwater, soil moisture, and drought at regional scale — directly applicable to BC aquifers, the St. Lawrence Lowlands, and Prairie water resources. Volcano and debris-flow precursors at Mount Meager and the Garibaldi belt are a natural extension as Canada's first real volcano station comes online in 2026.
-
-**Advanced Digital Technologies.** Building the digital twin requires a cloud-native pipeline ingesting terabytes of continuous CN + QW waveform data, ML-based quality control, automated anomaly detection on multi-year dv/v series, and inversion fusing dv/v with auxiliary geoscientific datasets — a concrete contribution to AI for Earth sciences.
+Most of these resources sit on Treaty lands. The project will be co-designed with First Nations and Métis communities through the University of Saskatchewan's existing Global Water Futures partnerships, so monitoring outputs serve communities, operators, regulators, and researchers together. The result is a unified, low-cost monitoring layer supporting faster, safer, and more transparent scale-up of Canadian geothermal, hydrogen, and helium production.
 
 ---
 
-## Auxiliary datasets in the digital twin
+## Live data feeds in the integrated model
+
+> Treated as live, assimilated streams (Newtonian relaxation toward observations), mirroring the operational-observatory pattern from the Salish Sea Digital Cousin reference. Reframed for clean-energy infrastructure.
 
 | Dataset | Source | Use |
 |---|---|---|
-| Precipitation grids | ECCC ANUSPLIN / CaPA | Drive recharge / loading models |
-| River discharge | NRCan HYDAT | Flood / runoff response |
-| Terrestrial water storage | NASA GRACE-FO | Long-wavelength groundwater anomaly |
-| Soil moisture | NASA SMAP, ESA SMOS | Vadose-zone validation |
-| Permafrost borehole temps | GTN-P | Validate Arctic dv/v interpretation |
-| Earthquake catalogue | NRCan, ISC | Co/postseismic dv/v steps |
-| Volcanic activity logs | Garibaldi VO (emerging) | Mount Meager / Garibaldi correlations |
-| Snow water equivalent | ECCC SnowCast / Sentinel | Loading-induced dv/v |
-| GNSS displacement | NRCan / WCDA | Slow-slip cross-validation |
-| InSAR | Sentinel-1, RCM | Surface deformation co-interpretation |
+| Operator pressure and flow | DEEP, Aquistore, SaskPower, etc. | Reservoir state ground truth |
+| Induced-seismicity catalogues | NRCan, AGS, OGC | Validate dv/v stress signals |
+| Precipitation grids | ECCC ANUSPLIN, CaPA | Hydrologic loading |
+| River and reservoir levels | NRCan HYDAT, BC Hydro | Hydro reservoir loading |
+| Snow water equivalent | ECCC SnowCast, Sentinel | Seasonal loading |
+| Soil moisture | NASA SMAP, ESA SMOS | Drought stress on operations |
+| Terrestrial water storage | NASA GRACE-FO | Long-wavelength change |
+| Permafrost borehole temps | GTN-P | Northern infrastructure risk |
+| GNSS displacement | NRCan, WCDA | Surface validation |
+| InSAR | Sentinel-1, RCM | Surface deformation context |
 
 ---
 
-## Open questions / refinement notes
+## Open questions and refinement notes
 
-- Confirm nominee stream: **doctoral student** vs **postdoctoral researcher**.
-- Confirm Canadian nominator (PI) and host institution (UBC / UVic / U Calgary / Western / McGill / U Ottawa). Affects which theatre is "in-house."
-- **Verify QW broadband fraction + continuous-archiving policy.** dv/v needs broadband (or at least usable low-frequency response) and continuous waveforms, not triggered windows. This is the single biggest feasibility check before submission.
-- Lead emphasis in Summary: keep the three-theatre breakdown, or pick one flagship (Mount Meager debris-flow precursors is the most *novel + media-friendly*; Arctic permafrost is the most *priority-area-coded*; BC EEW is the most *infrastructure-leverage-coded*).
-- Should the "digital twin" framing be in the title? Reviewers either love it or read it as buzzword.
-- Is "debris flow" too niche for keyword #8, or actually a strong differentiator (Mount Meager 2010 is a famous Canadian case)?
-- Add one prior-result line (e.g., "validated on 29 PNW stations, 7 producing genuinely usable hourly dv/v") to strengthen Summary credibility?
-- Char counts to re-verify after each edit pass.
+- Nominee stream: **postdoctoral researcher**. Host: **University of Saskatchewan**. Confirm specific nominator (PI in geothermal, CCS, induced seismicity, or critical minerals).
+- Confirm nominator faculty: candidates include researchers active around DEEP / Aquistore / Williston Basin induced seismicity. (Names to add once confirmed.)
+- Verify continuous-archiving and broadband-fraction status for the seismic stations near DEEP, Aquistore, and the southeast Saskatchewan injection field. Feasibility hinges on this.
+- Should the proposal explicitly name a partnership pathway with DEEP, SaskPower (Aquistore), and one Alberta CCS hub for letters of support?
+- The BC and Eastern Canada EEW theatres are now demoted to side benefits. Mention them at all in the public Summary, or save for the full proposal body?
+- "Clean-energy infrastructure resilience" as keyword: ok, or replace with "Energy transition monitoring"?
+- Retain Indigenous co-design language somewhere in the full proposal body, given lithium-brine and Northern infrastructure operations on Indigenous lands.
+- Char counts: Summary now under 1800 (verify after edits). Alignment draft to be checked.
