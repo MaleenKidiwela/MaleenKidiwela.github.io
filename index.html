@@ -3,233 +3,448 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maleen Kidiwela — Seismologist</title>
-  <meta name="description" content="Maleen Wijeratna Kidiwela — Seismologist and geophysicist at the University of Washington, specializing in ambient noise seismology, volcano tomography, and ocean-bottom geophysics." />
+  <title>Maleen Kidiwela — Seismologist · University of Washington</title>
+  <meta name="description" content="Maleen Wijeratna Kidiwela — Seismologist and geophysicist at the University of Washington. Ambient noise seismology, volcano tomography, and ocean-bottom geophysics across Cascadia, Axial Seamount, and Orca Volcano." />
+  <meta name="theme-color" content="#faf8f3" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet" />
+  <link rel="dns-prefetch" href="https://cdn.plot.ly" />
+  <link rel="preconnect" href="https://cdn.plot.ly" crossorigin />
+  <link rel="dns-prefetch" href="https://images.unsplash.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav class="nav">
-    <div class="nav-inner">
-      <a href="#" class="nav-logo">MK</a>
+  <!-- subtle paper grain -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ============================== NAV (glass pill) ============================== -->
+  <nav class="nav" aria-label="Primary">
+    <div class="nav-pill">
+      <a href="#top" class="nav-logo">
+        <span class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12 L5 12 L7 8 L9 16 L11 6 L13 18 L15 9 L17 14 L19 12 L22 12" />
+          </svg>
+        </span>
+        <span class="logo-text">Maleen Kidiwela</span>
+      </a>
+
       <ul class="nav-links">
         <li><a href="#about">About</a></li>
         <li><a href="#research">Research</a></li>
         <li><a href="#publications">Papers</a></li>
         <li><a href="#visualization">3D Viz</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="notes.html">Notes</a></li>
       </ul>
-      <button class="nav-toggle" aria-label="Toggle menu">
+
+      <a href="#contact" class="nav-cta">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>Get in touch</span>
+      </a>
+
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span>
       </button>
     </div>
   </nav>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-content">
-      <p class="hero-eyebrow reveal">University of Washington &middot; Seismologist &middot; Geophysicist</p>
-      <h1 class="hero-title reveal reveal-d1">Maleen<br/>Kidiwela</h1>
-      <p class="hero-sub reveal reveal-d2">Listening to the Earth.<br class="hide-mobile" /> Turning seismic noise into discovery.</p>
+  <!-- ============================== HERO ============================== -->
+  <header class="hero" id="top">
+    <!-- topographic background -->
+    <svg class="topo" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="topoFade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0b6e8a" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#0b6e8a" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g fill="none" stroke="#0b6e8a" stroke-width="0.6" opacity="0.16">
+        <path d="M-100 720 C 200 660, 360 700, 540 660 S 880 580, 1080 620 1340 560 1560 600"/>
+        <path d="M-100 680 C 200 620, 360 660, 540 620 S 880 540, 1080 580 1340 520 1560 560"/>
+        <path d="M-100 640 C 220 580, 380 620, 560 580 S 900 500, 1100 540 1360 480 1560 520"/>
+        <path d="M-100 600 C 240 540, 400 580, 580 540 S 920 460, 1120 500 1380 440 1560 480"/>
+        <path d="M-100 560 C 260 500, 420 540, 600 500 S 940 420, 1140 460 1400 400 1560 440"/>
+        <path d="M-100 520 C 280 460, 440 500, 620 460 S 960 380, 1160 420 1420 360 1560 400"/>
+        <path d="M-100 480 C 300 420, 460 460, 640 420 S 980 340, 1180 380 1440 320 1560 360"/>
+        <path d="M-100 440 C 320 380, 480 420, 660 380 S 1000 300, 1200 340 1460 280 1560 320"/>
+        <path d="M-100 400 C 340 340, 500 380, 680 340 S 1020 260, 1220 300 1480 240 1560 280"/>
+        <path d="M-100 360 C 360 300, 520 340, 700 300 S 1040 220, 1240 260 1500 200 1560 240"/>
+      </g>
+      <rect width="1440" height="900" fill="url(#topoFade)"/>
+    </svg>
+
+    <div class="hero-wrap">
+      <div class="hero-left">
+        <div class="meta-row">
+          <span class="meta-tag">University of Washington</span>
+          <span class="meta-sep" aria-hidden="true"></span>
+          <span class="meta-status">
+            <span class="status-dot status-dot-live" aria-hidden="true"></span>
+            Currently — Cascadia ambient noise
+          </span>
+        </div>
+
+        <h1 class="hero-title">
+          Listening to the<br/>
+          Earth's<span class="serif-it"> quiet </span>hum,<br/>
+          decoding what<br/>
+          it whispers.
+        </h1>
+
+        <p class="hero-lede">
+          I'm <strong>Maleen Kidiwela</strong> — a seismologist at the University
+          of Washington working on ambient-noise tomography, ocean-bottom
+          geophysics, and submarine volcano monitoring across Cascadia,
+          the Juan de Fuca Ridge, and Antarctica's Bransfield Basin.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#research" class="btn-primary">
+            <span>Recent research</span>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <path d="M4 10 L16 10 M11 5 L16 10 L11 15"/>
+            </svg>
+          </a>
+          <a href="#publications" class="btn-ghost">Published papers</a>
+        </div>
+      </div>
+
+      <aside class="hero-right" aria-label="At a glance">
+        <div class="glass-card">
+          <div class="gc-head">
+            <span class="gc-eyebrow">Field log</span>
+            <span class="gc-coords" aria-hidden="true">47.6553° N · 122.3035° W</span>
+          </div>
+
+          <ul class="data-stack">
+            <li>
+              <span class="d-label">OBS deployments</span>
+              <span class="d-val"><b>07</b></span>
+            </li>
+            <li>
+              <span class="d-label">Continuous ambient data</span>
+              <span class="d-val"><b>13</b><span class="d-unit">years</span></span>
+            </li>
+            <li>
+              <span class="d-label">Orca magma fraction</span>
+              <span class="d-val"><b>16–41</b><span class="d-unit">%</span></span>
+            </li>
+            <li>
+              <span class="d-label">Deepest sensor</span>
+              <span class="d-val"><b>2,580</b><span class="d-unit">m</span></span>
+            </li>
+          </ul>
+
+          <div class="gc-seismo">
+            <svg viewBox="0 0 320 40" preserveAspectRatio="none" aria-hidden="true">
+              <path class="seismo-line" d="
+                M0 20 L20 20 L26 19 L32 21 L40 20
+                L60 20 L68 17 L74 23 L80 13 L86 27 L92 9 L98 31 L104 6 L110 34 L116 12 L122 28
+                L130 18 L138 22 L150 20
+                L170 20 L178 17 L184 23 L190 14 L196 26 L202 11 L208 29 L214 16 L220 24
+                L230 20 L240 20 L250 19 L260 21 L270 20 L280 20 L290 19.5 L300 20.5 L320 20"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="float-chip chip-1" aria-hidden="true">
+          <span class="chip-k">P-wave</span>
+          <span class="chip-v">6.4 km/s</span>
+        </div>
+        <div class="float-chip chip-2" aria-hidden="true">
+          <span class="chip-k">dv/v drift</span>
+          <span class="chip-v">−0.18%</span>
+        </div>
+      </aside>
     </div>
 
-    <!-- Seismogram decoration -->
-    <div class="hero-seismo reveal reveal-d3">
-      <svg viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true" class="seismo-svg">
-        <path class="seismo-line" d="
-          M0,30 L80,30 L90,29 L100,30 L120,30 L140,30 L150,29.5 L160,30
-          L200,30 L210,30 L220,29 L230,31 L240,30
-          L280,30 L290,29 L295,31 L300,28 L305,32 L310,27
-          L315,34 L320,24 L325,36 L330,22 L335,38 L340,20
-          L345,40 L350,18 L355,42 L360,16 L365,41 L370,19
-          L375,38 L380,22 L385,36 L390,24 L395,34 L400,27
-          L405,32 L410,28 L415,31 L420,29 L425,30.5 L430,30
-          L450,30 L455,29 L460,31.5 L465,28 L470,33 L475,26
-          L480,35 L485,23 L490,38 L495,18 L500,42
-          L505,14 L510,44 L515,12 L520,46 L525,10
-          L530,45 L535,13 L540,43 L545,16 L550,40
-          L555,19 L560,37 L565,22 L570,34 L575,25
-          L580,32 L585,27 L590,31 L595,29 L600,30
-          L620,30 L640,30 L650,29.5 L660,30.5 L680,30
-          L700,30 L710,29 L720,31 L730,30 L740,29.5 L760,30
-          L800,30 L820,30 L830,29.5 L840,30 L860,30
-          L900,30 L920,30 L940,30 L960,30 L980,30
-          L1000,30 L1020,30 L1040,30 L1060,30 L1080,30
-          L1100,30 L1120,30 L1140,30 L1160,30 L1180,30 L1200,30
-        " />
-      </svg>
-    </div>
+    <a href="#about" class="hero-scroll" aria-label="Scroll to about">
+      <span>Scroll</span>
+      <span class="scroll-rule" aria-hidden="true"></span>
+    </a>
+  </header>
 
-    <div class="hero-scroll reveal reveal-d4">
-      <span class="scroll-text">Scroll</span>
-      <div class="scroll-line"></div>
+  <!-- ============================== KINETIC MARQUEE ============================== -->
+  <section class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Cascadia Subduction Zone</span><i>◆</i>
+      <span>Ambient Noise Cross-Correlation</span><i>◆</i>
+      <span>Orca Volcano · Bransfield Basin</span><i>◆</i>
+      <span>NoisePy</span><i>◆</i>
+      <span>Axial Seamount</span><i>◆</i>
+      <span>Ocean-Bottom Seismometers</span><i>◆</i>
+      <span>Tomography</span><i>◆</i>
+      <span>Slow Slip Events</span><i>◆</i>
+      <span>Hydrophone Arrays</span><i>◆</i>
+      <span>Methane Seepage</span><i>◆</i>
+      <span>Cascadia Subduction Zone</span><i>◆</i>
+      <span>Ambient Noise Cross-Correlation</span><i>◆</i>
+      <span>Orca Volcano · Bransfield Basin</span><i>◆</i>
+      <span>NoisePy</span><i>◆</i>
+      <span>Axial Seamount</span><i>◆</i>
+      <span>Ocean-Bottom Seismometers</span><i>◆</i>
+      <span>Tomography</span><i>◆</i>
+      <span>Slow Slip Events</span><i>◆</i>
+      <span>Hydrophone Arrays</span><i>◆</i>
+      <span>Methane Seepage</span><i>◆</i>
     </div>
   </section>
 
-  <!-- ABOUT -->
-  <section id="about" class="section">
+  <!-- ============================== ABOUT ============================== -->
+  <section id="about" class="section section-about">
     <div class="container">
-      <div class="section-label reveal">About</div>
-      <div class="about-layout">
-        <div class="about-headline reveal">
-          <div class="about-photo">
-            <img src="profile.jpeg" alt="Maleen Kidiwela" />
+      <div class="about-grid">
+        <div class="about-portrait">
+          <div class="portrait-frame">
+            <img src="profile.jpeg" alt="Portrait of Maleen Kidiwela" loading="lazy" />
+            <div class="portrait-corner tl"></div>
+            <div class="portrait-corner br"></div>
           </div>
-          <h2>I study the Earth's subtle vibrations to reveal what lies beneath.</h2>
+          <figcaption class="portrait-cap">
+            <span>Maleen Wijeratna Kidiwela</span>
+            <span class="cap-sub">Seattle, WA · 2026</span>
+          </figcaption>
         </div>
-        <div class="about-body">
-          <p class="reveal">
-            I'm a seismologist at the <em>University of Washington</em> specializing in
-            ambient noise seismology and ocean-bottom geophysics. My work extracts
-            meaningful signals from the continuous hum of the planet — what it tells
-            us when no earthquakes are shaking it.
-          </p>
-          <p class="reveal reveal-d1">
-            My current research spans Orca Volcano tomography and earthquake
-            location, ambient noise cross-correlation of the Cascadia subduction
-            zone, and monitoring submarine volcanism through the Ocean Observatories
-            Initiative. Previously, I investigated methane seepage along the US North
-            Atlantic with NOAA Ocean Explorer and developed mobile weather systems
-            with drone and sensor technology.
-          </p>
-          <div class="about-tools reveal reveal-d2">
-            <span>Python</span>
-            <span>ObsPy</span>
-            <span>NoisePy</span>
-            <span>Jupyter</span>
-            <span>MATLAB</span>
-            <span>GMT</span>
-            <span>SeisComp</span>
-            <span>Linux</span>
-            <span>HPC</span>
+
+        <div class="about-text">
+          <div class="section-num">§ 01 — About</div>
+          <h2 class="big-statement">
+            I study the Earth's <em>subtle</em> vibrations<br/>
+            to reveal what lies beneath.
+          </h2>
+
+          <div class="about-body">
+            <p>
+              My research extracts meaningful signals from the continuous hum of
+              the planet — what it tells us when no earthquakes are shaking it.
+              I work primarily with <strong>ambient-noise seismology</strong>,
+              ocean-bottom instrumentation, and dense passive arrays.
+            </p>
+            <p>
+              Current work spans <em>Orca Volcano</em> tomography in Antarctica's
+              Bransfield Basin, cross-correlation imaging of the Cascadia
+              subduction zone, and real-time monitoring of submarine volcanism
+              through the Ocean Observatories Initiative. Earlier work investigated
+              North-Atlantic methane seepage with NOAA Ocean Exploration and
+              mobile drone-based atmospheric sensing.
+            </p>
+          </div>
+
+          <div class="tools-block">
+            <span class="tools-label">Toolkit</span>
+            <ul class="tools-list">
+              <li>Python</li><li>ObsPy</li><li>NoisePy</li>
+              <li>Jupyter</li><li>MATLAB</li><li>GMT</li>
+              <li>SeisComp</li><li>Linux</li><li>HPC / Hyak</li>
+            </ul>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- RESEARCH -->
-  <section id="research" class="section section-alt">
+  <!-- ============================== RESEARCH (zig-zag) ============================== -->
+  <section id="research" class="section section-research">
     <div class="container">
-      <div class="section-label reveal">Research</div>
-      <h2 class="section-heading reveal">Selected projects in seismology<br class="hide-mobile" /> and geophysical data science.</h2>
-
-      <div class="research-grid">
-
-        <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025GC012224" target="_blank" class="research-card reveal">
-          <div class="card-num">01</div>
-          <div class="card-icon">
-            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M24 4 C18 14, 10 18, 8 28 C6 38, 14 44, 24 44 C34 44, 42 38, 40 28 C38 18, 30 14, 24 4Z" />
-              <path d="M20 28 C20 28, 22 22, 24 28 C26 34, 28 28, 28 28" opacity="0.5" />
-              <circle cx="24" cy="20" r="2" fill="currentColor" stroke="none" opacity="0.3" />
-            </svg>
-          </div>
-          <h3>Orca Volcano Tomography</h3>
-          <p>Seismic tomography and earthquake location at Orca Volcano — imaging subsurface structure and mapping volcanic seismicity using ocean-bottom instrumentation.</p>
-          <div class="card-tags">
-            <span>Tomography</span><span>ObsPy</span><span>OBS Data</span>
-          </div>
-          <div class="card-arrow">&rarr;</div>
-        </a>
-
-        <a href="https://www.science.org/doi/full/10.1126/sciadv.aea3684" target="_blank" class="research-card reveal reveal-d1">
-          <div class="card-num">02</div>
-          <div class="card-icon">
-            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 32 Q12 18, 24 24 Q36 30, 44 16" />
-              <path d="M4 36 Q12 22, 24 28 Q36 34, 44 20" opacity="0.4" />
-              <path d="M4 40 Q12 26, 24 32 Q36 38, 44 24" opacity="0.2" />
-            </svg>
-          </div>
-          <h3>Cascadia Ambient Noise</h3>
-          <p>Ambient noise cross-correlation along the Cascadia subduction zone — extracting velocity structure and monitoring temporal changes across the plate boundary.</p>
-          <div class="card-tags">
-            <span>NoisePy</span><span>Cross-Correlation</span><span>dv/v</span>
-          </div>
-          <div class="card-arrow">&rarr;</div>
-        </a>
-
-        <div class="research-card reveal reveal-d2">
-          <div class="card-num">03</div>
-          <div class="card-icon">
-            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 24 Q10 18, 16 24 Q22 30, 28 24 Q34 18, 40 24 Q43 26, 44 24" />
-              <circle cx="24" cy="36" r="4" opacity="0.3" />
-              <line x1="24" y1="32" x2="24" y2="24" opacity="0.3" />
-              <path d="M8 12 L12 8 L16 12" opacity="0.25" />
-              <path d="M32 12 L36 8 L40 12" opacity="0.25" />
-            </svg>
-          </div>
-          <h3>Axial Seamount Monitoring</h3>
-          <p>Automated acquisition and visualization of OOI hydrophone and broadband seismometer data from an active submarine volcano on the Juan de Fuca Ridge.</p>
-          <div class="card-tags">
-            <span>Python</span><span>OOI API</span><span>Real-time</span>
-          </div>
+      <div class="head-row">
+        <div>
+          <div class="section-num">§ 02 — Research</div>
+          <h2 class="section-h">Selected projects in seismology<br/>and geophysical data science.</h2>
         </div>
+        <p class="head-aside">
+          A working portfolio of ocean-bottom experiments, ambient-noise
+          imaging, and real-time volcano monitoring.
+        </p>
+      </div>
 
-        <div class="research-card reveal reveal-d3">
-          <div class="card-num">04</div>
-          <div class="card-icon">
-            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="24" cy="24" r="18" opacity="0.2" />
-              <path d="M12 30 Q18 18, 24 30 Q30 42, 36 30" />
-              <path d="M16 20 L20 16 L24 20" opacity="0.3" />
-              <circle cx="34" cy="16" r="3" opacity="0.2" />
-            </svg>
-          </div>
-          <h3>North Atlantic Methane Seepage</h3>
-          <p>Investigation of methane seepage along the US North Atlantic margin in collaboration with NOAA Ocean Exploration — mapping gas escape pathways on the seafloor.</p>
-          <div class="card-tags">
-            <span>NOAA</span><span>Marine Geophysics</span><span>Methane</span>
-          </div>
-        </div>
+      <ol class="zz-list">
 
+        <li class="zz">
+          <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025GC012224" target="_blank" rel="noopener" class="zz-link">
+            <div class="zz-media">
+              <img src="https://images.unsplash.com/photo-1518803194621-27188ba362c9?auto=format&fit=crop&w=1200&q=70"
+                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/orca-volcano/1200/900';"
+                   alt="Volcanic vent at dusk — Orca Volcano tomography" loading="lazy" />
+              <span class="zz-tag">01 / Antarctica</span>
+            </div>
+            <div class="zz-body">
+              <div class="zz-meta">Bransfield Basin · Active-source seismic</div>
+              <h3>Orca Volcano Tomography</h3>
+              <p>
+                Three-dimensional P-wave velocity imaging of an active back-arc
+                volcano. Reveals a magma chamber extending 1–4 km depth with
+                16–41% melt fraction — a rift transitioning from extension to
+                seafloor spreading.
+              </p>
+              <div class="chip-row">
+                <span>Tomography</span><span>ObsPy</span><span>OBS</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <li class="zz zz-reverse">
+          <a href="https://www.science.org/doi/full/10.1126/sciadv.aea3684" target="_blank" rel="noopener" class="zz-link">
+            <div class="zz-media">
+              <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=70"
+                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/cascadia/1200/900';"
+                   alt="Coastal mountains of the Pacific Northwest — Cascadia subduction zone" loading="lazy" />
+              <span class="zz-tag">02 / Pacific NW</span>
+            </div>
+            <div class="zz-body">
+              <div class="zz-meta">Cascadia · 13 years ambient noise</div>
+              <h3>Cascadia Ambient Noise</h3>
+              <p>
+                Cross-correlation of continuous offshore seismic data resolves
+                plate locking and slow-slip behavior along the megathrust —
+                northern plates locked, central segments fluid-driven. Findings
+                that may alter expectations of megathrust rupture.
+              </p>
+              <div class="chip-row">
+                <span>NoisePy</span><span>Cross-Correlation</span><span>dv/v</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <li class="zz">
+          <div class="zz-link no-link">
+            <div class="zz-media">
+              <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=1200&q=70"
+                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/axial/1200/900';"
+                   alt="Pacific Ocean horizon above Axial Seamount on the Juan de Fuca Ridge" loading="lazy" />
+              <span class="zz-tag">03 / Juan de Fuca</span>
+            </div>
+            <div class="zz-body">
+              <div class="zz-meta">OOI · Real-time pipeline</div>
+              <h3>Axial Seamount Monitoring</h3>
+              <p>
+                Automated acquisition and visualization of OOI hydrophone and
+                broadband seismometer data from an active submarine volcano on
+                the Juan de Fuca Ridge. Built for low-latency anomaly review.
+              </p>
+              <div class="chip-row">
+                <span>Python</span><span>OOI API</span><span>Real-time</span>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="zz zz-reverse">
+          <div class="zz-link no-link">
+            <div class="zz-media">
+              <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=1200&q=70"
+                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/methane/1200/900';"
+                   alt="Rocky coastal cliff above the North Atlantic — methane seep mapping" loading="lazy" />
+              <span class="zz-tag">04 / N. Atlantic</span>
+            </div>
+            <div class="zz-body">
+              <div class="zz-meta">NOAA Ocean Exploration · Marine geophysics</div>
+              <h3>North Atlantic Methane Seepage</h3>
+              <p>
+                Mapping methane gas-escape pathways along the U.S. North
+                Atlantic margin — combining multibeam water-column data with
+                geophysical interpretation of seep plumes on the seafloor.
+              </p>
+              <div class="chip-row">
+                <span>NOAA</span><span>Multibeam</span><span>Methane</span>
+              </div>
+            </div>
+          </div>
+        </li>
+
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================== DATA BAND (cockpit) ============================== -->
+  <section class="data-band" aria-label="Research at a glance">
+    <div class="container db-grid">
+      <div class="db-item">
+        <span class="db-num">2,580<i>m</i></span>
+        <span class="db-cap">Max sensor depth · OOI seafloor</span>
+      </div>
+      <div class="db-item">
+        <span class="db-num">13<i>yr</i></span>
+        <span class="db-cap">Cascadia ambient-noise record</span>
+      </div>
+      <div class="db-item">
+        <span class="db-num">16–41<i>%</i></span>
+        <span class="db-cap">Orca magma fraction · GC 2026</span>
+      </div>
+      <div class="db-item">
+        <span class="db-num">07</span>
+        <span class="db-cap">OBS deployments to date</span>
       </div>
     </div>
   </section>
 
-  <!-- PUBLICATIONS -->
-  <section id="publications" class="section">
+  <!-- ============================== PUBLICATIONS ============================== -->
+  <section id="publications" class="section section-pubs">
     <div class="container">
-      <div class="section-label reveal">Publications</div>
-      <h2 class="section-heading reveal">Recent peer-reviewed work.</h2>
+      <div class="head-row">
+        <div>
+          <div class="section-num">§ 03 — Publications</div>
+          <h2 class="section-h">Recent peer-reviewed work.</h2>
+        </div>
+        <p class="head-aside">
+          Selected first-author and contributing papers.
+        </p>
+      </div>
 
-      <div class="pub-list">
+      <div class="pub-stack">
 
-        <!-- Cascadia Paper -->
-        <a href="https://www.science.org/doi/full/10.1126/sciadv.aea3684" target="_blank" class="pub-card reveal">
-          <div class="pub-image">
-            <img src="img/cascadia-study.jpg" alt="Cascadia subduction zone plate locking model and seismometer deployment map" loading="lazy" />
+        <a href="https://www.science.org/doi/full/10.1126/sciadv.aea3684" target="_blank" rel="noopener" class="pub">
+          <div class="pub-media">
+            <img src="img/cascadia-study.jpg"
+                 alt="Cascadia subduction zone plate locking model with seismometer deployment" loading="lazy" />
           </div>
           <div class="pub-body">
-            <div class="pub-journal">Science Advances &middot; Feb 2026</div>
+            <div class="pub-tag">Science Advances · Feb 2026</div>
             <h3>Stress-testing the Cascadia Subduction Zone reveals variability that could impact how earthquakes spread</h3>
             <p class="pub-authors"><strong>M. Kidiwela</strong>, M. Denolle, W. Wilcock, K.-F. Feng</p>
-            <p class="pub-summary">First long-term offshore strain monitoring of Cascadia using 13 years of ambient noise data. Reveals the northern plates are locked while the central region shows slow-slip and fluid-driven velocity changes — findings that may alter expectations of megathrust earthquake behavior.</p>
-            <span class="pub-doi">DOI: 10.1126/sciadv.aea3684</span>
+            <p class="pub-sum">
+              First long-term offshore strain monitoring of Cascadia using 13
+              years of ambient-noise data. The northern plates are locked while
+              the central region shows slow-slip and fluid-driven velocity
+              changes.
+            </p>
+            <div class="pub-foot">
+              <span class="pub-doi">DOI 10.1126/sciadv.aea3684</span>
+              <span class="pub-arrow" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M5 15 L15 5 M8 5 L15 5 L15 12"/></svg>
+              </span>
+            </div>
           </div>
         </a>
 
-        <!-- Orca Volcano Paper -->
-        <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025GC012224" target="_blank" class="pub-card reveal reveal-d1">
-          <div class="pub-image pub-image-placeholder">
-            <svg viewBox="0 0 120 80" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3">
-              <path d="M20 60 C30 30, 50 20, 60 35 C70 50, 80 25, 100 20" />
-              <circle cx="60" cy="40" r="15" stroke-dasharray="3 2" />
-              <path d="M45 55 Q60 45, 75 55" opacity="0.5" />
-            </svg>
+        <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025GC012224" target="_blank" rel="noopener" class="pub">
+          <div class="pub-media">
+            <img src="https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=1200&q=70"
+                 onerror="this.onerror=null;this.src='https://picsum.photos/seed/bransfield/1200/900';"
+                 alt="Snow-capped peaks evoking Antarctica's Bransfield Basin" loading="lazy" />
           </div>
           <div class="pub-body">
-            <div class="pub-journal">Geochemistry, Geophysics, Geosystems &middot; 2026</div>
+            <div class="pub-tag">Geochemistry, Geophysics, Geosystems · 2026</div>
             <h3>Late-Stage Rift Evolution at Back Arc Basins: Insights from a Tomography Experiment at Orca Volcano, Bransfield Basin</h3>
             <p class="pub-authors"><strong>M. Kidiwela</strong> et al.</p>
-            <p class="pub-summary">Active-source 3D seismic tomography of Orca Volcano in Antarctica's Bransfield Basin, imaging the upper-crustal P-wave velocity structure. Reveals a magma chamber extending 1–4 km depth with 16–41% melt fraction, marking a rift transitioning from extension to seafloor spreading.</p>
-            <span class="pub-doi">DOI: 10.1029/2025GC012224</span>
+            <p class="pub-sum">
+              Active-source 3D seismic tomography of Orca Volcano in
+              Antarctica's Bransfield Basin imaging the upper-crustal P-wave
+              velocity structure — a magma chamber from 1–4 km depth with
+              16–41% melt fraction, marking a rift transitioning to seafloor
+              spreading.
+            </p>
+            <div class="pub-foot">
+              <span class="pub-doi">DOI 10.1029/2025GC012224</span>
+              <span class="pub-arrow" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M5 15 L15 5 M8 5 L15 5 L15 12"/></svg>
+              </span>
+            </div>
           </div>
         </a>
 
@@ -237,96 +452,298 @@
     </div>
   </section>
 
-  <!-- 3D VISUALIZATION -->
+  <!-- ============================== PRESS ============================== -->
+  <section id="press" class="section section-press">
+    <div class="container">
+      <div class="head-row">
+        <div>
+          <div class="section-num">§ 04 — In the press</div>
+          <h2 class="section-h">Recent coverage of the<br/>Cascadia work.</h2>
+        </div>
+        <p class="head-aside">
+          Selected reporting on the 2026 <em>Science Advances</em> paper —
+          covering both national and university press.
+        </p>
+      </div>
+
+      <ol class="press-list">
+
+        <li>
+          <a href="https://abcnews.com/Technology/earth-beneath-pacific-northwest-tearing-apart-scientists/story?id=132881643" target="_blank" rel="noopener" class="press-row">
+            <span class="pr-outlet">
+              <span class="pr-mark" aria-hidden="true">ABC</span>
+              <span class="pr-name">ABC News</span>
+            </span>
+            <span class="pr-head">
+              Earth beneath the Pacific Northwest is tearing apart, scientists say
+              <span class="pr-sub">Technology · National coverage</span>
+            </span>
+            <span class="pr-date">2026</span>
+            <span class="pr-arrow" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M5 15 L15 5 M8 5 L15 5 L15 12"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <li>
+          <a href="https://www.washington.edu/news/2026/02/27/stress-testing-the-cascadia-subduction-zone-reveals-variability-that-could-impact-how-earthquakes-spread/" target="_blank" rel="noopener" class="press-row">
+            <span class="pr-outlet">
+              <span class="pr-mark pr-mark-uw" aria-hidden="true">UW</span>
+              <span class="pr-name">UW News</span>
+            </span>
+            <span class="pr-head">
+              Stress-testing the Cascadia Subduction Zone reveals variability that could impact how earthquakes spread
+              <span class="pr-sub">University of Washington · Office of News</span>
+            </span>
+            <span class="pr-date">Feb 27, 2026</span>
+            <span class="pr-arrow" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M5 15 L15 5 M8 5 L15 5 L15 12"/></svg>
+            </span>
+          </a>
+        </li>
+
+        <li>
+          <a href="https://www.dailyuw.com/article/new-study-shows-fluid-in-cascadia-subduction-zone-creates-variability-in-earthquake-impacts-20260414" target="_blank" rel="noopener" class="press-row">
+            <span class="pr-outlet">
+              <span class="pr-mark pr-mark-duw" aria-hidden="true">D·UW</span>
+              <span class="pr-name">The Daily UW</span>
+            </span>
+            <span class="pr-head">
+              New study shows fluid in Cascadia Subduction Zone creates variability in earthquake impacts
+              <span class="pr-sub">Student paper · Science desk</span>
+            </span>
+            <span class="pr-date">Apr 14, 2026</span>
+            <span class="pr-arrow" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M5 15 L15 5 M8 5 L15 5 L15 12"/></svg>
+            </span>
+          </a>
+        </li>
+
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================== 3D VIZ ============================== -->
   <section id="visualization" class="section section-viz">
-    <div class="container">
-      <div class="section-label reveal">Interactive</div>
-      <h2 class="viz-title reveal">Axial Seamount<br class="hide-mobile" /> in 3D.</h2>
-      <p class="viz-intro reveal reveal-d1">Explore the bathymetry and earthquake locations at Axial Seamount — an active submarine volcano on the Juan de Fuca Ridge. Rotate, zoom, and pan to investigate the caldera structure. Use the timeline slider to see seismicity evolve.</p>
-      <div class="viz-controls reveal reveal-d1">
-        <span class="viz-hint">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M10 3v14M3 10l7 7 7-7" /></svg>
-          Drag to rotate
-        </span>
-        <span class="viz-hint">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg>
-          Scroll to zoom
-        </span>
-        <a href="axial_3d.html" target="_blank" class="viz-hint viz-hint-link">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-            <path d="M3 12 L3 17 L8 17" /><path d="M17 8 L17 3 L12 3" /><path d="M3 17 L9 11" /><path d="M17 3 L11 9" />
-          </svg>
-          Open fullscreen
-        </a>
+    <div class="container viz-intro">
+      <div>
+        <div class="section-num">§ 05 — Interactive</div>
+        <h2 class="viz-title">Axial Seamount,<br/>rendered in <em>3D</em>.</h2>
+      </div>
+      <div class="viz-aside">
+        <p>
+          Explore bathymetry and earthquake locations at an active submarine
+          volcano on the Juan de Fuca Ridge. Rotate, zoom, pan the caldera —
+          drag the timeline to see seismicity unfold.
+        </p>
+        <div class="viz-hints">
+          <span class="vh">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M10 3v14M3 10l7 7 7-7"/></svg>
+            Drag to rotate
+          </span>
+          <span class="vh">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="10" cy="10" r="7"/><path d="M10 6v8M6 10h8"/></svg>
+            Scroll to zoom
+          </span>
+          <a href="axial_3d.html" target="_blank" rel="noopener" class="vh vh-link">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M3 12 L3 17 L8 17"/><path d="M17 8 L17 3 L12 3"/><path d="M3 17 L9 11"/><path d="M17 3 L11 9"/></svg>
+            Open fullscreen
+          </a>
+        </div>
       </div>
     </div>
-    <div class="viz-embed reveal reveal-d2">
-      <iframe src="axial_3d.html" class="viz-iframe" loading="lazy" title="3D visualization of Axial Seamount bathymetry and seismicity"></iframe>
-    </div>
-  </section>
 
-  <!-- QUOTE -->
-  <section class="section section-quote">
-    <div class="container">
-      <blockquote class="big-quote reveal">
-        <p>The Earth is never silent. Every rumble, every wave, every tremor carries a story — my work is learning to read it.</p>
-      </blockquote>
-    </div>
-  </section>
+    <div class="viz-frame" id="vizFrame">
 
-  <!-- CONTACT -->
-  <section id="contact" class="section">
-    <div class="container">
-      <div class="section-label reveal">Contact</div>
-      <div class="contact-layout">
-        <div class="contact-left reveal">
-          <h2>Let's work together.</h2>
-          <p>Open to research collaborations, scientific consulting, and connecting with fellow earth scientists.</p>
-          <div class="contact-links">
-            <a href="https://github.com/MaleenKidiwela" class="contact-link">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-              <span>GitHub</span>
-            </a>
-            <a href="https://linkedin.com/in/maleenwijeratna" class="contact-link">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-              <span>LinkedIn</span>
-            </a>
-            <a href="https://scholar.google.com/citations?user=1YHEJeJ-Wt0C&hl=en" class="contact-link">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/></svg>
-              <span>Google Scholar</span>
-            </a>
-            <a href="mailto:seismic@uw.edu" class="contact-link">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-.9.732-1.636 1.636-1.636h.96L12 10.09l9.404-6.269h.96A1.636 1.636 0 0 1 24 5.457z"/></svg>
-              <span>seismic@uw.edu</span>
-            </a>
+      <!-- POSTER (shown until user clicks load) -->
+      <div class="viz-poster" id="vizPoster">
+        <svg class="viz-bathy" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <radialGradient id="bathyHot" cx="50%" cy="55%" r="40%">
+              <stop offset="0%"   stop-color="#0b6e8a" stop-opacity="0.32"/>
+              <stop offset="55%"  stop-color="#0b6e8a" stop-opacity="0.10"/>
+              <stop offset="100%" stop-color="#0b6e8a" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="1200" height="600" fill="url(#bathyHot)"/>
+          <g fill="none" stroke="#0b6e8a" stroke-width="0.7" opacity="0.34">
+            <ellipse cx="600" cy="330" rx="60"  ry="40"/>
+            <ellipse cx="600" cy="330" rx="110" ry="72"/>
+            <ellipse cx="600" cy="330" rx="170" ry="108"/>
+            <ellipse cx="600" cy="330" rx="240" ry="148"/>
+            <ellipse cx="600" cy="330" rx="320" ry="192"/>
+            <ellipse cx="600" cy="330" rx="410" ry="240"/>
+            <ellipse cx="600" cy="330" rx="510" ry="290"/>
+          </g>
+          <!-- caldera epicenters -->
+          <g fill="#c85a3c" opacity="0.78">
+            <circle cx="585" cy="320" r="2.5"/>
+            <circle cx="612" cy="345" r="3"/>
+            <circle cx="598" cy="338" r="2"/>
+            <circle cx="624" cy="312" r="1.8"/>
+            <circle cx="572" cy="348" r="2.2"/>
+            <circle cx="608" cy="298" r="1.6"/>
+            <circle cx="640" cy="335" r="2"/>
+            <circle cx="560" cy="320" r="1.4"/>
+          </g>
+          <!-- radial scan line -->
+          <line class="scan-line" x1="600" y1="330" x2="600" y2="80"
+                stroke="#0b6e8a" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+          <circle cx="600" cy="330" r="4" fill="#0e1116"/>
+          <circle cx="600" cy="330" r="9" fill="none" stroke="#0e1116" stroke-width="0.7" opacity="0.4"/>
+        </svg>
+
+        <div class="viz-poster-grid" aria-hidden="true"></div>
+
+        <div class="viz-poster-ui">
+          <div class="vp-meta">
+            <div class="vp-coord">
+              <span class="vp-k">LAT</span><span class="vp-v">45.9542° N</span>
+            </div>
+            <div class="vp-coord">
+              <span class="vp-k">LON</span><span class="vp-v">130.0086° W</span>
+            </div>
+            <div class="vp-coord">
+              <span class="vp-k">DEPTH</span><span class="vp-v">1,520 m</span>
+            </div>
+          </div>
+
+          <button type="button" class="viz-launch" id="vizLaunch" aria-controls="vizFrame">
+            <span class="vl-ring" aria-hidden="true">
+              <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.4">
+                <circle cx="32" cy="32" r="28" opacity="0.25"/>
+                <circle cx="32" cy="32" r="22" opacity="0.5"/>
+                <path d="M26 22 L44 32 L26 42 Z" fill="currentColor" stroke="none"/>
+              </svg>
+            </span>
+            <span class="vl-text">
+              <span class="vl-line-1">Load 3D bathymetry</span>
+              <span class="vl-line-2">Axial Seamount caldera · ~4&nbsp;MB · interactive</span>
+            </span>
+          </button>
+
+          <div class="vp-log" aria-hidden="true">
+            <span class="vp-log-line">$ MGM mesh · 600k vertices · standby</span>
           </div>
         </div>
-        <div class="contact-right reveal reveal-d1">
-          <form class="contact-form" id="contactForm">
-            <div class="form-group">
-              <label for="name">Name</label>
-              <input type="text" id="name" name="name" placeholder="Your name" required />
-            </div>
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input type="email" id="email" name="email" placeholder="your@email.com" required />
-            </div>
-            <div class="form-group">
-              <label for="message">Message</label>
-              <textarea id="message" name="message" rows="5" placeholder="Tell me about your project or research idea..." required></textarea>
-            </div>
-            <button type="submit" class="btn-submit">Send Message</button>
-          </form>
-        </div>
       </div>
+
+      <!-- LOADER (shown while iframe loads) -->
+      <div class="viz-loader" id="vizLoader" aria-hidden="true">
+        <div class="vl-scan">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(11,110,138,0.15)" stroke-width="1"/>
+            <circle cx="60" cy="60" r="40" fill="none" stroke="rgba(11,110,138,0.20)" stroke-width="1"/>
+            <circle cx="60" cy="60" r="24" fill="none" stroke="rgba(11,110,138,0.28)" stroke-width="1"/>
+            <line class="vl-sweep" x1="60" y1="60" x2="60" y2="6"
+                  stroke="#0b6e8a" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="3" fill="#0e1116"/>
+          </svg>
+        </div>
+        <ul class="vl-log" id="vlLog">
+          <li>$ requesting bathymetric mesh</li>
+          <li>$ decoding earthquake catalog</li>
+          <li>$ initializing WebGL context</li>
+        </ul>
+      </div>
+
+      <!-- IFRAME (injected on click) -->
     </div>
   </section>
 
-  <!-- FOOTER -->
+  <!-- ============================== QUOTE ============================== -->
+  <section class="quote">
+    <div class="container">
+      <p class="quote-mark" aria-hidden="true">“</p>
+      <blockquote>
+        The Earth is never silent. Every rumble, every wave, every tremor
+        carries a story — my work is learning to read it.
+      </blockquote>
+      <p class="quote-sig">— M.K.</p>
+    </div>
+  </section>
+
+  <!-- ============================== CONTACT ============================== -->
+  <section id="contact" class="section section-contact">
+    <div class="container contact-grid">
+      <div class="contact-left">
+        <div class="section-num">§ 06 — Contact</div>
+        <h2 class="contact-h">Let's work<br/>together.</h2>
+        <p class="contact-lede">
+          Open to research collaborations, scientific consulting, and meeting
+          fellow earth scientists. Most days I'm reachable at the lab in
+          Seattle or by email.
+        </p>
+
+        <ul class="contact-list">
+          <li>
+            <a href="notes.html" class="cl-row cl-row-feat">
+              <span class="cl-k">Field log</span>
+              <span class="cl-v">Read the research notes<span class="cl-mini">/notes</span></span>
+              <span class="cl-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:seismic@uw.edu" class="cl-row">
+              <span class="cl-k">Email</span>
+              <span class="cl-v">seismic@uw.edu</span>
+              <span class="cl-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/MaleenKidiwela" target="_blank" rel="noopener" class="cl-row">
+              <span class="cl-k">GitHub</span>
+              <span class="cl-v">@MaleenKidiwela</span>
+              <span class="cl-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://linkedin.com/in/maleenwijeratna" target="_blank" rel="noopener" class="cl-row">
+              <span class="cl-k">LinkedIn</span>
+              <span class="cl-v">/in/maleenwijeratna</span>
+              <span class="cl-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://scholar.google.com/citations?user=1YHEJeJ-Wt0C&hl=en" target="_blank" rel="noopener" class="cl-row">
+              <span class="cl-k">Scholar</span>
+              <span class="cl-v">Google Scholar profile</span>
+              <span class="cl-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <form class="contact-form" id="contactForm">
+        <div class="cf-row">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="Your name" required />
+        </div>
+        <div class="cf-row">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="you@institution.edu" required />
+        </div>
+        <div class="cf-row">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="6" placeholder="Tell me about your project, data, or collaboration idea…" required></textarea>
+        </div>
+        <button type="submit" class="btn-submit">
+          <span>Send message</span>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M4 10 L16 10 M11 5 L16 10 L11 15"/></svg>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================== FOOTER ============================== -->
   <footer class="footer">
-    <div class="container footer-inner">
-      <p class="footer-name">Maleen Kidiwela</p>
-      <p class="footer-copy">Seismologist &middot; Geophysicist &middot; University of Washington</p>
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <span class="f-mark">MK</span>
+        <span>Maleen Kidiwela</span>
+      </div>
+      <p class="f-copy">Seismologist · Geophysicist · University of Washington</p>
+      <p class="f-mini">© 2026 · Built in Seattle</p>
     </div>
   </footer>
 
