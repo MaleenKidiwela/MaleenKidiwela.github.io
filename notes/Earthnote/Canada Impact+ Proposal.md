@@ -23,7 +23,12 @@ updated: 2026-05-13
 > - CIHR-only items (sex, gender, stem cells): **No** / not applicable to NSERC-coded geophysics.
 > - EDI considerations: **Yes** (open-data pipeline, HQP recruitment and mentoring, Indigenous-territory engagement, accessible dissemination).
 >
-> **Data backbone:** FDSN networks **CN** (Canadian National Seismograph Network), **QW** (Canadian National EEW), **RV** (RAVEN, Alberta), **ATSN** (Alberta Telemetered Seismograph Network), plus the CaMI Field Research Station (academic partnership via U Calgary), Aquistore (PTRC partnership), DEEP Earth Energy 3D seismic baseline, and open international analogues at **Brady Hot Springs / PoroTomo** and **Utah FORGE** (via PubDAS, Geothermal Data Repository, IRIS DMC).
+> **Data backbone (Canadian, no new deployment required):**
+> - **Aquistore (Boundary Dam, SK).** Permanent surface geophone array + downhole DAS fibre in the same Deadwood Formation as DEEP, 50 km away. Continuous since 2015. Access via PTRC partnership.
+> - **CaMI Field Research Station (Newell County, AB).** Fully instrumented CCS testbed with surface seismometers, downhole 3C geophones, and straight + helically-wound DAS in two observation wells. Access via U Calgary / CMC JIP, with academic-partnership pathway.
+> - **DEEP (Torquay, SK).** 56.2 km² 3D seismic baseline (Q1 2023). Proprietary; access via NRCan-funded partnership pathway (DEEP has received $25.6M from NRCan's Emerging Renewable Power Program).
+> - **Regional FDSN seismic networks:** **CN** (Canadian National Seismograph Network), **RV** (RAVEN), and **ATSN** (Alberta Telemetered). Open via FDSN.
+> - **Method benchmarks (international, internal-use only, not in public summary):** Brady / PoroTomo and Utah FORGE for established geothermal DAS + ambient-noise interferometry workflows.
 >
 > **Project anchor:** [[Cascadia dv.v]], the Canadian extension of the Earthnote pipeline.
 
@@ -49,10 +54,13 @@ The methodology is national in scope. The natural centrepiece is the **Saskatche
 ## 1. Summary of proposed research
 *(1,800 character max in English, including spaces)*
 
-Canada has a large, untapped deep-geothermal resource. Southern Saskatchewan is its most promising frontier: kilometres of insulating sediment trap heat in the Cambrian Deadwood Formation, where Canada's first deep geothermal plant (DEEP Earth Energy Production) is now drawing 120 °C brine from horizontal wells at 3.5 km. Phase 2 will quadruple capacity by 2027. Comparable plays sit in Alberta, the volcanic systems of British Columbia (Garibaldi belt, Mount Meager), and the Whitehorse trough in Yukon. The same southern Saskatchewan basin also hosts active helium production and emerging native-hydrogen exploration in similar reservoirs.
-What is unknown is how each reservoir evolves under sustained production and injection: where the cooling front advances, how pore pressure communicates between wells, and what triggers induced seismicity. Operators today rely on costly downhole tools that see only their own well, or on episodic 3D seismic surveys that arrive years late. Continuous reservoir-scale information is missing.
-New data finally make this addressable. DEEP has completed a 56 km² 3D seismic baseline; the Aquistore CO2 storage facility, in the same Deadwood Formation since 2015, runs a permanent geophone array and DAS fibre; the CaMI Field Research Station in Alberta operates a fully instrumented CCS testbed; and the RAVEN and Alberta Telemetered networks cover regional seismicity. Most are accessible through FDSN or academic partnership. 
-This project will use single-station ambient noise interferometry to convert these continuous waveforms into multi-year, reservoir-scale records of how the subsurface is changing. The result is a low-cost monitoring framework that de-risks the scale-up of Canadian geothermal, hydrogen, and helium production.
+Canada has a large, untapped deep-geothermal resource. Southern Saskatchewan is its most promising frontier: kilometres of insulating sediment trap heat in the Cambrian Deadwood Formation, where Canada's first deep geothermal plant (DEEP Earth Energy Production) draws 120 °C brine from horizontal wells at 3.5 km. Comparable plays sit in Alberta, BC (Garibaldi belt, Mount Meager), and Yukon (Whitehorse trough). The same basin also hosts active helium production and emerging native-hydrogen exploration in similar reservoirs.
+
+What is unknown is how each reservoir evolves under production and injection: where the cooling front advances, how pore pressure moves between wells, and what triggers induced seismicity. Existing methods, downhole tools and episodic 3D surveys, see only one well or arrive years late.
+
+The Canadian data needed for continuous answers already exist. The Aquistore CO2 storage facility, 50 km from DEEP in the same Deadwood Formation, has run a permanent geophone array and downhole DAS fibre since 2015. The CaMI Field Research Station in Alberta hosts a fully instrumented testbed with surface and borehole DAS. DEEP has completed a 56 km² 3D seismic baseline, and CN, RAVEN, and ATSN seismic networks cover the regional background.
+
+The project will apply ambient-noise interferometry to these data to produce time-lapse maps of seismic velocity change across each reservoir, at hourly to monthly resolution, tracking pore pressure, the advance of cooling fronts between injection and production wells, and stress changes that precede induced seismicity. Cross-checked against operator pressure logs and microseismic catalogues, the outputs form a continuously updated monitoring framework for safe scale-up of Canadian geothermal, hydrogen, and helium production.
 
 
 ---
@@ -77,11 +85,11 @@ This project will use single-station ambient noise interferometry to convert the
 
 This research aligns directly with Clean Technology and Resource Value Chains, broadly defined.
 
-Canada's clean-energy transition depends on the sedimentary subsurface. Deep geothermal promises baseload renewable power; helium from the same basins underpins quantum and critical-technology supply chains; and native-hydrogen exploration in similar traps could open a domestic clean-fuel resource. Each depends on knowing how rocks and fluids behave kilometres below the surface as wells produce and inject fluids for years. Today this knowledge comes only from single-well downhole tools or from periodic 3D seismic surveys that arrive too late to inform operations.
+Canada's clean-energy transition depends on the sedimentary subsurface. Deep geothermal promises baseload renewable power; helium from the same basins underpins quantum and critical technology; and native-hydrogen exploration in similar traps could open a domestic clean fuel. Each depends on how rocks and fluids behave kilometres below the surface as wells produce and inject for years. Today this knowledge comes only from single-well downhole tools or from periodic 3D surveys that arrive too late to inform operations.
 
-This project closes the gap by extracting reservoir-scale information from data operators and public agencies already collect: the continuous background vibration recorded by every nearby seismometer and distributed acoustic sensing fibre. Single-station ambient noise interferometry converts that vibration into time series of velocity change that track temperature, pore pressure, and stress, with no active source and no new instruments. The method is mature on international geothermal benchmark sites; this project operationalises it for Canadian deep geothermal and transfers it to the adjacent helium and hydrogen plays sharing the same reservoirs.
+This project closes the gap by extracting reservoir-scale information from data already being collected: continuous background vibration recorded by nearby seismometers and distributed acoustic sensing fibres. Single-station ambient noise interferometry converts that vibration into velocity-change time series tracking temperature, pore pressure, and stress. The method is mature internationally; this project operationalises it for Canadian deep geothermal and the adjacent helium and hydrogen plays.
 
-Most of these resources sit on Treaty lands. The project will be co-designed with First Nations and Métis communities through the University of Saskatchewan's existing Global Water Futures partnerships, so monitoring outputs serve communities, operators, regulators, and researchers together. The result is a unified, low-cost monitoring layer supporting faster, safer, and more transparent scale-up of Canadian geothermal, hydrogen, and helium production.
+Beyond science, the project delivers outputs useful to communities, operators, and regulators. It requires no new installations or site access, making it non-invasive across agricultural, Crown, and Indigenous lands overlying the reservoirs. Data will be deposited in open-access repositories and plain-language summaries shared through regional outlets. The work supports the National Strategy for an Electrified Canadian Economy (2026), which targets doubling the grid by 2050 with geothermal in the required low-emitting mix. The result is a unified, low-cost monitoring layer supporting safer scale-up of Canadian geothermal, hydrogen, and helium production.
 
 ---
 
