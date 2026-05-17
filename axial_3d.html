@@ -113,11 +113,11 @@
 
 <div class="range-controls">
   <span class="range-label">From</span>
-  <span class="range-value" id="startLabel">2015-01</span>
+  <span class="range-value" id="startLabel">2020-12</span>
   <div class="range-track">
     <div class="range-bar"></div>
     <div class="range-bar-active" id="activeBar"></div>
-    <input type="range" id="rangeStart" min="0" max="82" value="0" />
+    <input type="range" id="rangeStart" min="0" max="82" value="70" />
     <input type="range" id="rangeEnd" min="0" max="82" value="82" />
   </div>
   <span class="range-value" id="endLabel">2021-12</span>
@@ -158,34 +158,17 @@
 
   function applyStyle() {
     if (!plotDiv || !plotDiv.data) { setTimeout(applyStyle, 500); return; }
+    var eqIdx = [];
     plotDiv.data.forEach(function(trace, i) {
-      if (trace.name && trace.name.startsWith('EQ ')) {
-        Plotly.restyle(plotDiv, {
-          'marker.color': 'rgba(220, 40, 40, 0.8)',
-          'marker.size': 2
-        }, [i]);
-      }
+      if (trace.name && trace.name.startsWith('EQ ')) eqIdx.push(i);
     });
+    if (eqIdx.length) {
+      Plotly.restyle(plotDiv, {
+        'marker.color': 'rgba(220, 40, 40, 0.8)',
+        'marker.size': 2
+      }, eqIdx);
+    }
     updateVis();
-    var angle = 0, radius = 1.1, zH = 0.5, rotating = true, timer;
-    plotDiv.addEventListener('mousedown', function() { rotating = false; });
-    plotDiv.addEventListener('touchstart', function() { rotating = false; });
-    function resetTimer() {
-      clearTimeout(timer); rotating = false;
-      timer = setTimeout(function() { rotating = true; }, 5000);
-    }
-    plotDiv.addEventListener('mouseup', resetTimer);
-    plotDiv.addEventListener('touchend', resetTimer);
-    function rot() {
-      if (rotating) {
-        angle += 0.003;
-        Plotly.relayout(plotDiv, { 'scene.camera.eye': {
-          x: radius * Math.cos(angle), y: radius * Math.sin(angle), z: zH
-        } });
-      }
-      requestAnimationFrame(rot);
-    }
-    setTimeout(rot, 2000);
   }
 
   startSlider.addEventListener('input', updateVis);
@@ -199,7 +182,7 @@
 (function () {
   var ID = "4cb6801b-1bb9-4b46-965c-0213bd85354f";
   var SPEED = 0.0028;        // radians per frame
-  var RESUME_AFTER = 2200;   // ms after user stops interacting
+  var RESUME_AFTER = 5000;   // ms after user stops interacting
 
   function start() {
     var div = document.getElementById(ID);
@@ -216,11 +199,14 @@
     var paused = false;
     var resumeTimer;
 
-    function pauseAndResume() {
+    function pauseNow() {
       paused = true;
       clearTimeout(resumeTimer);
+    }
+    function scheduleResume() {
+      clearTimeout(resumeTimer);
       resumeTimer = setTimeout(function () {
-        // pick up from current camera position
+        // pick up from the user's current camera position
         var c = div._fullLayout && div._fullLayout.scene && div._fullLayout.scene.camera;
         if (c && c.eye) {
           radius = Math.sqrt(c.eye.x * c.eye.x + c.eye.y * c.eye.y) || radius;
@@ -230,9 +216,15 @@
         paused = false;
       }, RESUME_AFTER);
     }
-    div.addEventListener('mousedown', pauseAndResume);
-    div.addEventListener('wheel',     pauseAndResume, { passive: true });
-    div.addEventListener('touchstart',pauseAndResume, { passive: true });
+    // pause while pointer is held / wheeling; only start the 5s countdown when interaction ends
+    div.addEventListener('mousedown',  pauseNow);
+    div.addEventListener('touchstart', pauseNow, { passive: true });
+    div.addEventListener('mouseup',    scheduleResume);
+    div.addEventListener('mouseleave', scheduleResume);
+    div.addEventListener('touchend',   scheduleResume);
+    div.addEventListener('touchcancel',scheduleResume);
+    // wheel has no end event — debounce by treating each tick as both pause + reschedule
+    div.addEventListener('wheel', function () { pauseNow(); scheduleResume(); }, { passive: true });
 
     // throttle relayouts to ~30fps so we don't melt CPUs
     var lastT = 0;
