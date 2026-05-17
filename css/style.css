@@ -1305,7 +1305,7 @@ body {
 /* per-photo crop alignment — keeps the subject inside the 4:3 frame */
 .zz-media[data-illustration="orca"]    img { object-position: 50% 55%; }
 .zz-media[data-illustration="cascadia"] img { object-position: 50% 50%; }
-.zz-media[data-illustration="axial"]    img { object-position: 50% 18%; }
+.zz-media[data-illustration="axial"]    img { object-position: 50% 50%; }
 .zz-media[data-illustration="methane"]  img { object-position: 50% 65%; }
 /* duotone overlay for cohesion */
 .zz-media::after {
