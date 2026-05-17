@@ -1321,13 +1321,6 @@ body {
   filter: contrast(1.08) saturate(1);
 }
 
-.pub-media-svg { background: #eee5d3; }
-.pub-media-svg::after { display: none; }
-.pub-media-svg svg {
-  width: 100%; height: 100%;
-  transition: transform 1.4s var(--ease);
-}
-.pub:hover .pub-media-svg svg { transform: scale(1.03); }
 .zz-tag {
   position: absolute;
   top: 1rem;
