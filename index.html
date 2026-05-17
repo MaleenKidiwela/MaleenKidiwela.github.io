@@ -12,7 +12,7 @@
   <link rel="dns-prefetch" href="https://cdn.plot.ly" />
   <link rel="preconnect" href="https://cdn.plot.ly" crossorigin />
   <link rel="dns-prefetch" href="https://images.unsplash.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Geist:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -53,146 +53,63 @@
   </nav>
 
   <!-- ============================== HERO ============================== -->
-  <header class="hero" id="top">
-    <!-- topographic background -->
-    <svg class="topo" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <linearGradient id="topoFade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#0b6e8a" stop-opacity="0.18"/>
-          <stop offset="100%" stop-color="#0b6e8a" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <g fill="none" stroke="#0b6e8a" stroke-width="0.6" opacity="0.16">
-        <path d="M-100 720 C 200 660, 360 700, 540 660 S 880 580, 1080 620 1340 560 1560 600"/>
-        <path d="M-100 680 C 200 620, 360 660, 540 620 S 880 540, 1080 580 1340 520 1560 560"/>
-        <path d="M-100 640 C 220 580, 380 620, 560 580 S 900 500, 1100 540 1360 480 1560 520"/>
-        <path d="M-100 600 C 240 540, 400 580, 580 540 S 920 460, 1120 500 1380 440 1560 480"/>
-        <path d="M-100 560 C 260 500, 420 540, 600 500 S 940 420, 1140 460 1400 400 1560 440"/>
-        <path d="M-100 520 C 280 460, 440 500, 620 460 S 960 380, 1160 420 1420 360 1560 400"/>
-        <path d="M-100 480 C 300 420, 460 460, 640 420 S 980 340, 1180 380 1440 320 1560 360"/>
-        <path d="M-100 440 C 320 380, 480 420, 660 380 S 1000 300, 1200 340 1460 280 1560 320"/>
-        <path d="M-100 400 C 340 340, 500 380, 680 340 S 1020 260, 1220 300 1480 240 1560 280"/>
-        <path d="M-100 360 C 360 300, 520 340, 700 300 S 1040 220, 1240 260 1500 200 1560 240"/>
-      </g>
-      <rect width="1440" height="900" fill="url(#topoFade)"/>
-    </svg>
+  <header class="hero-prisma" id="top">
+    <div class="hp-bg">
+      <video
+        class="hp-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=1600&q=70"
+        aria-hidden="true"
+      >
+        <source src="hero.mp4" type="video/mp4" />
+      </video>
+      <div class="hp-noise" aria-hidden="true"></div>
+      <div class="hp-grad-top" aria-hidden="true"></div>
+      <div class="hp-grad-bottom" aria-hidden="true"></div>
+    </div>
 
-    <div class="hero-wrap">
-      <div class="hero-left">
-        <div class="meta-row">
-          <span class="meta-tag">University of Washington</span>
-          <span class="meta-sep" aria-hidden="true"></span>
-          <span class="meta-status">
-            <span class="status-dot status-dot-live" aria-hidden="true"></span>
-            Currently — Cascadia ambient noise
-          </span>
+    <div class="hp-content">
+      <div class="hp-grid">
+        <div class="hp-name-col">
+          <h1 class="hp-name" aria-label="Maleen Kidiwela">
+            <span class="hp-word"><span>Maleen</span></span>
+            <span class="hp-word"><span>Kidiwela<i class="hp-aster" aria-hidden="true">*</i></span></span>
+          </h1>
+          <p class="hp-name-foot" aria-hidden="true">
+            <span>*Seismologist · Geophysicist</span>
+            <span>University of Washington</span>
+          </p>
         </div>
 
-        <h1 class="hero-title">
-          Listening to the<br/>
-          Earth's<span class="serif-it"> quiet </span>hum,<br/>
-          decoding what<br/>
-          it whispers.
-        </h1>
+        <aside class="hp-aside">
+          <p class="hp-lede">
+            Maleen is a seismologist at the University of Washington working at
+            the intersection of ambient-noise interferometry, geodesy,
+            tomography, and seismic monitoring — across Cascadia, Axial
+            Seamount, and Antarctica's Bransfield Basin.
+          </p>
 
-        <p class="hero-lede">
-          I'm <strong>Maleen Kidiwela</strong> — a seismologist at the University
-          of Washington working on ambient-noise tomography, ocean-bottom
-          geophysics, and submarine volcano monitoring across Cascadia,
-          the Juan de Fuca Ridge, and Antarctica's Bransfield Basin.
-        </p>
-
-        <div class="hero-actions">
-          <a href="#research" class="btn-primary">
-            <span>Recent research</span>
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-              <path d="M4 10 L16 10 M11 5 L16 10 L11 15"/>
-            </svg>
-          </a>
-          <a href="#publications" class="btn-ghost">Published papers</a>
-        </div>
+          <div class="hp-actions">
+            <a href="#research" class="hp-cta">
+              <span>Recent research</span>
+              <span class="hp-cta-arrow" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                  <path d="M4 10 L16 10 M11 5 L16 10 L11 15"/>
+                </svg>
+              </span>
+            </a>
+            <a href="#publications" class="hp-cta hp-cta-ghost">
+              <span>Published papers</span>
+            </a>
+          </div>
+        </aside>
       </div>
-
-      <aside class="hero-right" aria-label="At a glance">
-        <div class="glass-card">
-          <div class="gc-head">
-            <span class="gc-eyebrow">Field log</span>
-            <span class="gc-coords" aria-hidden="true">47.6553° N · 122.3035° W</span>
-          </div>
-
-          <ul class="data-stack">
-            <li>
-              <span class="d-label">OBS deployments</span>
-              <span class="d-val"><b>07</b></span>
-            </li>
-            <li>
-              <span class="d-label">Continuous ambient data</span>
-              <span class="d-val"><b>13</b><span class="d-unit">years</span></span>
-            </li>
-            <li>
-              <span class="d-label">Orca magma fraction</span>
-              <span class="d-val"><b>16–41</b><span class="d-unit">%</span></span>
-            </li>
-            <li>
-              <span class="d-label">Deepest sensor</span>
-              <span class="d-val"><b>2,580</b><span class="d-unit">m</span></span>
-            </li>
-          </ul>
-
-          <div class="gc-seismo">
-            <svg viewBox="0 0 320 40" preserveAspectRatio="none" aria-hidden="true">
-              <path class="seismo-line" d="
-                M0 20 L20 20 L26 19 L32 21 L40 20
-                L60 20 L68 17 L74 23 L80 13 L86 27 L92 9 L98 31 L104 6 L110 34 L116 12 L122 28
-                L130 18 L138 22 L150 20
-                L170 20 L178 17 L184 23 L190 14 L196 26 L202 11 L208 29 L214 16 L220 24
-                L230 20 L240 20 L250 19 L260 21 L270 20 L280 20 L290 19.5 L300 20.5 L320 20"/>
-            </svg>
-          </div>
-        </div>
-
-        <div class="float-chip chip-1" aria-hidden="true">
-          <span class="chip-k">P-wave</span>
-          <span class="chip-v">6.4 km/s</span>
-        </div>
-        <div class="float-chip chip-2" aria-hidden="true">
-          <span class="chip-k">dv/v drift</span>
-          <span class="chip-v">−0.18%</span>
-        </div>
-      </aside>
     </div>
-
-    <a href="#about" class="hero-scroll" aria-label="Scroll to about">
-      <span>Scroll</span>
-      <span class="scroll-rule" aria-hidden="true"></span>
-    </a>
   </header>
-
-  <!-- ============================== KINETIC MARQUEE ============================== -->
-  <section class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      <span>Cascadia Subduction Zone</span><i>◆</i>
-      <span>Ambient Noise Cross-Correlation</span><i>◆</i>
-      <span>Orca Volcano · Bransfield Basin</span><i>◆</i>
-      <span>NoisePy</span><i>◆</i>
-      <span>Axial Seamount</span><i>◆</i>
-      <span>Ocean-Bottom Seismometers</span><i>◆</i>
-      <span>Tomography</span><i>◆</i>
-      <span>Slow Slip Events</span><i>◆</i>
-      <span>Hydrophone Arrays</span><i>◆</i>
-      <span>Methane Seepage</span><i>◆</i>
-      <span>Cascadia Subduction Zone</span><i>◆</i>
-      <span>Ambient Noise Cross-Correlation</span><i>◆</i>
-      <span>Orca Volcano · Bransfield Basin</span><i>◆</i>
-      <span>NoisePy</span><i>◆</i>
-      <span>Axial Seamount</span><i>◆</i>
-      <span>Ocean-Bottom Seismometers</span><i>◆</i>
-      <span>Tomography</span><i>◆</i>
-      <span>Slow Slip Events</span><i>◆</i>
-      <span>Hydrophone Arrays</span><i>◆</i>
-      <span>Methane Seepage</span><i>◆</i>
-    </div>
-  </section>
 
   <!-- ============================== ABOUT ============================== -->
   <section id="about" class="section section-about">
@@ -265,10 +182,44 @@
 
         <li class="zz">
           <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025GC012224" target="_blank" rel="noopener" class="zz-link">
-            <div class="zz-media">
-              <img src="https://images.unsplash.com/photo-1518803194621-27188ba362c9?auto=format&fit=crop&w=1200&q=70"
-                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/orca-volcano/1200/900';"
-                   alt="Volcanic vent at dusk — Orca Volcano tomography" loading="lazy" />
+            <div class="zz-media zz-media-svg" data-illustration="orca">
+              <svg viewBox="0 0 600 450" preserveAspectRatio="xMidYMid slice" aria-label="Bathymetric contours and magma chamber, Orca Volcano">
+                <defs>
+                  <radialGradient id="orcaMelt" cx="50%" cy="56%" r="22%">
+                    <stop offset="0%"  stop-color="#c85a3c" stop-opacity="0.65"/>
+                    <stop offset="60%" stop-color="#b07033" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#b07033" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <rect width="600" height="450" fill="#eee5d3"/>
+                <g fill="none" stroke="#0b6e8a" stroke-width="0.9" opacity="0.55">
+                  <ellipse cx="300" cy="240" rx="42"  ry="28"/>
+                  <ellipse cx="300" cy="240" rx="74"  ry="50"/>
+                  <ellipse cx="300" cy="240" rx="112" ry="76"/>
+                  <ellipse cx="300" cy="240" rx="156" ry="104"/>
+                  <ellipse cx="300" cy="240" rx="206" ry="136"/>
+                  <ellipse cx="300" cy="240" rx="262" ry="170"/>
+                  <ellipse cx="300" cy="240" rx="324" ry="208"/>
+                </g>
+                <ellipse cx="300" cy="240" rx="60" ry="38" fill="url(#orcaMelt)"/>
+                <g fill="#0e1116">
+                  <circle cx="290" cy="235" r="2.2"/>
+                  <circle cx="312" cy="248" r="1.8"/>
+                  <circle cx="298" cy="252" r="1.6"/>
+                  <circle cx="318" cy="230" r="2"/>
+                  <circle cx="276" cy="246" r="1.4"/>
+                  <circle cx="306" cy="222" r="1.6"/>
+                  <circle cx="332" cy="240" r="1.8"/>
+                  <circle cx="262" cy="234" r="1.4"/>
+                </g>
+                <g font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.55">
+                  <text x="20" y="28">ORCA · BRANSFIELD BASIN</text>
+                  <text x="20" y="42">62.84° S · 058.50° W</text>
+                  <text x="20" y="430">DEPTH CONTOURS · 200 m</text>
+                  <text x="500" y="430">MELT 16–41%</text>
+                </g>
+                <line x1="20" y1="48" x2="180" y2="48" stroke="#0e1116" stroke-width="0.6" opacity="0.4"/>
+              </svg>
               <span class="zz-tag">01 / Antarctica</span>
             </div>
             <div class="zz-body">
@@ -289,10 +240,66 @@
 
         <li class="zz zz-reverse">
           <a href="https://www.science.org/doi/full/10.1126/sciadv.aea3684" target="_blank" rel="noopener" class="zz-link">
-            <div class="zz-media">
-              <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=70"
-                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/cascadia/1200/900';"
-                   alt="Coastal mountains of the Pacific Northwest — Cascadia subduction zone" loading="lazy" />
+            <div class="zz-media zz-media-svg" data-illustration="cascadia">
+              <svg viewBox="0 0 600 450" preserveAspectRatio="xMidYMid slice" aria-label="Cross-section of the Cascadia subduction zone">
+                <defs>
+                  <linearGradient id="oceanG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stop-color="#bcd6df"/>
+                    <stop offset="100%" stop-color="#7fa9b5"/>
+                  </linearGradient>
+                  <linearGradient id="contG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stop-color="#d8c9a8"/>
+                    <stop offset="100%" stop-color="#9d8456"/>
+                  </linearGradient>
+                  <linearGradient id="slabG" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#3a4350"/>
+                    <stop offset="100%" stop-color="#1a1f27"/>
+                  </linearGradient>
+                  <linearGradient id="lockG" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%"  stop-color="#c85a3c" stop-opacity="0.7"/>
+                    <stop offset="100%" stop-color="#c85a3c" stop-opacity="0.1"/>
+                  </linearGradient>
+                </defs>
+                <rect width="600" height="450" fill="#f3ecdc"/>
+                <!-- ocean -->
+                <path d="M0 130 L320 130 L360 150 L0 150 Z" fill="url(#oceanG)" opacity="0.85"/>
+                <line x1="0" y1="130" x2="320" y2="130" stroke="#0b6e8a" stroke-width="1" opacity="0.6"/>
+                <!-- continental wedge -->
+                <path d="M320 130 L360 150 L420 175 L520 200 L600 215 L600 450 L320 450 Z" fill="url(#contG)" opacity="0.95"/>
+                <!-- trench marker -->
+                <path d="M340 140 L320 130 L300 140" fill="none" stroke="#0e1116" stroke-width="1.3"/>
+                <text x="276" y="118" font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.7">CASCADIA TRENCH</text>
+                <!-- subducting slab -->
+                <path d="M0 175 L260 175 L600 380 L600 420 L0 215 Z" fill="url(#slabG)" opacity="0.92"/>
+                <line x1="0" y1="180" x2="260" y2="180" stroke="#fff" stroke-width="0.6" opacity="0.18"/>
+                <!-- locked zone overlay -->
+                <path d="M320 150 L420 175 L460 200 L380 165 Z" fill="url(#lockG)"/>
+                <text x="370" y="200" font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.85" transform="rotate(20 370 200)">LOCKED · NORTH</text>
+                <!-- slow slip arrows -->
+                <g stroke="#0b6e8a" stroke-width="1.2" fill="#0b6e8a">
+                  <line x1="510" y1="240" x2="475" y2="225"/>
+                  <polygon points="475,225 482,228 480,221"/>
+                  <line x1="545" y1="270" x2="510" y2="255"/>
+                  <polygon points="510,255 517,258 515,251"/>
+                </g>
+                <text x="492" y="290" font-family="JetBrains Mono, monospace" font-size="9" fill="#0b6e8a" opacity="0.85">SLOW-SLIP · CENTER</text>
+                <!-- station markers -->
+                <g fill="#c85a3c">
+                  <polygon points="60,150 66,140 72,150"/>
+                  <polygon points="120,150 126,140 132,150"/>
+                  <polygon points="190,150 196,140 202,150"/>
+                  <polygon points="250,150 256,140 262,150"/>
+                </g>
+                <text x="60" y="170" font-family="JetBrains Mono, monospace" font-size="8" fill="#0e1116" opacity="0.6">▾ OBS array (4 of 13)</text>
+                <!-- meta -->
+                <g font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.55">
+                  <text x="20" y="28">CASCADIA · 47.5°N – 48.3°N</text>
+                  <text x="20" y="42">13 yr AMBIENT-NOISE RECORD</text>
+                  <text x="20" y="430">CROSS-SECTION · NOT TO SCALE</text>
+                  <text x="520" y="430">~80 km wide</text>
+                </g>
+                <line x1="20" y1="48" x2="180" y2="48" stroke="#0e1116" stroke-width="0.6" opacity="0.4"/>
+              </svg>
               <span class="zz-tag">02 / Pacific NW</span>
             </div>
             <div class="zz-body">
@@ -313,10 +320,71 @@
 
         <li class="zz">
           <div class="zz-link no-link">
-            <div class="zz-media">
-              <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=1200&q=70"
-                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/axial/1200/900';"
-                   alt="Pacific Ocean horizon above Axial Seamount on the Juan de Fuca Ridge" loading="lazy" />
+            <div class="zz-media zz-media-svg" data-illustration="axial">
+              <svg viewBox="0 0 600 450" preserveAspectRatio="xMidYMid slice" aria-label="Plan view of the Axial Seamount caldera with OOI seismometers and hydrophones">
+                <defs>
+                  <radialGradient id="calGlow" cx="50%" cy="50%" r="40%">
+                    <stop offset="0%"  stop-color="#0b6e8a" stop-opacity="0.20"/>
+                    <stop offset="100%" stop-color="#0b6e8a" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <rect width="600" height="450" fill="#e9e1ce"/>
+                <rect x="0" y="0" width="600" height="450" fill="url(#calGlow)"/>
+                <!-- caldera outline -->
+                <path d="M210 165 C 260 130, 360 130, 410 160 C 460 195, 470 260, 425 305 C 380 350, 285 360, 230 320 C 175 285, 165 200, 210 165 Z"
+                      fill="#cfb98a" fill-opacity="0.55" stroke="#0e1116" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.9"/>
+                <!-- inner ring -->
+                <path d="M250 200 C 290 175, 360 178, 388 205 C 416 232, 412 280, 380 300 C 348 320, 290 318, 262 295 C 234 272, 230 220, 250 200 Z"
+                      fill="none" stroke="#0e1116" stroke-width="0.7" opacity="0.5"/>
+                <!-- magma center -->
+                <ellipse cx="320" cy="245" rx="22" ry="14" fill="#c85a3c" opacity="0.75"/>
+                <ellipse cx="320" cy="245" rx="40" ry="26" fill="none" stroke="#c85a3c" stroke-width="0.7" opacity="0.6"/>
+                <!-- seismic events -->
+                <g fill="#0e1116">
+                  <circle cx="310" cy="230" r="1.6"/>
+                  <circle cx="335" cy="252" r="2"/>
+                  <circle cx="298" cy="270" r="1.4"/>
+                  <circle cx="340" cy="225" r="1.6"/>
+                  <circle cx="278" cy="248" r="1.4"/>
+                  <circle cx="356" cy="265" r="1.8"/>
+                </g>
+                <!-- OOI sensors around the rim -->
+                <g>
+                  <g fill="#0b6e8a">
+                    <circle cx="120" cy="120" r="4"/>
+                    <circle cx="490" cy="118" r="4"/>
+                    <circle cx="520" cy="280" r="4"/>
+                    <circle cx="440" cy="370" r="4"/>
+                    <circle cx="180" cy="360" r="4"/>
+                    <circle cx="80"  cy="240" r="4"/>
+                  </g>
+                  <g stroke="#0b6e8a" stroke-width="0.7" stroke-dasharray="2 3" fill="none" opacity="0.6">
+                    <line x1="120" y1="120" x2="320" y2="245"/>
+                    <line x1="490" y1="118" x2="320" y2="245"/>
+                    <line x1="520" y1="280" x2="320" y2="245"/>
+                    <line x1="440" y1="370" x2="320" y2="245"/>
+                    <line x1="180" y1="360" x2="320" y2="245"/>
+                    <line x1="80"  y1="240" x2="320" y2="245"/>
+                  </g>
+                </g>
+                <!-- station labels -->
+                <g font-family="JetBrains Mono, monospace" font-size="8" fill="#0e1116" opacity="0.65">
+                  <text x="128" y="114">AXBA1</text>
+                  <text x="498" y="112">AXEC1</text>
+                  <text x="528" y="284">AXEC2</text>
+                  <text x="448" y="386">AXAS1</text>
+                  <text x="188" y="376">AXAS2</text>
+                  <text x="40"  y="234">AXCC1</text>
+                </g>
+                <!-- meta -->
+                <g font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.55">
+                  <text x="20" y="28">AXIAL · JUAN DE FUCA RIDGE</text>
+                  <text x="20" y="42">45.9542° N · 130.0086° W</text>
+                  <text x="20" y="430">PLAN VIEW · CALDERA + OOI</text>
+                  <text x="496" y="430">~3 km × 8 km</text>
+                </g>
+                <line x1="20" y1="48" x2="180" y2="48" stroke="#0e1116" stroke-width="0.6" opacity="0.4"/>
+              </svg>
               <span class="zz-tag">03 / Juan de Fuca</span>
             </div>
             <div class="zz-body">
@@ -336,10 +404,85 @@
 
         <li class="zz zz-reverse">
           <div class="zz-link no-link">
-            <div class="zz-media">
-              <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=1200&q=70"
-                   onerror="this.onerror=null;this.src='https://picsum.photos/seed/methane/1200/900';"
-                   alt="Rocky coastal cliff above the North Atlantic — methane seep mapping" loading="lazy" />
+            <div class="zz-media zz-media-svg" data-illustration="methane">
+              <svg viewBox="0 0 600 450" preserveAspectRatio="xMidYMid slice" aria-label="Water-column section showing methane seep plumes rising from the seafloor">
+                <defs>
+                  <linearGradient id="watCol" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stop-color="#cfe1e7"/>
+                    <stop offset="100%" stop-color="#5a8390"/>
+                  </linearGradient>
+                  <linearGradient id="seaFloor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stop-color="#a78d5e"/>
+                    <stop offset="100%" stop-color="#5b482a"/>
+                  </linearGradient>
+                </defs>
+                <rect width="600" height="450" fill="url(#watCol)"/>
+                <!-- depth ruler -->
+                <g font-family="JetBrains Mono, monospace" font-size="8" fill="#0e1116" opacity="0.45" text-anchor="end">
+                  <line x1="45" y1="60"  x2="55" y2="60"  stroke="#0e1116" stroke-width="0.5"/>
+                  <text x="40" y="63"> 200 m</text>
+                  <line x1="45" y1="140" x2="55" y2="140" stroke="#0e1116" stroke-width="0.5"/>
+                  <text x="40" y="143">400 m</text>
+                  <line x1="45" y1="220" x2="55" y2="220" stroke="#0e1116" stroke-width="0.5"/>
+                  <text x="40" y="223">600 m</text>
+                  <line x1="45" y1="300" x2="55" y2="300" stroke="#0e1116" stroke-width="0.5"/>
+                  <text x="40" y="303">800 m</text>
+                </g>
+                <line x1="55" y1="40" x2="55" y2="360" stroke="#0e1116" stroke-width="0.5" opacity="0.35"/>
+                <!-- thermocline -->
+                <line x1="55" y1="170" x2="600" y2="155" stroke="#fff" stroke-width="0.8" stroke-dasharray="2 4" opacity="0.7"/>
+                <text x="500" y="148" font-family="JetBrains Mono, monospace" font-size="8" fill="#0e1116" opacity="0.6">THERMOCLINE</text>
+                <!-- seafloor -->
+                <path d="M55 360 C 130 350, 190 380, 240 370 C 290 360, 320 340, 360 350 C 400 360, 440 380, 500 370 C 540 365, 580 372, 600 370 L 600 450 L 55 450 Z" fill="url(#seaFloor)"/>
+                <line x1="55" y1="360" x2="600" y2="360" stroke="#0e1116" stroke-width="0.6" opacity="0.5" stroke-dasharray="0"/>
+                <!-- seep plumes (rising bubble columns) -->
+                <g fill="#faf8f3" opacity="0.85">
+                  <!-- plume 1 -->
+                  <circle cx="148" cy="349" r="2"/>
+                  <circle cx="151" cy="338" r="1.6"/>
+                  <circle cx="146" cy="325" r="2.2"/>
+                  <circle cx="152" cy="310" r="1.4"/>
+                  <circle cx="148" cy="295" r="1.8"/>
+                  <circle cx="153" cy="278" r="1.2"/>
+                  <circle cx="147" cy="260" r="1.4"/>
+                  <circle cx="151" cy="240" r="1"/>
+                  <circle cx="148" cy="218" r="1.2"/>
+                  <!-- plume 2 -->
+                  <circle cx="305" cy="338" r="2.5"/>
+                  <circle cx="308" cy="322" r="1.8"/>
+                  <circle cx="302" cy="306" r="2.2"/>
+                  <circle cx="307" cy="288" r="1.4"/>
+                  <circle cx="304" cy="270" r="1.8"/>
+                  <circle cx="308" cy="248" r="1.2"/>
+                  <circle cx="305" cy="226" r="1.5"/>
+                  <circle cx="307" cy="200" r="1.1"/>
+                  <circle cx="304" cy="172" r="1.3"/>
+                  <circle cx="306" cy="140" r="1"/>
+                  <!-- plume 3 -->
+                  <circle cx="445" cy="356" r="2"/>
+                  <circle cx="448" cy="342" r="1.6"/>
+                  <circle cx="442" cy="328" r="2"/>
+                  <circle cx="447" cy="312" r="1.4"/>
+                  <circle cx="445" cy="295" r="1.6"/>
+                  <circle cx="449" cy="276" r="1.2"/>
+                  <circle cx="444" cy="254" r="1.3"/>
+                </g>
+                <!-- ship + ROV silhouette -->
+                <g fill="#0e1116" opacity="0.85">
+                  <path d="M395 45 L455 45 L450 55 L400 55 Z"/>
+                  <rect x="418" y="38" width="14" height="8" rx="1"/>
+                  <line x1="425" y1="55" x2="425" y2="115" stroke="#0e1116" stroke-width="0.6"/>
+                  <rect x="421" y="115" width="8" height="6"/>
+                </g>
+                <text x="460" y="50" font-family="JetBrains Mono, monospace" font-size="8" fill="#0e1116" opacity="0.7">R/V OKEANOS</text>
+                <!-- meta -->
+                <g font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.7">
+                  <text x="65" y="28">N. ATLANTIC MARGIN · NOAA OE</text>
+                  <text x="65" y="42">METHANE PLUMES · MULTIBEAM WC</text>
+                  <text x="65" y="440">SECTION · BUBBLE-PLUME COLUMN</text>
+                </g>
+                <line x1="65" y1="48" x2="225" y2="48" stroke="#0e1116" stroke-width="0.6" opacity="0.4"/>
+              </svg>
               <span class="zz-tag">04 / N. Atlantic</span>
             </div>
             <div class="zz-body">
@@ -358,28 +501,6 @@
         </li>
 
       </ol>
-    </div>
-  </section>
-
-  <!-- ============================== DATA BAND (cockpit) ============================== -->
-  <section class="data-band" aria-label="Research at a glance">
-    <div class="container db-grid">
-      <div class="db-item">
-        <span class="db-num">2,580<i>m</i></span>
-        <span class="db-cap">Max sensor depth · OOI seafloor</span>
-      </div>
-      <div class="db-item">
-        <span class="db-num">13<i>yr</i></span>
-        <span class="db-cap">Cascadia ambient-noise record</span>
-      </div>
-      <div class="db-item">
-        <span class="db-num">16–41<i>%</i></span>
-        <span class="db-cap">Orca magma fraction · GC 2026</span>
-      </div>
-      <div class="db-item">
-        <span class="db-num">07</span>
-        <span class="db-cap">OBS deployments to date</span>
-      </div>
     </div>
   </section>
 
@@ -423,10 +544,63 @@
         </a>
 
         <a href="https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025GC012224" target="_blank" rel="noopener" class="pub">
-          <div class="pub-media">
-            <img src="https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=1200&q=70"
-                 onerror="this.onerror=null;this.src='https://picsum.photos/seed/bransfield/1200/900';"
-                 alt="Snow-capped peaks evoking Antarctica's Bransfield Basin" loading="lazy" />
+          <div class="pub-media pub-media-svg">
+            <svg viewBox="0 0 600 450" preserveAspectRatio="xMidYMid slice" aria-label="Cross-section of the Orca Volcano magma chamber and crustal melt fraction">
+              <defs>
+                <linearGradient id="oceanO" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"  stop-color="#cfe1e7"/>
+                  <stop offset="100%" stop-color="#5a8390"/>
+                </linearGradient>
+                <linearGradient id="crustO" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"  stop-color="#9b8a64"/>
+                  <stop offset="100%" stop-color="#564b30"/>
+                </linearGradient>
+                <radialGradient id="magmaO" cx="50%" cy="48%" r="38%">
+                  <stop offset="0%"   stop-color="#ffb678" stop-opacity="1"/>
+                  <stop offset="35%"  stop-color="#c85a3c" stop-opacity="0.9"/>
+                  <stop offset="80%"  stop-color="#b07033" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#b07033" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <rect width="600" height="450" fill="url(#oceanO)"/>
+              <!-- seafloor with edifice -->
+              <path d="M0 320 C 120 310, 200 290, 250 270 C 280 258, 290 240, 300 235 C 310 240, 320 258, 350 270 C 400 290, 480 310, 600 320 L 600 450 L 0 450 Z" fill="url(#crustO)"/>
+              <!-- magma chamber zone (1-4 km) -->
+              <ellipse cx="300" cy="372" rx="135" ry="42" fill="url(#magmaO)"/>
+              <!-- depth ticks -->
+              <g font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.7" text-anchor="end">
+                <line x1="50" y1="330" x2="60" y2="330" stroke="#0e1116" stroke-width="0.5"/>
+                <text x="46" y="333">1 km</text>
+                <line x1="50" y1="372" x2="60" y2="372" stroke="#0e1116" stroke-width="0.5"/>
+                <text x="46" y="375">2 km</text>
+                <line x1="50" y1="414" x2="60" y2="414" stroke="#0e1116" stroke-width="0.5"/>
+                <text x="46" y="417">4 km</text>
+              </g>
+              <line x1="60" y1="320" x2="60" y2="420" stroke="#0e1116" stroke-width="0.5" opacity="0.5"/>
+              <!-- velocity contours through chamber -->
+              <g fill="none" stroke="#faf8f3" stroke-width="0.6" opacity="0.45">
+                <ellipse cx="300" cy="372" rx="60"  ry="20"/>
+                <ellipse cx="300" cy="372" rx="95"  ry="32"/>
+                <ellipse cx="300" cy="372" rx="125" ry="40"/>
+              </g>
+              <!-- station triangles on seafloor -->
+              <g fill="#0e1116">
+                <polygon points="160,295 168,283 176,295"/>
+                <polygon points="240,275 248,263 256,275"/>
+                <polygon points="298,235 306,223 314,235"/>
+                <polygon points="360,278 368,266 376,278"/>
+                <polygon points="440,300 448,288 456,300"/>
+              </g>
+              <text x="298" y="218" font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.85" text-anchor="middle">ORCA EDIFICE</text>
+              <!-- meta -->
+              <g font-family="JetBrains Mono, monospace" font-size="9" fill="#0e1116" opacity="0.75">
+                <text x="65" y="28">ORCA VOLCANO · CROSS-SECTION</text>
+                <text x="65" y="42">P-WAVE TOMOGRAPHY · ACTIVE SOURCE</text>
+                <text x="65" y="440">MELT 16–41% · 1–4 km DEPTH</text>
+                <text x="510" y="440">~10 km wide</text>
+              </g>
+              <line x1="65" y1="48" x2="245" y2="48" stroke="#0e1116" stroke-width="0.6" opacity="0.5"/>
+            </svg>
           </div>
           <div class="pub-body">
             <div class="pub-tag">Geochemistry, Geophysics, Geosystems · 2026</div>
@@ -554,100 +728,25 @@
     </div>
 
     <div class="viz-frame" id="vizFrame">
-
-      <!-- POSTER (shown until user clicks load) -->
-      <div class="viz-poster" id="vizPoster">
-        <svg class="viz-bathy" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <radialGradient id="bathyHot" cx="50%" cy="55%" r="40%">
-              <stop offset="0%"   stop-color="#0b6e8a" stop-opacity="0.32"/>
-              <stop offset="55%"  stop-color="#0b6e8a" stop-opacity="0.10"/>
-              <stop offset="100%" stop-color="#0b6e8a" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <rect width="1200" height="600" fill="url(#bathyHot)"/>
-          <g fill="none" stroke="#0b6e8a" stroke-width="0.7" opacity="0.34">
-            <ellipse cx="600" cy="330" rx="60"  ry="40"/>
-            <ellipse cx="600" cy="330" rx="110" ry="72"/>
-            <ellipse cx="600" cy="330" rx="170" ry="108"/>
-            <ellipse cx="600" cy="330" rx="240" ry="148"/>
-            <ellipse cx="600" cy="330" rx="320" ry="192"/>
-            <ellipse cx="600" cy="330" rx="410" ry="240"/>
-            <ellipse cx="600" cy="330" rx="510" ry="290"/>
-          </g>
-          <!-- caldera epicenters -->
-          <g fill="#c85a3c" opacity="0.78">
-            <circle cx="585" cy="320" r="2.5"/>
-            <circle cx="612" cy="345" r="3"/>
-            <circle cx="598" cy="338" r="2"/>
-            <circle cx="624" cy="312" r="1.8"/>
-            <circle cx="572" cy="348" r="2.2"/>
-            <circle cx="608" cy="298" r="1.6"/>
-            <circle cx="640" cy="335" r="2"/>
-            <circle cx="560" cy="320" r="1.4"/>
-          </g>
-          <!-- radial scan line -->
-          <line class="scan-line" x1="600" y1="330" x2="600" y2="80"
-                stroke="#0b6e8a" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
-          <circle cx="600" cy="330" r="4" fill="#0e1116"/>
-          <circle cx="600" cy="330" r="9" fill="none" stroke="#0e1116" stroke-width="0.7" opacity="0.4"/>
-        </svg>
-
-        <div class="viz-poster-grid" aria-hidden="true"></div>
-
-        <div class="viz-poster-ui">
-          <div class="vp-meta">
-            <div class="vp-coord">
-              <span class="vp-k">LAT</span><span class="vp-v">45.9542° N</span>
-            </div>
-            <div class="vp-coord">
-              <span class="vp-k">LON</span><span class="vp-v">130.0086° W</span>
-            </div>
-            <div class="vp-coord">
-              <span class="vp-k">DEPTH</span><span class="vp-v">1,520 m</span>
-            </div>
-          </div>
-
-          <button type="button" class="viz-launch" id="vizLaunch" aria-controls="vizFrame">
-            <span class="vl-ring" aria-hidden="true">
-              <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.4">
-                <circle cx="32" cy="32" r="28" opacity="0.25"/>
-                <circle cx="32" cy="32" r="22" opacity="0.5"/>
-                <path d="M26 22 L44 32 L26 42 Z" fill="currentColor" stroke="none"/>
-              </svg>
-            </span>
-            <span class="vl-text">
-              <span class="vl-line-1">Load 3D bathymetry</span>
-              <span class="vl-line-2">Axial Seamount caldera · ~4&nbsp;MB · interactive</span>
-            </span>
-          </button>
-
-          <div class="vp-log" aria-hidden="true">
-            <span class="vp-log-line">$ MGM mesh · 600k vertices · standby</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- LOADER (shown while iframe loads) -->
+      <iframe
+        id="vizIframe"
+        class="viz-iframe"
+        src="axial_3d.html"
+        title="3D visualization of Axial Seamount bathymetry and seismicity"
+        loading="lazy"
+        allow="fullscreen"
+      ></iframe>
       <div class="viz-loader" id="vizLoader" aria-hidden="true">
-        <div class="vl-scan">
-          <svg viewBox="0 0 120 120" aria-hidden="true">
-            <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(11,110,138,0.15)" stroke-width="1"/>
-            <circle cx="60" cy="60" r="40" fill="none" stroke="rgba(11,110,138,0.20)" stroke-width="1"/>
-            <circle cx="60" cy="60" r="24" fill="none" stroke="rgba(11,110,138,0.28)" stroke-width="1"/>
-            <line class="vl-sweep" x1="60" y1="60" x2="60" y2="6"
-                  stroke="#0b6e8a" stroke-width="1.2" stroke-linecap="round"/>
-            <circle cx="60" cy="60" r="3" fill="#0e1116"/>
+        <div class="vl-spinner">
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(11,110,138,0.18)" stroke-width="1.5"/>
+            <path d="M32 4 A28 28 0 0 1 60 32" fill="none" stroke="#0b6e8a" stroke-width="1.5" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate" from="0 32 32" to="360 32 32" dur="1.4s" repeatCount="indefinite"/>
+            </path>
           </svg>
         </div>
-        <ul class="vl-log" id="vlLog">
-          <li>$ requesting bathymetric mesh</li>
-          <li>$ decoding earthquake catalog</li>
-          <li>$ initializing WebGL context</li>
-        </ul>
+        <span class="vl-caption">Loading bathymetry…</span>
       </div>
-
-      <!-- IFRAME (injected on click) -->
     </div>
   </section>
 

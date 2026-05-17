@@ -194,5 +194,67 @@
   else window.addEventListener('load', function() { setTimeout(applyStyle, 1000); });
 })();
 </script>
+<!-- AUTO-ROTATE INJECTED -->
+<script>
+(function () {
+  var ID = "4cb6801b-1bb9-4b46-965c-0213bd85354f";
+  var SPEED = 0.0028;        // radians per frame
+  var RESUME_AFTER = 2200;   // ms after user stops interacting
+
+  function start() {
+    var div = document.getElementById(ID);
+    if (!div || !window.Plotly || !div._fullLayout) {
+      return setTimeout(start, 80);
+    }
+
+    var cam = (div._fullLayout.scene && div._fullLayout.scene.camera) || {};
+    var eye = cam.eye || { x: 1.6, y: 1.6, z: 0.9 };
+    var radius = Math.sqrt(eye.x * eye.x + eye.y * eye.y) || 2.1;
+    var elev = eye.z;
+    var angle = Math.atan2(eye.y, eye.x);
+
+    var paused = false;
+    var resumeTimer;
+
+    function pauseAndResume() {
+      paused = true;
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(function () {
+        // pick up from current camera position
+        var c = div._fullLayout && div._fullLayout.scene && div._fullLayout.scene.camera;
+        if (c && c.eye) {
+          radius = Math.sqrt(c.eye.x * c.eye.x + c.eye.y * c.eye.y) || radius;
+          elev   = c.eye.z;
+          angle  = Math.atan2(c.eye.y, c.eye.x);
+        }
+        paused = false;
+      }, RESUME_AFTER);
+    }
+    div.addEventListener('mousedown', pauseAndResume);
+    div.addEventListener('wheel',     pauseAndResume, { passive: true });
+    div.addEventListener('touchstart',pauseAndResume, { passive: true });
+
+    // throttle relayouts to ~30fps so we don't melt CPUs
+    var lastT = 0;
+    function tick(t) {
+      requestAnimationFrame(tick);
+      if (paused) return;
+      if (t - lastT < 33) return;
+      lastT = t;
+      angle += SPEED * 2;     // compensate for ~30fps throttle
+      Plotly.relayout(ID, {
+        'scene.camera.eye': {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+          z: elev
+        }
+      });
+    }
+    requestAnimationFrame(tick);
+  }
+  start();
+})();
+</script>
+<!-- AUTO-ROTATE INJECTED -->
 </body>
 </html>
