@@ -1,9 +1,3 @@
----
-tags: [proposal, funding, canada-impact-plus]
-status: draft-v5-cleantech
-created: 2026-05-13
-updated: 2026-05-13
----
 
 # Canada Impact+ Research Training Awards, Proposal Draft v5 (Clean Tech pivot)
 
@@ -58,7 +52,7 @@ Canada has a large, untapped deep-geothermal resource. Southern Saskatchewan is 
 
 What is unknown is how each reservoir evolves under production and injection: where the cooling front advances, how pore pressure moves between wells, and what triggers induced seismicity. Existing methods, downhole tools and episodic 3D surveys, see only one well or arrive years late.
 
-The Canadian data needed for continuous answers already exist. The Aquistore CO2 storage facility, 50 km from DEEP in the same Deadwood Formation, has run a permanent geophone array and downhole DAS fibre since 2015. The CaMI Field Research Station in Alberta hosts a fully instrumented testbed with surface and borehole DAS. DEEP has completed a 56 km² 3D seismic baseline, and CN, RAVEN, and ATSN seismic networks cover the regional background.
+The Canadian data needed for continuous answers already exist. The Aquistore CO2 storage facility, 50 km from DEEP in the same Deadwood Formation, has run a permanent geophone array and downhole DAS fibre since 2015. The CaMI Field Research Station https://www.fdsn.org/networks/detail/8O_2019/ in Alberta hosts a fully instrumented testbed with surface and borehole DAS. DEEP has completed a 56 km² 3D seismic baseline, and CN, RAVEN, and ATSN seismic networks cover the regional background.
 
 The project will apply ambient-noise interferometry to these data to produce time-lapse maps of seismic velocity change across each reservoir, at hourly to monthly resolution, tracking pore pressure, the advance of cooling fronts between injection and production wells, and stress changes that precede induced seismicity. Cross-checked against operator pressure logs and microseismic catalogues, the outputs form a continuously updated monitoring framework for safe scale-up of Canadian geothermal, hydrogen, and helium production.
 
