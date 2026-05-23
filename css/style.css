@@ -1599,6 +1599,7 @@ body {
 }
 .pr-mark-uw   { background: #4b2e83; }   /* UW purple */
 .pr-mark-duw  { background: #b07033; }   /* warm ochre */
+.pr-mark-ooi  { background: #0b6e8a; }   /* OOI deep teal */
 .pr-name {
   font-family: var(--sans);
   font-size: 0.85rem;
