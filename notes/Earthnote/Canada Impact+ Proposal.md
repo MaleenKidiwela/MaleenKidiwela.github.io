@@ -116,3 +116,107 @@ Beyond science, the project delivers outputs useful to communities, operators, a
 - "Clean-energy infrastructure resilience" as keyword: ok, or replace with "Energy transition monitoring"?
 - Retain Indigenous co-design language somewhere in the full proposal body, given lithium-brine and Northern infrastructure operations on Indigenous lands.
 - Char counts: Summary now under 1800 (verify after edits). Alignment draft to be checked.
+
+
+
+I operate the only permanent broadband seismic station in Saskatchewan  
+which is located at the UofS geophysics test site about 12 km NE of  
+Saskatoon. It is a good installation with a vault, proper seismic pier,  
+a broadband ("HH") Trillium Compact sensor and Taurus seismometer but  
+now getting noisier with acreage development and a cell tower  
+constructed nearby. However, it records earthquakes well including those  
+from Esterhazy cluster (potash salt belt), and of course lots of noise  
+records. Within 20 m from the sensor, there is also a GPS site of the  
+permanent Canadian national geodetic network.  
+  
+So, fully within the topic of your current proposal, a strong and  
+natural approach would be to analyze records from this station,  
+including coda and noise: receiver functions, coda attenuation, H/V  
+("transfer function"), deconvolved and/or cross-correlated H/V  
+components ("dv/v"), maybe noise polarizations, and anything else. I had  
+been always wanting to do this but never got a student to work on it.
+
+
+Comments from Igor 
+
+thank you for the interesting meeting today. I've attached a zip file  
+with several papers about topics I mentioned. Most of the papers are  
+about "coda Q", but please note that dv/v is closely related to it. As  
+stated on page 3 in Clements-Denolle paper, quantity dv/v is only  
+inferred from variations of time intervals between the different  
+arrivals within coda:  
+  
+"With the assumption that there is a homogeneous velocity change in the  
+sampling medium, the relative time delay in the coda, dt/t, is related  
+to the relative change in seismic velocity, dv/v, by dt/t = −dv/v."  
+  
+The above assumption is the Aki coda model in which a uniform crust  
+without basin or Moho and collocated source and receiver are also  
+assumed. This is shown in Figure 4 of Yuan's et al paper which I also  
+include in the zip file. This model is completely unrealistic and it  
+cannot be trusted with ~1% accuracy required in the dv/v or Q  
+interpretations.  
+  
+The key paper directly revisiting Aki's (1980) paper (among a few other  
+things) is "Critique_of_Aki_coda_model/Morozov_Q_PAGEOPH2010.pdf" (Fig 4  
+there). You can start with it.  
+  
+A more realistic coda model is shown in Fig 5 of "Temporal_variations_of  
+Q_(aka dv_v)/Morozov_Temporal_coda_variations_PEPI2011.pdf". Note that  
+this paper nicely explains the temporal variations of seismic  
+observations simply by a rainy season in Stone Canyon and an inflation  
+of the cone of Mt. St Helens. I wonder if you can get hold of these 1973  
+or similar data and try your dv/v on them?  
+  
+By the way, did not you mention that you had tried dv/v on some  
+time-lapse seismic data from volcanoes? If you have not only noise but  
+some picked S-wave arrivals with real codas, it would be very  
+interesting to use the "coda attenuation coefficient" method described  
+in most of my attached papers. I am sure you can also use it in all of  
+your OBSes, even single-component ones. We used this method on VSP (at  
+Weyburn CCS site!) and in controlled-source profiles, and it should also  
+work well for single-station geothermal sites. It is very simple and  
+requires no elaborate de-noising - just band-pass filtering and  
+measuring amplitude decays.  
+  
+Sorry about a long message again. Please let me know what you think  
+about all this.
+sorry, I forgot to add one more comment about the papers in the .zip  
+file. I included paper "Receiver_Functions/Morozov Slab or Trench - BSSA  
+94 (4) SSA03117.pdf" because its Figures 2 and 3 show what kind of  
+wavefield actually arrives at a station in your area. For "noise" which  
+you use, distance 0 (source) would be at the coastline, with some  
+variations due to the tides, wind, etc. From shallow sources (ocean),  
+the pattern  would be closer to Fig. 2a than 2b, i.e. many bands of P  
+and S waves and their mode conversions. If you place your station  
+anywhere on this profile, you will see a sequence of multiple P waves  
+and then S waves, conversions, etc., and higher-mode surface waves (Lg).  
+A receiver-function deconvolution of cross-correlation of components  
+would produce a pattern like in Fig.3, only much more complex. If the  
+source is slightly moved to the left or crustal boundaries go down, the  
+P-S spacings would increase, and you would have dt/t > 0 and infer dv/v < 0.  
+  
+Fig 5 is also interesting - it shows that in real "noise", there are  
+many strong crustal events as shown in Fig 2a.  
+  
+By the way, this paper was also quite notable and caused some  
+discussions. It showed that subducting crustal slabs reported in some  
+receiver-function papers were likely misinterpretations of S waves  
+scattered on the trench zone itself.
+
+Igor operates the only permanent broadband seismic station in Saskatchewan  
+which is located at the UofS geophysics test site about 12 km NE of  
+Saskatoon. It is a good installation with a vault, proper seismic pier,  
+a broadband ("HH") Trillium Compact sensor and Taurus seismometer but  
+now getting noisier with acreage development and a cell tower  
+constructed nearby. However, it records earthquakes well including those  
+from Esterhazy cluster (potash salt belt), and of course lots of noise  
+records. Within 20 m from the sensor, there is also a GPS site of the  
+permanent Canadian national geodetic network.  
+  
+So, fully within the topic of your current proposal, a strong and  
+natural approach would be to analyze records from this station,  
+including coda and noise: receiver functions, coda attenuation, H/V  
+("transfer function"), deconvolved and/or cross-correlated H/V  
+components ("dv/v"), maybe noise polarizations, and anything else. I had  
+been always wanting to do this but never got a student to work on it.
