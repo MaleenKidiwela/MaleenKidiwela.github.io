@@ -28,6 +28,10 @@ const INTER_BATCH_DELAY_MS = 1500;
 const CONCEPT_INTER_CALL_MS = 200;
 const CONCEPT_MIN_CHUNKS = 1; // include even singletons; UI can filter
 
+// Bump when the rationale prompt or concept-embedding input format changes,
+// to invalidate stale entries in directions-*-cache.json on the next run.
+const DIRECTIONS_CACHE_VERSION = '1';
+
 const DEFAULTS = {
   embedDim: 768,
   chunking: { minChunkWords: 60, maxChunkWords: 375, overlapWords: 75 },
@@ -404,6 +408,37 @@ async function loadConceptCache(outDir) {
   }
 }
 
+// Concept-embedding cache. Keyed on concept id (e.g. "method:beamforming");
+// each value is a plain array of `embedDim` floats. Invalidated when the cache
+// version or embedDim changes (a different embedding model would also need a
+// version bump).
+async function loadConceptEmbCache(outDir, embedDim) {
+  try {
+    const raw = await fs.readFile(path.join(outDir, 'directions-emb-cache.json'), 'utf8');
+    const j = JSON.parse(raw);
+    if (!j || typeof j !== 'object') return {};
+    if (j.version !== DIRECTIONS_CACHE_VERSION) return {};
+    if (j.embedDim !== embedDim) return {};
+    return j.vectors && typeof j.vectors === 'object' ? j.vectors : {};
+  } catch {
+    return {};
+  }
+}
+
+// Rationale cache. Keyed on "<source.id>|||<target.id>" → rationale string.
+// Invalidated when the cache version changes.
+async function loadRationaleCache(outDir) {
+  try {
+    const raw = await fs.readFile(path.join(outDir, 'directions-rationale-cache.json'), 'utf8');
+    const j = JSON.parse(raw);
+    if (!j || typeof j !== 'object') return {};
+    if (j.version !== DIRECTIONS_CACHE_VERSION) return {};
+    return j.rationales && typeof j.rationales === 'object' ? j.rationales : {};
+  } catch {
+    return {};
+  }
+}
+
 // Detect whether a chunk is a catalog/inventory section vs narrative prose.
 // Three independent signals; any one trips the flag. We surface this to the
 // LLM via the user message so its (c) "explicit subject of enumeration" rule
@@ -681,43 +716,55 @@ function buildCooccurrenceGraph(concepts, byChunk, savedChunks) {
   return { nodes, edges };
 }
 
-async function embedConcepts(concepts, savedChunks, savedEmbView, apiKey, embedDim) {
-  // Embed each concept label directly via the Gemini embedding API.
-  // Falls back to averaged chunk embeddings if the API call fails.
+async function embedConcepts(concepts, savedChunks, savedEmbView, apiKey, embedDim, outDir) {
+  // Embed each concept label directly via the Gemini embedding API. Cache
+  // results in directions-emb-cache.json so unchanged concepts don't burn
+  // calls on every daily sync. Falls back to averaged chunk embeddings if
+  // the API call fails (fallbacks are not cached, since chunk content shifts).
+  const cache = await loadConceptEmbCache(outDir, embedDim);
   const conceptEmbeddings = new Map();
+  const apiSourced = new Set(); // concept ids whose vector came from the API (cached or freshly embedded)
+
   const chunkEmbLookup = new Map();
   for (let i = 0; i < savedChunks.length; i++) {
     const start = i * embedDim;
     chunkEmbLookup.set(savedChunks[i].id, savedEmbView.subarray(start, start + embedDim));
   }
 
-  // Batch embed concept labels.
-  const batchSize = BATCH_SIZE;
-  const batches = [];
-  for (let i = 0; i < concepts.length; i += batchSize) {
-    batches.push(concepts.slice(i, i + batchSize));
+  // Partition concepts into cache hits vs misses.
+  const misses = [];
+  let cachedCount = 0;
+  for (const c of concepts) {
+    const hit = cache[c.id];
+    if (Array.isArray(hit) && hit.length === embedDim) {
+      conceptEmbeddings.set(c.id, new Float32Array(hit));
+      apiSourced.add(c.id);
+      cachedCount++;
+    } else {
+      misses.push(c);
+    }
   }
 
+  // Batch embed only the misses.
+  const batchSize = BATCH_SIZE;
   let embeddedCount = 0;
-  for (const batch of batches) {
-    const texts = batch.map((c) =>
-      `geophysics :: ${c.kind} :: ${c.display}`,
-    );
+  for (let i = 0; i < misses.length; i += batchSize) {
+    const batch = misses.slice(i, i + batchSize);
+    const texts = batch.map((c) => `geophysics :: ${c.kind} :: ${c.display}`);
     try {
       const vectors = await embedBatch(texts, apiKey, embedDim);
-      for (let i = 0; i < batch.length; i++) {
-        conceptEmbeddings.set(batch[i].id, new Float32Array(vectors[i]));
+      for (let k = 0; k < batch.length; k++) {
+        conceptEmbeddings.set(batch[k].id, new Float32Array(vectors[k]));
+        apiSourced.add(batch[k].id);
       }
       embeddedCount += batch.length;
-      if (batches.length > 1) await sleep(INTER_BATCH_DELAY_MS);
+      if (i + batchSize < misses.length) await sleep(INTER_BATCH_DELAY_MS);
     } catch (err) {
-      console.warn(`  Concept embed batch failed: ${err.message}; falling back to chunk averages.`);
-      // Fallback: average chunk embeddings for concepts in this batch.
+      console.warn(`  Concept embed batch failed: ${err.message}; falling back to chunk averages for ${batch.length} concepts.`);
+      // Fallback: average chunk embeddings for the failed batch's concepts.
       for (const c of batch) {
         if (conceptEmbeddings.has(c.id)) continue;
-        const vecs = c.chunkIds
-          .map((id) => chunkEmbLookup.get(id))
-          .filter(Boolean);
+        const vecs = c.chunkIds.map((id) => chunkEmbLookup.get(id)).filter(Boolean);
         if (vecs.length) {
           const avg = new Float32Array(embedDim);
           for (const v of vecs) for (let d = 0; d < embedDim; d++) avg[d] += v[d];
@@ -728,22 +775,44 @@ async function embedConcepts(concepts, savedChunks, savedEmbView, apiKey, embedD
     }
   }
 
-  // Fill in any remaining concepts that weren't embedded via API (shouldn't
-  // happen, but guard against partial failures).
+  // Final safety net: any concept still missing gets a chunk-average fallback.
+  let fallbackCount = 0;
   for (const c of concepts) {
-    if (conceptEmbeddings.has(c.id)) continue;
-    const vecs = c.chunkIds
-      .map((id) => chunkEmbLookup.get(id))
-      .filter(Boolean);
+    if (conceptEmbeddings.has(c.id)) {
+      if (!apiSourced.has(c.id)) fallbackCount++;
+      continue;
+    }
+    const vecs = c.chunkIds.map((id) => chunkEmbLookup.get(id)).filter(Boolean);
     if (vecs.length) {
       const avg = new Float32Array(embedDim);
       for (const v of vecs) for (let d = 0; d < embedDim; d++) avg[d] += v[d];
       for (let d = 0; d < embedDim; d++) avg[d] /= vecs.length;
       conceptEmbeddings.set(c.id, avg);
+      fallbackCount++;
     }
   }
 
-  console.log(`  Concept embeddings: ${embeddedCount} via API, ${conceptEmbeddings.size - embeddedCount} via chunk average.`);
+  // Persist the cache. Only API-sourced vectors go in; pruned to current
+  // concepts so stale labels don't grow the file forever.
+  const nextCache = {};
+  for (const c of concepts) {
+    if (!apiSourced.has(c.id)) continue;
+    const v = conceptEmbeddings.get(c.id);
+    if (!v || v.length !== embedDim) continue;
+    nextCache[c.id] = Array.from(v);
+  }
+  await fs.writeFile(
+    path.join(outDir, 'directions-emb-cache.json'),
+    JSON.stringify({
+      version: DIRECTIONS_CACHE_VERSION,
+      embedDim,
+      vectors: nextCache,
+    }),
+  );
+
+  console.log(
+    `  Concept embeddings: ${cachedCount} cached, ${embeddedCount} via API, ${fallbackCount} via chunk average.`,
+  );
   return conceptEmbeddings;
 }
 
@@ -866,17 +935,30 @@ function scoreDirections(graph, conceptEmbeddings, concepts) {
 
 const DIRECTION_RATIONALE_MODEL = 'gemini-2.5-flash';
 
-async function generateRationales(predictions, savedChunks, concepts, apiKey) {
+async function generateRationales(predictions, savedChunks, concepts, apiKey, outDir) {
   const conceptById = new Map();
   for (const c of concepts) conceptById.set(c.id, c);
 
   const chunkById = new Map();
   for (const c of savedChunks) chunkById.set(c.id, c);
 
+  const cache = await loadRationaleCache(outDir);
+  const nextCache = {};
+
   const top = predictions.slice(0, 20);
   let generated = 0;
+  let cached = 0;
 
   for (const pred of top) {
+    const cacheKey = `${pred.source.id}|||${pred.target.id}`;
+    const cachedText = cache[cacheKey];
+    if (cachedText && typeof cachedText === 'string' && cachedText.trim()) {
+      pred.rationale = cachedText;
+      nextCache[cacheKey] = cachedText;
+      cached++;
+      continue;
+    }
+
     const srcConcept = conceptById.get(pred.source.id);
     const tgtConcept = conceptById.get(pred.target.id);
     if (!srcConcept || !tgtConcept) continue;
@@ -927,6 +1009,7 @@ async function generateRationales(predictions, savedChunks, concepts, apiKey) {
           const j = await res.json();
           const text = j?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join('') || '';
           pred.rationale = text.trim();
+          if (pred.rationale) nextCache[cacheKey] = pred.rationale;
           generated++;
           break;
         }
@@ -944,7 +1027,17 @@ async function generateRationales(predictions, savedChunks, concepts, apiKey) {
     await sleep(CONCEPT_INTER_CALL_MS);
   }
 
-  console.log(`  Rationales: ${generated}/${top.length} generated.`);
+  // Persist the cache. nextCache is keyed only on current top-20 pairs, so
+  // entries for old predictions are pruned automatically.
+  await fs.writeFile(
+    path.join(outDir, 'directions-rationale-cache.json'),
+    JSON.stringify({
+      version: DIRECTIONS_CACHE_VERSION,
+      rationales: nextCache,
+    }),
+  );
+
+  console.log(`  Rationales: ${cached} cached, ${generated} generated, ${top.length - cached - generated} missing.`);
   return predictions;
 }
 
@@ -1148,12 +1241,12 @@ async function main() {
         const graph = buildCooccurrenceGraph(concepts, byChunk, savedChunks);
         console.log(`  Co-occurrence graph: ${graph.nodes.length} nodes, ${graph.edges.length} edges.`);
 
-        const conceptEmbeddings = await embedConcepts(concepts, savedChunks, savedEmbView, conceptKey, cfg.embedDim);
+        const conceptEmbeddings = await embedConcepts(concepts, savedChunks, savedEmbView, conceptKey, cfg.embedDim, OUT_DIR);
 
         const predictions = scoreDirections(graph, conceptEmbeddings, concepts);
         console.log(`  Scored ${predictions.length} predicted directions.`);
 
-        await generateRationales(predictions, savedChunks, concepts, conceptKey);
+        await generateRationales(predictions, savedChunks, concepts, conceptKey, OUT_DIR);
 
         const directionsOut = {
           generatedAt: new Date().toISOString(),
