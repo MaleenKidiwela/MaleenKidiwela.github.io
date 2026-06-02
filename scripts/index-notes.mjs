@@ -592,6 +592,362 @@ async function buildConceptIndex(savedChunks, outDir, apiKey) {
   };
 }
 
+// ── Directions: concept co-occurrence graph + link prediction ────────────────
+// Builds a unipartite graph of concept co-occurrences, computes concept-level
+// embeddings, scores all non-existing concept pairs, and generates LLM
+// rationales for the top predictions. Output: directions.json.
+
+function buildCooccurrenceGraph(concepts, byChunk, savedChunks) {
+  // Build a lookup from concept id → concept object for fast access.
+  const conceptById = new Map();
+  for (const c of concepts) conceptById.set(c.id, c);
+
+  // For each chunk, get all concepts present and create pairwise edges.
+  const edgeMap = new Map(); // "id1|||id2" → edge object
+  const chunkLookup = new Map();
+  for (const c of savedChunks) chunkLookup.set(c.id, c);
+
+  for (const c of savedChunks) {
+    const ex = byChunk[c.id];
+    if (!ex) continue;
+
+    // Collect all concept ids present in this chunk.
+    const chunkConcepts = new Set();
+    for (const kind of CONCEPT_KINDS) {
+      for (const raw of ex[kind] || []) {
+        const label = canonicalizeLabel(raw);
+        if (!label) continue;
+        const singular = KIND_SINGULAR[kind] || kind;
+        const id = `${singular}:${label}`;
+        // Only include concepts that survived the min-chunks filter.
+        if (conceptById.has(id)) chunkConcepts.add(id);
+      }
+    }
+
+    const ids = [...chunkConcepts].sort();
+    const date = c.dateFromFilename || null;
+
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const key = `${ids[i]}|||${ids[j]}`;
+        let edge = edgeMap.get(key);
+        if (!edge) {
+          edge = {
+            source: ids[i],
+            target: ids[j],
+            weight: 0,
+            chunks: [],
+            projects: new Set(),
+            dates: [],
+          };
+          edgeMap.set(key, edge);
+        }
+        edge.weight++;
+        edge.chunks.push(c.id);
+        if (c.project) edge.projects.add(c.project);
+        if (date) edge.dates.push(date);
+      }
+    }
+  }
+
+  // Build node list with degree counts.
+  const degree = new Map();
+  for (const c of concepts) degree.set(c.id, 0);
+
+  const edges = [...edgeMap.values()].map((e) => {
+    degree.set(e.source, (degree.get(e.source) || 0) + 1);
+    degree.set(e.target, (degree.get(e.target) || 0) + 1);
+    return {
+      source: e.source,
+      target: e.target,
+      weight: e.weight,
+      chunks: e.chunks,
+      projects: [...e.projects],
+      dates: e.dates,
+    };
+  });
+
+  const nodes = concepts.map((c) => ({
+    id: c.id,
+    label: c.label,
+    display: c.display,
+    kind: c.kind,
+    degree: degree.get(c.id) || 0,
+    projects: c.projects,
+    count: c.count,
+    firstSeen: c.noteIds.length ? c.noteIds[0] : null,
+  }));
+
+  return { nodes, edges };
+}
+
+async function embedConcepts(concepts, savedChunks, savedEmbView, apiKey, embedDim) {
+  // Embed each concept label directly via the Gemini embedding API.
+  // Falls back to averaged chunk embeddings if the API call fails.
+  const conceptEmbeddings = new Map();
+  const chunkEmbLookup = new Map();
+  for (let i = 0; i < savedChunks.length; i++) {
+    const start = i * embedDim;
+    chunkEmbLookup.set(savedChunks[i].id, savedEmbView.subarray(start, start + embedDim));
+  }
+
+  // Batch embed concept labels.
+  const batchSize = BATCH_SIZE;
+  const batches = [];
+  for (let i = 0; i < concepts.length; i += batchSize) {
+    batches.push(concepts.slice(i, i + batchSize));
+  }
+
+  let embeddedCount = 0;
+  for (const batch of batches) {
+    const texts = batch.map((c) =>
+      `geophysics :: ${c.kind} :: ${c.display}`,
+    );
+    try {
+      const vectors = await embedBatch(texts, apiKey, embedDim);
+      for (let i = 0; i < batch.length; i++) {
+        conceptEmbeddings.set(batch[i].id, new Float32Array(vectors[i]));
+      }
+      embeddedCount += batch.length;
+      if (batches.length > 1) await sleep(INTER_BATCH_DELAY_MS);
+    } catch (err) {
+      console.warn(`  Concept embed batch failed: ${err.message}; falling back to chunk averages.`);
+      // Fallback: average chunk embeddings for concepts in this batch.
+      for (const c of batch) {
+        if (conceptEmbeddings.has(c.id)) continue;
+        const vecs = c.chunkIds
+          .map((id) => chunkEmbLookup.get(id))
+          .filter(Boolean);
+        if (vecs.length) {
+          const avg = new Float32Array(embedDim);
+          for (const v of vecs) for (let d = 0; d < embedDim; d++) avg[d] += v[d];
+          for (let d = 0; d < embedDim; d++) avg[d] /= vecs.length;
+          conceptEmbeddings.set(c.id, avg);
+        }
+      }
+    }
+  }
+
+  // Fill in any remaining concepts that weren't embedded via API (shouldn't
+  // happen, but guard against partial failures).
+  for (const c of concepts) {
+    if (conceptEmbeddings.has(c.id)) continue;
+    const vecs = c.chunkIds
+      .map((id) => chunkEmbLookup.get(id))
+      .filter(Boolean);
+    if (vecs.length) {
+      const avg = new Float32Array(embedDim);
+      for (const v of vecs) for (let d = 0; d < embedDim; d++) avg[d] += v[d];
+      for (let d = 0; d < embedDim; d++) avg[d] /= vecs.length;
+      conceptEmbeddings.set(c.id, avg);
+    }
+  }
+
+  console.log(`  Concept embeddings: ${embeddedCount} via API, ${conceptEmbeddings.size - embeddedCount} via chunk average.`);
+  return conceptEmbeddings;
+}
+
+function cosineSimilarity(a, b) {
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  const denom = Math.sqrt(na) * Math.sqrt(nb);
+  return denom > 0 ? dot / denom : 0;
+}
+
+function scoreDirections(graph, conceptEmbeddings, concepts) {
+  const ALPHA = 0.35; // semantic similarity weight
+  const BETA  = 0.30; // shared neighbor weight
+  const GAMMA = 0.25; // cross-project bonus weight
+  const DELTA = 0.10; // kind diversity weight
+
+  const SIM_MAX = 0.92;  // near-synonyms
+  const SIM_MIN = 0.15;  // no plausible connection
+
+  // Build adjacency for the co-occurrence graph.
+  const adj = new Map();
+  for (const n of graph.nodes) adj.set(n.id, new Set());
+  for (const e of graph.edges) {
+    adj.get(e.source)?.add(e.target);
+    adj.get(e.target)?.add(e.source);
+  }
+
+  // Build connected set for quick "already linked?" checks.
+  const connected = new Set();
+  for (const e of graph.edges) {
+    connected.add(`${e.source}|||${e.target}`);
+    connected.add(`${e.target}|||${e.source}`);
+  }
+
+  // Compute degree percentiles for generic-concept filtering.
+  const degrees = graph.nodes.map((n) => n.degree).sort((a, b) => a - b);
+  const p75 = degrees[Math.floor(degrees.length * 0.75)] || Infinity;
+
+  // Build project sets and kind map.
+  const conceptById = new Map();
+  for (const c of concepts) conceptById.set(c.id, c);
+
+  const predictions = [];
+  const nodeIds = graph.nodes.map((n) => n.id);
+
+  for (let i = 0; i < nodeIds.length; i++) {
+    const uId = nodeIds[i];
+    const u = conceptById.get(uId);
+    if (!u) continue;
+    const uEmb = conceptEmbeddings.get(uId);
+    if (!uEmb) continue;
+    const uAdj = adj.get(uId);
+    const uDeg = uAdj?.size || 0;
+
+    // Skip overly generic concepts.
+    if (uDeg > p75 && uDeg > 10) continue;
+
+    for (let j = i + 1; j < nodeIds.length; j++) {
+      const vId = nodeIds[j];
+      // Skip already-connected pairs.
+      if (connected.has(`${uId}|||${vId}`)) continue;
+
+      const v = conceptById.get(vId);
+      if (!v) continue;
+      const vEmb = conceptEmbeddings.get(vId);
+      if (!vEmb) continue;
+      const vAdj = adj.get(vId);
+      const vDeg = vAdj?.size || 0;
+
+      if (vDeg > p75 && vDeg > 10) continue;
+
+      // Semantic similarity.
+      const semanticSim = cosineSimilarity(uEmb, vEmb);
+      if (semanticSim > SIM_MAX || semanticSim < SIM_MIN) continue;
+
+      // Shared neighbors (Jaccard-like).
+      let shared = 0;
+      if (uAdj && vAdj) {
+        for (const n of uAdj) if (vAdj.has(n)) shared++;
+      }
+      const union = (uAdj?.size || 0) + (vAdj?.size || 0) - shared;
+      const sharedNeighborScore = union > 0 ? shared / union : 0;
+
+      // Cross-project bonus.
+      const uProjects = new Set(u.projects);
+      const vProjects = new Set(v.projects);
+      let crossProject = false;
+      for (const p of vProjects) {
+        if (!uProjects.has(p)) { crossProject = true; break; }
+      }
+
+      // Kind diversity bonus.
+      const kindDiversity = u.kind !== v.kind ? 1 : 0;
+
+      const score =
+        ALPHA * semanticSim +
+        BETA  * sharedNeighborScore +
+        GAMMA * (crossProject ? 1 : 0) +
+        DELTA * kindDiversity;
+
+      predictions.push({
+        source: { id: u.id, display: u.display, kind: u.kind, projects: u.projects },
+        target: { id: v.id, display: v.display, kind: v.kind, projects: v.projects },
+        score: Math.round(score * 1000) / 1000,
+        semanticSim: Math.round(semanticSim * 1000) / 1000,
+        sharedNeighbors: shared,
+        crossProject,
+        rationale: null,
+      });
+    }
+  }
+
+  predictions.sort((a, b) => b.score - a.score);
+  return predictions.slice(0, 30);
+}
+
+const DIRECTION_RATIONALE_MODEL = 'gemini-2.5-flash';
+
+async function generateRationales(predictions, savedChunks, concepts, apiKey) {
+  const conceptById = new Map();
+  for (const c of concepts) conceptById.set(c.id, c);
+
+  const chunkById = new Map();
+  for (const c of savedChunks) chunkById.set(c.id, c);
+
+  const top = predictions.slice(0, 20);
+  let generated = 0;
+
+  for (const pred of top) {
+    const srcConcept = conceptById.get(pred.source.id);
+    const tgtConcept = conceptById.get(pred.target.id);
+    if (!srcConcept || !tgtConcept) continue;
+
+    // Get sample text for each concept.
+    const srcChunk = srcConcept.chunkIds.map((id) => chunkById.get(id)).filter(Boolean)[0];
+    const tgtChunk = tgtConcept.chunkIds.map((id) => chunkById.get(id)).filter(Boolean)[0];
+
+    const prompt = [
+      'You are a research advisor for a marine geophysicist.',
+      '',
+      'Two concepts from research notes have been identified as a potentially productive but unexplored connection:',
+      '',
+      `Concept A: "${pred.source.display}" (${pred.source.kind})`,
+      `  Projects: ${pred.source.projects.join(', ')}`,
+      srcChunk ? `  Context: "${srcChunk.text.slice(0, 400)}"` : '',
+      '',
+      `Concept B: "${pred.target.display}" (${pred.target.kind})`,
+      `  Projects: ${pred.target.projects.join(', ')}`,
+      tgtChunk ? `  Context: "${tgtChunk.text.slice(0, 400)}"` : '',
+      '',
+      `These concepts share ${pred.sharedNeighbors} neighbors in the concept graph but have never appeared together in the same note.`,
+      '',
+      'Write 2-3 concise sentences explaining:',
+      '1. Why combining these concepts could lead to a new research direction',
+      '2. What specific experiment, analysis, or investigation this combination suggests',
+      '',
+      'Be specific and scientific. Do not use em dashes.',
+    ].filter((l) => l !== '').join('\n');
+
+    try {
+      const body = {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 300 },
+      };
+
+      let lastErr;
+      for (let attempt = 0; attempt <= 3; attempt++) {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${DIRECTION_RATIONALE_MODEL}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+          },
+        );
+        if (res.ok) {
+          const j = await res.json();
+          const text = j?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join('') || '';
+          pred.rationale = text.trim();
+          generated++;
+          break;
+        }
+        const txt = await res.text().catch(() => '');
+        lastErr = new Error(`Rationale gen failed (${res.status}): ${txt.slice(0, 300)}`);
+        if (res.status !== 429 && res.status < 500) break;
+        await sleep(BASE_BACKOFF_MS * Math.pow(2, attempt));
+      }
+      if (!pred.rationale) {
+        console.warn(`  Rationale failed for ${pred.source.display} × ${pred.target.display}: ${lastErr?.message || 'unknown'}`);
+      }
+    } catch (err) {
+      console.warn(`  Rationale error: ${err.message}`);
+    }
+    await sleep(CONCEPT_INTER_CALL_MS);
+  }
+
+  console.log(`  Rationales: ${generated}/${top.length} generated.`);
+  return predictions;
+}
+
 async function main() {
   // Prefer the dedicated embedding key (paid tier); fall back to the legacy
   // single key so existing CI setups keep working.
@@ -781,6 +1137,43 @@ async function main() {
       `Concepts: ${stats.totalConcepts} unique across ${savedChunks.length} chunks ` +
       `(cache=${stats.hits}, new=${stats.calls}, ${Math.round(ms / 1000)}s).`,
     );
+
+    // ── Directions: link prediction pipeline ──────────────────────────────
+    // Runs after concept extraction succeeds. A failure here only skips the
+    // Directions tab; concepts and RAG are unaffected.
+    if (process.env.SKIP_DIRECTIONS !== '1') {
+      try {
+        console.log('Building research directions …');
+        const dt0 = Date.now();
+        const graph = buildCooccurrenceGraph(concepts, byChunk, savedChunks);
+        console.log(`  Co-occurrence graph: ${graph.nodes.length} nodes, ${graph.edges.length} edges.`);
+
+        const conceptEmbeddings = await embedConcepts(concepts, savedChunks, savedEmbView, conceptKey, cfg.embedDim);
+
+        const predictions = scoreDirections(graph, conceptEmbeddings, concepts);
+        console.log(`  Scored ${predictions.length} predicted directions.`);
+
+        await generateRationales(predictions, savedChunks, concepts, conceptKey);
+
+        const directionsOut = {
+          generatedAt: new Date().toISOString(),
+          graph: {
+            nodeCount: graph.nodes.length,
+            edgeCount: graph.edges.length,
+          },
+          predictions,
+        };
+        await fs.writeFile(
+          path.join(OUT_DIR, 'directions.json'),
+          JSON.stringify(directionsOut),
+        );
+        const dms = Date.now() - dt0;
+        console.log(`Directions: ${predictions.length} predictions written (${Math.round(dms / 1000)}s).`);
+      } catch (dirErr) {
+        console.error(`Directions pipeline failed: ${dirErr.message}`);
+        console.error('Concepts and RAG artifacts are still saved.');
+      }
+    }
   } catch (err) {
     console.error(`Concept extraction failed: ${err.message}`);
     console.error('RAG artifacts are still saved; Concepts tab may be stale.');

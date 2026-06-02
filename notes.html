@@ -247,6 +247,12 @@ header::after {
   border-color: var(--border-2);
 }
 
+.tab[data-project="Directions"].active {
+  color: var(--accent);
+  background: var(--accent-glow);
+  border-color: var(--accent-dim);
+}
+
 .tab-concepts-icon { font-size: 14px; opacity: 0.85; }
 
 .tab-dot {
@@ -309,13 +315,20 @@ header::after {
 @media (min-width: 769px) {
   .layout.dashboard-mode aside { display: none; }
   .layout.concepts-mode  aside { display: none; }
+  .layout.directions-mode aside { display: none; }
   body:has(.layout.concepts-mode) .sidebar-toggle { display: none !important; }
   body:has(.layout.concepts-mode) .sidebar-overlay { display: none !important; }
+  body:has(.layout.directions-mode) .sidebar-toggle { display: none !important; }
+  body:has(.layout.directions-mode) .sidebar-overlay { display: none !important; }
 }
 .layout.concepts-mode  main  { padding: 0; }
 main.concepts-active .content-header { display: none; }
 main.concepts-active .content-scroll { padding: 0; height: 100%; }
 main.concepts-active #content-area  { padding: 0; height: 100%; }
+.layout.directions-mode  main  { padding: 0; }
+main.directions-active .content-header { display: none; }
+main.directions-active .content-scroll { padding: 0; height: 100%; overflow-y: auto; }
+main.directions-active #content-area  { padding: 0; }
 
 /* Mobile section menu inside the aside — hidden on desktop. */
 .mobile-tabs { display: none; }
@@ -1680,6 +1693,130 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
 .concepts-view-btn.active { color: var(--text); background: var(--bg3); }
 .concepts-view-btn + .concepts-view-btn { border-left: 1px solid var(--border); }
 
+/* ── Directions view ──────────────────────────────────────────────────── */
+.directions-view {
+  padding: 24px 28px 32px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.directions-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; margin-bottom: 6px; flex-wrap: wrap;
+}
+.directions-title {
+  font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.01em;
+}
+.directions-sub {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 18px;
+}
+.directions-meta {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+}
+.directions-controls {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px;
+  align-items: center;
+}
+.direction-filter {
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--muted); padding: 6px 12px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 11px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.direction-filter.active {
+  color: var(--text); background: var(--bg3); border-color: var(--border-2);
+}
+#directions-render {
+  flex: 1; min-height: 0; overflow-y: auto;
+}
+.direction-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 880px) {
+  .direction-grid { grid-template-columns: 1fr; }
+  .directions-view { padding: 14px 14px 18px; }
+}
+.direction-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px 16px 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: border-color 0.15s;
+}
+.direction-card:hover { border-color: var(--border-2); }
+.direction-pairs {
+  display: flex; align-items: stretch; gap: 10px;
+}
+.direction-pill {
+  flex: 1; min-width: 0;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.direction-pill-head {
+  display: flex; align-items: center; gap: 8px;
+}
+.direction-pill-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.direction-pill-kind {
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.direction-pill-label {
+  color: var(--text); font-size: 14px; font-weight: 500;
+  word-wrap: break-word;
+}
+.direction-pill-projects {
+  display: flex; gap: 5px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+}
+.direction-pill-proj {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.direction-pill-proj-dot { width: 5px; height: 5px; border-radius: 50%; }
+.direction-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3);
+  font-family: var(--font-mono); font-size: 18px;
+  width: 16px; flex-shrink: 0;
+}
+.direction-score {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+}
+.direction-score-bar {
+  flex: 1; height: 4px; border-radius: 2px;
+  background: var(--bg3); overflow: hidden;
+}
+.direction-score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+}
+.direction-rationale {
+  color: var(--text); font-size: 13px; line-height: 1.6;
+  font-family: var(--font-sans);
+}
+.direction-rationale.is-missing {
+  color: var(--text-3); font-style: italic;
+}
+.direction-meta {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--muted);
+  border-top: 1px dashed var(--border); padding-top: 10px;
+}
+.direction-meta-badge.is-cross { color: var(--accent); }
+.directions-empty {
+  text-align: center; color: var(--muted);
+  font-family: var(--font-mono); font-size: 13px;
+  padding: 60px 20px;
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    Concepts · Graph view  —  "Editorial Atlas"
    ────────────────────────────────────────────────────────────────────────── */
@@ -2089,6 +2226,9 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
     <button class="tab" data-project="Concepts" onclick="selectProject('Concepts', this)">
       <span class="tab-concepts-icon">◈</span>Concepts
     </button>
+    <button class="tab" data-project="Directions" onclick="selectProject('Directions', this)">
+      <span class="tab-concepts-icon">⟠</span>Directions
+    </button>
   </nav>
   <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -2117,6 +2257,9 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
       </button>
       <button class="mobile-tab" data-project="Concepts"     onclick="selectProject('Concepts', this)">
         <span class="tab-concepts-icon">◈</span><span>Concepts</span>
+      </button>
+      <button class="mobile-tab" data-project="Directions"    onclick="selectProject('Directions', this)">
+        <span class="tab-concepts-icon">⟠</span><span>Directions</span>
       </button>
     </nav>
     <div class="sidebar-header" id="sidebar-label">Explorer</div>
@@ -2293,8 +2436,8 @@ let __constellation = null; // { nodes, rafId, canvas, ctx, tooltip, dpr, w, h, 
 
 // ── Show dashboard ─────────────────────────────────────────────────────────
 function showDashboard() {
-  document.querySelector('.layout').classList.remove('concepts-mode');
-  document.querySelector('main').classList.remove('concepts-active');
+  document.querySelector('.layout').classList.remove('concepts-mode', 'directions-mode');
+  document.querySelector('main').classList.remove('concepts-active', 'directions-active');
   document.querySelector('.layout').classList.add('dashboard-mode');
   document.querySelector('main').classList.add('dashboard-active');
   document.getElementById('status-text').textContent = 'Dashboard';
@@ -3059,12 +3202,25 @@ function selectProject(project, tabEl) {
     document.getElementById('sidebar-toggle').style.display = 'none';
     closeSidebar();
     stopConstellation();
-    document.querySelector('.layout').classList.remove('dashboard-mode');
-    document.querySelector('main').classList.remove('dashboard-active');
+    document.querySelector('.layout').classList.remove('dashboard-mode', 'directions-mode');
+    document.querySelector('main').classList.remove('dashboard-active', 'directions-active');
     document.querySelector('.layout').classList.add('concepts-mode');
     document.querySelector('main').classList.add('concepts-active');
     location.hash = encodeURIComponent(project);
     showConcepts();
+    return;
+  }
+
+  if (project === 'Directions') {
+    document.getElementById('sidebar-toggle').style.display = 'none';
+    closeSidebar();
+    stopConstellation();
+    document.querySelector('.layout').classList.remove('dashboard-mode', 'concepts-mode');
+    document.querySelector('main').classList.remove('dashboard-active', 'concepts-active');
+    document.querySelector('.layout').classList.add('directions-mode');
+    document.querySelector('main').classList.add('directions-active');
+    location.hash = encodeURIComponent(project);
+    showDirections();
     return;
   }
 
@@ -3073,9 +3229,9 @@ function selectProject(project, tabEl) {
   stopConstellation();
   document.getElementById('sidebar-toggle').style.display = '';
 
-  // Exit dashboard / concepts modes
-  document.querySelector('.layout').classList.remove('dashboard-mode', 'concepts-mode');
-  document.querySelector('main').classList.remove('dashboard-active', 'concepts-active');
+  // Exit dashboard / concepts / directions modes
+  document.querySelector('.layout').classList.remove('dashboard-mode', 'concepts-mode', 'directions-mode');
+  document.querySelector('main').classList.remove('dashboard-active', 'concepts-active', 'directions-active');
 
   activeProject = project;
   activeFile    = null;
@@ -3974,6 +4130,138 @@ function openNoteSide(noteNode, graphData) {
 function closeGraphSide() {
   const side = document.getElementById('cg-side');
   if (side) side.classList.remove('open');
+}
+
+// ── Directions view ───────────────────────────────────────────────────────
+let __directionsData = null;            // { predictions, graph, generatedAt }
+let __directionsState = { filter: 'all' };
+
+async function loadDirectionsData() {
+  if (__directionsData) return;
+  const res = await fetch('/public/directions.json', { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`directions.json: ${res.status}`);
+  __directionsData = await res.json();
+}
+
+function setDirectionFilter(f) {
+  __directionsState.filter = f;
+  document.querySelectorAll('.direction-filter').forEach((el) => {
+    el.classList.toggle('active', el.dataset.filter === f);
+  });
+  renderDirections();
+}
+
+function renderDirectionCard(pred) {
+  const srcColor = conceptKindColor(pred.source.kind);
+  const tgtColor = conceptKindColor(pred.target.kind);
+  const srcProjects = (pred.source.projects || []).map((p) => `
+    <span class="direction-pill-proj">
+      <span class="direction-pill-proj-dot" style="background:${projectDotColor(p)}"></span>${escHtml(p)}
+    </span>`).join('');
+  const tgtProjects = (pred.target.projects || []).map((p) => `
+    <span class="direction-pill-proj">
+      <span class="direction-pill-proj-dot" style="background:${projectDotColor(p)}"></span>${escHtml(p)}
+    </span>`).join('');
+  const scorePct = Math.max(0, Math.min(1, pred.score)) * 100;
+  const rationale = pred.rationale && pred.rationale.trim()
+    ? `<div class="direction-rationale">${escHtml(pred.rationale)}</div>`
+    : `<div class="direction-rationale is-missing">No rationale generated.</div>`;
+  const crossBadge = pred.crossProject
+    ? `<span class="direction-meta-badge is-cross">cross-project</span>`
+    : `<span class="direction-meta-badge">same project</span>`;
+  return `
+    <div class="direction-card">
+      <div class="direction-pairs">
+        <div class="direction-pill">
+          <div class="direction-pill-head">
+            <span class="direction-pill-dot" style="background:${srcColor}"></span>
+            <span class="direction-pill-kind">${escHtml(pred.source.kind)}</span>
+          </div>
+          <div class="direction-pill-label">${escHtml(pred.source.display)}</div>
+          <div class="direction-pill-projects">${srcProjects}</div>
+        </div>
+        <div class="direction-arrow">⟶</div>
+        <div class="direction-pill">
+          <div class="direction-pill-head">
+            <span class="direction-pill-dot" style="background:${tgtColor}"></span>
+            <span class="direction-pill-kind">${escHtml(pred.target.kind)}</span>
+          </div>
+          <div class="direction-pill-label">${escHtml(pred.target.display)}</div>
+          <div class="direction-pill-projects">${tgtProjects}</div>
+        </div>
+      </div>
+      <div class="direction-score">
+        <div class="direction-score-bar"><div class="direction-score-fill" style="width:${scorePct.toFixed(1)}%"></div></div>
+        <span>score ${pred.score.toFixed(3)}</span>
+      </div>
+      ${rationale}
+      <div class="direction-meta">
+        <span class="direction-meta-badge">sim ${(pred.semanticSim ?? 0).toFixed(3)}</span>
+        <span class="direction-meta-badge">${pred.sharedNeighbors} shared neighbors</span>
+        ${crossBadge}
+      </div>
+    </div>`;
+}
+
+function renderDirections() {
+  const host = document.getElementById('directions-render');
+  if (!host || !__directionsData) return;
+  const all = __directionsData.predictions || [];
+  const filter = __directionsState.filter;
+  const filtered = all.filter((p) => {
+    if (filter === 'cross') return p.crossProject;
+    if (filter === 'rationale') return p.rationale && p.rationale.trim();
+    return true;
+  });
+  if (!filtered.length) {
+    host.innerHTML = `<div class="directions-empty">No predictions match this filter.</div>`;
+    return;
+  }
+  host.innerHTML = `<div class="direction-grid">${filtered.map(renderDirectionCard).join('')}</div>`;
+}
+
+async function showDirections() {
+  const area = document.getElementById('content-area');
+  document.getElementById('bc-project').textContent = 'Directions';
+  document.getElementById('status-text').textContent = 'Loading directions…';
+
+  area.innerHTML = `
+    <div class="directions-view">
+      <div class="directions-head">
+        <div>
+          <div class="directions-title">Research Directions</div>
+          <div class="directions-sub">Predicted unexplored connections</div>
+        </div>
+        <div class="directions-meta" id="directions-meta">loading…</div>
+      </div>
+      <div class="directions-controls">
+        <button class="direction-filter active" data-filter="all"       onclick="setDirectionFilter('all')">All</button>
+        <button class="direction-filter"        data-filter="cross"     onclick="setDirectionFilter('cross')">Cross-project</button>
+        <button class="direction-filter"        data-filter="rationale" onclick="setDirectionFilter('rationale')">With rationale</button>
+      </div>
+      <div id="directions-render"></div>
+    </div>`;
+
+  try {
+    await loadDirectionsData();
+  } catch (err) {
+    document.getElementById('directions-render').innerHTML =
+      `<div class="directions-empty">Couldn't load directions: ${escHtml(err.message)}.<br>` +
+      `Run <code>npm run index</code> to generate <code>public/directions.json</code>.</div>`;
+    document.getElementById('directions-meta').textContent = 'unavailable';
+    document.getElementById('status-text').textContent = 'Directions unavailable';
+    return;
+  }
+
+  const preds = __directionsData.predictions || [];
+  const when = __directionsData.generatedAt
+    ? new Date(__directionsData.generatedAt).toISOString().slice(0, 10) : '';
+  const nodes = __directionsData.graph?.nodeCount ?? 0;
+  document.getElementById('directions-meta').textContent =
+    `${preds.length} predictions · ${nodes} concepts${when ? ' · ' + when : ''}`;
+  document.getElementById('status-text').textContent = `${preds.length} predictions`;
+
+  renderDirections();
 }
 
 (function () {
