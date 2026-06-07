@@ -8,7 +8,7 @@
 
 ## Status
 
-Stage 1 (picking) is complete across the full 14-month BRAVOSEIS deployment (2019-01-01 → 2020-03-01): OBSTransformer `obst2024 @ 0.1/0.1` ran on 13,955 station-days with ~8.5 M picks; PhaseNet `instance @ 0.1` produced a complementary ~3.7 M picks. Stage 2 (pyocto association) is mid-run on a daily-chunk parallel scheduler (40/425 days ≈ 9 % done, ETA ~22 h). Stage 3 (GrowClust XC prep) is running in parallel on a 30-day partial catalog of 11,358 events / 154 k picks (309,641 unique event pairs). Stage 4 (GrowClust relocation) has been validated end-to-end on the 30-day partial: 44 % of events relocated into multi-event clusters, including a 530-event Orca-centered cluster, with sub-100 m relative precision. Stage 5 (ML polarity) and Stage 6 (focal mechanisms) are outline-only.
+Stage 1 (picking) is complete across the full 14-month BRAVOSEIS deployment (2019-01-01 → 2020-03-01): OBSTransformer `obst2024 @ 0.1/0.1` ~8.5 M picks; PhaseNet `instance @ 0.1` ~3.7 M picks. **Stage 2 (pyocto) is complete for the full year: 42,040 events / 483,516 picks**, after the XC bottleneck was fixed by pre-windowing every pick into a flat memmap (540× speedup; full pipeline ~1 h 50 min). **Stage 3+4 relocation is run full-year by two independent methods** — GrowClust (`growclust_picker_only.csv`, 42,040 relocated) and hypoDD via a **pruned-backbone (Stage A) + dense sub-cluster (Stage B)** scheme, because monolithic year-scale hypoDD is intractable. **Shot discrimination** removed BRAVOSEIS airgun contamination (a v2 spectral classifier, AUC 0.998, flagged 25 % of the catalog; canonical inputs are now the `_no_shots_v2` set, 31,516 events). **Stage 4b NLLoc absolute relocation** runs end-to-end on an extended 38-station Python velocity grid (31,515 events; standard-tier reliable subset 7,272), feeding a hybrid HypoDD-relative + NLLoc-absolute catalog. **Vp/Vs = 1.78 is empirically confirmed.** Per Marine's 2026-05-20 review, the **earthquake-location paper is now the priority, targeting mid-July submission**; tremor is deferred. Stage 5 (ML polarity) and Stage 6 (focal mechanisms) remain outline-only. The Orca swarm images consistently across all methods: centroid ≈ (−62.425, −58.385), depth 2–6 km, ~5 × 5 km extent.
 
 ## Goals
 
@@ -29,6 +29,12 @@ Stage 1 (picking) is complete across the full 14-month BRAVOSEIS deployment (201
 
 ## Decisions
 
+- **2026-05-20** — Marine review: **prioritize the EQ-location paper, mid-July submission target**; defer tremor detection. Adopt ELEP ensemble picking for ~1–2k high-quality picks → fine-tune a lightweight local PhaseNet on OBS noise; evaluate **GrowClust 3D / GraphDD** (hypoDD is 1D); add Maochuan's polarity picker; continue dv/v.
+- **2026-05-19** — **Vp/Vs = 1.78 locked** for NLLoc (median of 106,841 S/P pairs, depth-flat); the 2.10 template value rejected and its artifacts deleted. v2 NLLoc (1.78, 38 stations, extended grid) is canonical; the **standard reliable tier** (gap<180°, RMS<0.5 s, Nphs≥6, interior) = 7,272 events is the paper set.
+- **2026-05-18** — Reuse the Stingray P travel-time grids (no MATLAB on cluster); build the extended velocity grid in Python + NLLoc `Grid2Time`. **srModel z is depth-below-seafloor** (datum fix). Min 4 ZX picks/event. NLLoc TRANS rotation is **+36** (CW); shipped `.hdr` origins were sign-stripped.
+- **2026-05-15** — Shot discrimination: v2 flag = (±5 s temporal) OR (in-window spectral classifier p≥0.5); 10,524 events (25 %) flagged. Canonical catalogs switch to `_no_shots_v2`. Manual picks confirmed shot-free.
+- **2026-05-14** — Year-scale hypoDD must be **pruned backbone (Stage A) + K-means sub-clusters (Stage B)** with bridge events + closest-centroid dedup; monolithic LSQR on the 20k-event cluster is intractable (>11 h/iteration).
+- **2026-05-13** — XC-prep architecture: **pre-window every pick once into a memmap**, never decode mseed in the pair loop (EQcorrscan/hypoDDpy pattern). dt.cc must store **travel-time** differentials (tt = pick − origin), not pick-time differentials — so the **May-12 30-day partial is superseded**. GrowClust relocations are non-deterministic (unstable INDEXX heapsort + thread-order dt.cc); a canonical-sort `write_dtcc` patch exists (reverted on request).
 - **2026-05-12** — Pyocto switched from monolithic year-long `associate()` (16 h zero-output stuck run) to daily chunks in parallel (1 chunk/day, 10 threads each, 10 chunks at a time). Resume-capable via per-day output files. Margin = 120 s around each day to catch boundary events; strict-window filter prevents double-counting.
 - **2026-05-12** — GrowClust station list is **bare station codes** (no `NW.` prefix) — the Fortran format truncates to 5 chars and crashes on a `.` at column 3.
 - **2026-05-12** — GrowClust travel-time table extended to `tt_del1=300 km` / `delmax=250 km` / `tt_dep1=60 km`; velocity model extended with half-space marker at 70 km.
@@ -64,6 +70,12 @@ Stage 1 (picking) is complete across the full 14-month BRAVOSEIS deployment (201
 
 ## Recent activity
 
+- **05-20** — Meeting with Marine: presented EQ detection+location (structural features — dike, magma chamber, asymmetric rifting); paper prioritized for mid-July; action list (ELEP picks → PhaseNet fine-tune, GrowClust 3D / GraphDD, polarity picker, Shibin 2023 denoiser review).
+- **05-19** — Hand-picking workflow + `seismologist-pick` skill (moveout/zoom/anti-anchoring safeguards); empirical Vp/Vs = 1.78 calibration; reliable-subset tiers (`40_filter_nlloc_reliable.py`); deleted all 2.10 artifacts.
+- **05-18** — NLLoc absolute relocation end-to-end (scripts 27–39): rotation + datum bugs fixed, extended 38-station Python grid (edge-pinning 44.7→12.4 %, HQ 4,319→7,272), hybrid catalog.
+- **05-15** — Shot discrimination: BRAVOSEIS airgun shotfiles (26,823 shots) found; v2 spectral classifier (AUC 0.998); `_no_shots_v2` catalogs (31,516 ev); manual-anchored + noshot Stage B rebuilds; Jan 17–18 spike verified as real swarm onset.
+- **05-14** — hypoDD at scale: Stage A pruned backbone (676 ev, RMS 147 ms) + Stage B sub-clusters (~5,064 ev); time animations; regional ~8 % events dropped by all DD methods (need NLLoc).
+- **05-13** — Full-year pyocto catalog (42,040 ev); pre-windowing fix (540× speedup); GrowClust non-determinism + dt-accounting bug found (May-12 partial superseded); hypoDD pipeline added.
 - **05-12** — Pyocto daily-chunk scheduler launched (43 batches × 10 days). GrowClust Stage 4 validated end-to-end on 30-day partial (5,037 events relocated; 530-event Orca cluster; sub-100 m relative precision). Bathymetry basemap upgraded to MGDS Orca (~30 m vs GEBCO ~450 m). 5 bugs in GrowClust runner + 2 in XC prep fixed.
 - **05-11** — Full-year Stage 1 picker pass complete (OBST `obst2024 @ 0.1`: 8.5 M picks; PhaseNet `instance @ 0.1`: 3.7 M). Velocity model rebuilt with sea-level datum and water layer. Station geometry patched from Kidiwela+ Table S1.
 - **05-09** — OBS-domain DeepDenoiser + PhaseNet fine-tuning plan drafted (Phases 0–5, ~4 h wall). 30 curated training days listed; August 2019 held out.
@@ -110,9 +122,12 @@ Stage 1 (picking) is complete across the full 14-month BRAVOSEIS deployment (201
 
 ## Future steps
 
-1. **Finish pyocto daily run** — ~22 h remaining for full 425-day catalog.
-2. **Stage 3 XC prep + Stage 4 GrowClust** on full year once pyocto completes (~10× the 30-day partial → ~12 h XC prep, <1 s GrowClust).
-3. **Fine-tune PhaseNet** via the Phase 1–5 plan; evaluate on August 2019 (`catalogs/aug2019_eval.csv`) and decide whether to deploy the FT model for the production catalog.
+1. **Earthquake-location paper — mid-July target.** Finalize the catalog (GrowClust + hypoDD Stage B + NLLoc hybrid) and figures; write methods for pre-windowing, shot discrimination, Stage A/B partitioning, and Vp/Vs calibration.
+2. **Fix the `hypodd_id` indexing bug** (`scripts/22_*:58` → `event_idx+1`) so cross-catalog joins and the Stage B dedup are valid; re-merge (event counts will drop to true uniques).
+3. **Rerun HypoDD Stage A / hybrid on the `picker_only_no_shots` input** so event_idx maps align with the v2 NLLoc catalog.
+4. **NLLoc grid-top depth=0 pile-up** (~20 %): patch the top velocity layer or post-filter; optional Vp/Vs sensitivity rerun.
+5. **ELEP ensemble picks → fine-tune lightweight PhaseNet**; evaluate GrowClust 3D / GraphDD as scalable 3D-velocity relocators (Marine action items). ~~Done: full pyocto + GrowClust + hypoDD year runs.~~
+6. **Fine-tune PhaseNet** via the Phase 1–5 plan; evaluate on August 2019 (`catalogs/aug2019_eval.csv`) and decide whether to deploy the FT model for the production catalog.
 4. **Stage 2 (multi-class classification)** — implement tectonic vs icequake split, adopt SpecUFEx + whale freq-ratio + spectrogram-window pattern from Wang 2024.
 5. **Stage 5 (ML polarity)** — DiTingMotion / PolarCAP-style.
 6. **Stage 6 (focal mechanisms)** — HASH/FPFIT for small events; gCAP/ISOLA for M ≥ 3.5.
@@ -123,6 +138,12 @@ Stage 1 (picking) is complete across the full 14-month BRAVOSEIS deployment (201
 
 ## Timeline
 
+- **2026-05-20** — Marine meeting; EQ-location paper prioritized (mid-July); action items (ELEP, GrowClust 3D / GraphDD, polarity, denoiser review).
+- **2026-05-19** — Hand-pick workflow + `seismologist-pick` skill; Vp/Vs = 1.78 calibration; reliable tiers; 2.10 cleanup.
+- **2026-05-18** — NLLoc end-to-end (scripts 27–39); extended 38-station grid; hybrid catalog.
+- **2026-05-15** — Shot discrimination (v2 spectral classifier); `_no_shots_v2` catalogs; Stage B rebuilds.
+- **2026-05-14** — hypoDD Stage A + Stage B at scale; time animations.
+- **2026-05-13** — Full-year pyocto (42,040 ev); pre-windowing (540×); dt-accounting fix; hypoDD pipeline. Commit `57c92c9` (dt fix).
 - **2026-05-12** — Pyocto daily-chunk scheduler; GrowClust Stage 4 validated; bathymetry upgrade. Commits `85c7af1` (initial pipeline push) + `807ff98` (README expansion).
 - **2026-05-11** — Full-year Stage 1 picker pass complete; velocity model + station geometry rebuilt.
 - **2026-05-09** — OBS-DeepDenoiser + PhaseNet fine-tuning plan; commit `400c027` (EQT + plotting + SLURM).

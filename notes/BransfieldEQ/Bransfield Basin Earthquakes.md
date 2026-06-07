@@ -24,6 +24,12 @@ Anchor note for the Bransfield EQ project. End-to-end ML-assisted earthquake wor
 - [[05-09-26 Notes]] — OBS-domain DeepDenoiser + PhaseNet fine-tuning plan (Phases 0–5); 30 curated training days, August 2019 held out
 - [[05-11-26 Notes]] — Stage 1 picker pass complete (OBST 8.5 M + PhaseNet 3.7 M picks); velocity model rebuilt with sea-level datum + water layer; station geometry patched from Kidiwela+ Table S1
 - [[05-12-26 Notes]] — pyocto daily-chunk parallel scheduler launched; Stage 4 GrowClust validated end-to-end on 30-day partial (5,037 events relocated, 530-event Orca cluster, sub-100 m relative precision); bathymetry upgrade
+- [[05-13-26 Notes]] — full-year pyocto catalog (42,040 events / 483,516 picks); XC prep OOM-killed, fixed via **pre-windowing** (540× speedup, ~1h50 end-to-end); GrowClust non-determinism + dt-accounting bug found (May-12 30-day partial superseded); hypoDD pipeline added
+- [[05-14-26 Notes]] — hypoDD at scale: monolithic year intractable → **pruned backbone (Stage A, 676 ev) + dense sub-clusters (Stage B, ~5,064 ev)**; time animations; regional ~8% events need NLLoc
+- [[05-15-26 Notes]] — **shot discrimination**: BRAVOSEIS 2019 airgun surveys (26,823 shots) contaminate the catalog; v2 spectral classifier (AUC 0.998) flags 25%; cleaned `_no_shots_v2` catalogs (31,516 ev); manual-anchored + noshot Stage B variants
+- [[05-18-26 Notes]] — **NLLoc absolute relocation** end-to-end: extended 38-station Python velocity grid, rotation/datum bugs fixed; v2 catalog 31,515 ev, HQ 7,272; hybrid HypoDD+NLLoc catalog
+- [[05-19-26 Notes]] — hand-picking workflow + **seismologist-pick skill**; empirical **Vp/Vs = 1.78** confirmed (106k S/P pairs); reliable-subset tiers; 2.10 artifacts deleted
+- [[05-20-26 Notes]] — **meeting with Marine**: prioritize the EQ-location paper (mid-July target); ELEP ensemble picking → fine-tune local PhaseNet; try GrowClust 3D / GraphDD; polarity picker; defer tremor
 
 ## Code
 Methodology lives in this vault. Implementation lives at `~/Documents/bransfield-eq/` (see `PROJECT_PLAN` → "Repo / pipeline layout").

@@ -8,7 +8,7 @@
 
 ## Status
 
-Phase 2/2.1/2.2 pilot iterations are running on the 29-station January 2020 pool at 2–4 Hz (Z·E, Clements-style broadband-whitened recipe). The stretching-grid quantization that broke Phase 1.3 is resolved; per-station hourly dv/v is now genuinely usable on ~7 stations. Phase 2.4 hyperparameter sweep is scoped but not yet executed. Marine has signed off on the single-station path before any scaling.
+Phase 2/2.1/2.2 pilot iterations ran on the 29-station January 2020 pool at 2–4 Hz (Z·E, Clements-style broadband-whitened recipe); the stretching-grid quantization that broke Phase 1.3 is resolved, and per-station hourly dv/v is genuinely usable on ~7 stations. The pipeline has since scaled to **Phase 3.1 production** (Wiener denoise gate at eff-K = 2.5, MAXLAG 30 s, vectorized stretching) launched across **110 broadband stations for full-year 2020** — and the year-scale finding is that Wiener denoise is the *dominant* path (95 % of stations), not the exception. A second dv/v track, **tremormetry**, runs an LFE-coda-wave-interferometry workflow per station (UW.HDW, UW.GNW), with its inverse-problem theory (deep-source coda sensitivity kernel + fault-plane δβ/β tomography) derived 06-04/06-05. Phase 2.4 hyperparameter sweep is still scoped but not executed. Adjacent threads now live under Earthnote: a Canadian clean-tech reframing of the pipeline ([[Canada Impact+ Proposal]]), a PNW digital-twin build (`earthnote-worldview`), and a Research-Directions feature for the notes app.
 
 ## Goals
 
@@ -16,6 +16,7 @@ Phase 2/2.1/2.2 pilot iterations are running on the 29-station January 2020 pool
 - Validate the pipeline on a small, known-good station pool before scaling to multi-year production.
 - Produce stable hourly-resolution dv/v on Tier A stations; daily-only dv/v elsewhere.
 - Eventually: spatial dv/v maps, correlation with Cascadia slow slip / volcanic / environmental signals, automated production pipeline + monitoring dashboard (Phases 4–8 in `PROJECT_PLAN`).
+- Add a **tremormetry** track: LFE-coda-wave-interferometry dv/v that images shear-velocity change *on the plate interface* (deep repeating sources), complementing the ambient-noise SC dv/v.
 
 ## Key questions
 
@@ -27,6 +28,10 @@ Phase 2/2.1/2.2 pilot iterations are running on the 29-station January 2020 pool
 
 ## Decisions
 
+- **2026-05-29** — Tremormetry workflow gotchas locked: use the full-Cascadia PNSN catalog (`pnsn_tremor_cascadia_full.csv`, **not** the 47.5°N-cut file); `resample_poly` everywhere (obspy FFT-resample → OOM + dv/v drift); GPU matched filter for discovery + densify; **per-era referencing** at sensor/rate-change dates to avoid fake dv/v steps; verify "real" via per-era invariance + cross-patch coherence + neighbouring stations.
+- **2026-05-23** — Phase 3 station selection: one instrument per unique site, broadband > short-period > accelerometer (304-site list `data/inventory/phase3_priority_2020.csv`).
+- **2026-05-22** — Phase 3.1 production rules: Wiener soft-threshold denoise at **effective K = 2.5** when combined |cc| ≤ 0.8 (else keep K=full); **MAXLAG 60 → 30 s**; vectorized stretching; resume via per-station `done.npy`. Phase 2.2 shelved (outputs deleted).
+- **2026-05-13** — Canada Impact+ proposal reframed (professor feedback) to a **clean-tech** lead: geothermal in southern SK (DEEP / Aquistore Deadwood Formation), comparators in AB/BC/Yukon; the Earthnote dv/v pipeline as the method, anchored to [[Cascadia dv.v]].
 - **2026-05-12** — Phase 2/2.1/2.2 iterations backed up; superseded recompute/replot helpers dropped; `.gitignore` extended to skip heavy `stacks_*/` and `logs_*/`.
 - **2026-04-29** — Adopted 48-h rolling phase-weighted stack stepped at 1 h as the Phase 2.1 hourly substrate; adaptive coda window via log-envelope (median + 5/95 %ile spread + 2× noise-floor floor).
 - **2026-04-22** — Killed Phase 1.3 as the production recipe after stretching-grid quantization at ±0.06 % surfaced. Moved to Phase 2.0 (Tim Clements' California recipe): broadband whitening 0.5–19 Hz, 30-min CCs at 75 % overlap, science band 2–4 Hz, MWCS as independent second method.
@@ -47,6 +52,11 @@ Phase 2/2.1/2.2 pilot iterations are running on the 29-station January 2020 pool
 
 ## Recent activity
 
+- **06-04 / 06-05** — Coda-wave sensitivity-kernel theory for deep repeating sources (LFE) + surface receivers, then fault-plane δβ/β tomography from many LFE-family/station pairs — the tremormetry inverse-problem foundation.
+- **06-01** — Designed the notes-app **Research Directions** feature (temporal concept-graph + heuristic link prediction, adapting Marwitz et al. 2026 for cross-project suggestions).
+- **05-29** — **Tremormetry**: per-station LFE-coda dv/v workflow on UW.HDW + UW.GNW; GPU discovery + matched filter; per-era referencing (HDW 2017 rise real, 2023 jump = EHZ→HHZ artifact).
+- **05-22** — Phase 3.1 launched on 110 broadband stations (full-year 2020); Wiener denoise dominant at year scale (95 %); CC.SHRK autoencoder seasonal clustering; deleted Phase 2.2 outputs.
+- **05-21** — PNW digital-twin scoping (`earthnote-worldview`) after the Ryan Delaney / Salish Sea Digital Cousin meeting.
 - **05-12** — Phase 2/2.1/2.2 backup commit; `step_03_new_workflow` and `step_04_quality_screening` docs added.
 - **04-29** — Phase 2.1 adaptive coda window run across all 29 stations; ranking table by SC SNR with per-station coda windows. UW.MDW extended to [1.50, 12.62] s (clear win); CBS/MANO narrowed and lost (proposed fix: "default-or-wider only").
 - **04-28** — Internals review of `stack_hourly_utc` and the hourly dv/v measurement path; identified four levers for Phase 2.1.
@@ -83,7 +93,9 @@ Phase 2/2.1/2.2 pilot iterations are running on the 29-station January 2020 pool
 
 ## Future steps
 
-1. **Phase 2.4 hyperparameter sweep** — execute the planned outer-product of frequency band × coda window × channel-pair averaging on the saved 30-min tensors (no need to re-CC).
+1. **Finish + analyze the Phase 3.1 110-station full-year run** — review the three gate-passing stations, generalize the CC.SHRK seasonal-cluster fingerprinting to more stations.
+2. **Tremormetry: extend beyond HDW/GNW and implement the fault-plane inversion** — assemble the LFE-family/station/lapse-window sensitivity matrix and solve for δβ/β(x₀,y₀,T) per the 06-04/06-05 theory.
+3. **Phase 2.4 hyperparameter sweep** — execute the planned outer-product of frequency band × coda window × channel-pair averaging on the saved 30-min tensors (no need to re-CC).
 2. **Phase 2 multi-year extension** on Tier A + selected Tier B — 2020–2026 with monthly moving-reference stacks; turn the pilot into a science run.
 3. **Cross-validate stretching vs MWCS on Tier A** to confirm the hourly-QC std is method-limited, not noise-limited.
 4. **Add Z·N and E·N component pairs** — compare cleanest pair per station.
@@ -92,6 +104,13 @@ Phase 2/2.1/2.2 pilot iterations are running on the 29-station January 2020 pool
 
 ## Timeline
 
+- **2026-06-05** — Fault-plane δβ/β tomography derivation (LFE-family/station coda pairs).
+- **2026-06-04** — Coda-wave sensitivity-kernel derivation (deep source / surface receiver).
+- **2026-06-01** — Notes-app Research Directions feature designed.
+- **2026-05-29** — Tremormetry LFE-coda dv/v workflow (HDW, GNW); GPU discovery + matched filter.
+- **2026-05-23 / 05-22** — Phase 3.1 production launch (110 broadband stations, Wiener denoise gate); CC.SHRK autoencoder fingerprinting; Phase 2.2 deleted.
+- **2026-05-21** — PNW digital-twin scoping; Salish Sea Digital Cousin meeting.
+- **2026-05-13** — Canada Impact+ proposal clean-tech reframe.
 - **2026-05-12** — Phase 2/2.1/2.2 backup, workflow docs, `.gitignore` cleanup.
 - **2026-05-06** — (note exists but empty — placeholder).
 - **2026-05-05** — Phase 2.0 / 1.3 Plan / 1.3 Results / Phase 2.0 docs touched; Cascadia dv.v anchor refreshed.

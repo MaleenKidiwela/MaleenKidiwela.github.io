@@ -10,7 +10,7 @@
 
 ## Status
 
-Chronos (detection) + Chronfix (correction) form a working end-to-end pipeline for HYS14, validated full-record on 4 years of OO.HYS12/HYS14 MHZ data. The v3 rolling-median segment smoother brought the post-correction hourly peak-lag outlier rate (|x|>5 s) from the v1 buggy 0.81 % through a worse v2 linear-fit (6.33 %) down to 0.30 %, with a 3.16× lift in long-term reference CCF RMS. An uncertainty diagnostic (σ_lag ≈ 0.002 s, σ_model ≈ 0.077 s median) was added 2026-05-05. The main data-collection code is mid-migration: legacy gap-detection is being replaced by the investigator's integer-step + OLS approach (Phase 0 → Phase 2 of `code migration`), with daily metrics destined to sync to `coszo-hub/PREST`. Website restructuring is underway for the **Science Advisory Committee meeting on 2026-05-18** — first pass through the nav restructure and Data rename landed 2026-05-07. RAG-over-notes prototype is live at `/chat` on the notes site.
+Chronos (detection) + Chronfix (correction) form a working end-to-end pipeline for HYS14, validated full-record on 4 years of OO.HYS12/HYS14 MHZ data. The v3 rolling-median segment smoother brought the post-correction hourly peak-lag outlier rate (|x|>5 s) from the v1 buggy 0.81 % through a worse v2 linear-fit (6.33 %) down to 0.30 %, with a 3.16× lift in long-term reference CCF RMS. An uncertainty diagnostic (σ_lag ≈ 0.002 s, σ_model ≈ 0.077 s median) was added 2026-05-05. The main data-collection code is mid-migration: legacy gap-detection is being replaced by the investigator's integer-step + OLS approach (Phase 0 → Phase 2 of `code migration`), with daily metrics destined to sync to `coszo-hub/PREST`. Website restructuring is underway for the **Science Advisory Committee meeting on 2026-05-18** — first pass through the nav restructure and Data rename landed 2026-05-07. RAG-over-notes prototype is live at `/chat` on the notes site. The **SAC meeting was held 2026-05-18**: a six-node network is confirmed for a late-August deployment cruise. Focus has since shifted to **EarthScope data submission** (channel list finalized 2026-05-27, NetCDF→MiniSEED flow, ring-server push), the **seedlink + cron QC pipeline** for tidal pressure, huddle-testing the broadband seismometers toward five units before the cruise, and a **COSZO-VM expansion** (dedicated COSZO machine; current VM retained for PREST / VEL3D / SCPR). Science-writing threads in flight: the Axial acoustic-ranging paper, a Fibre-sensing-workshop abstract, and the Optical-sensing-conference (Kona) abstract.
 
 ## Goals
 
@@ -32,6 +32,9 @@ Chronos (detection) + Chronfix (correction) form a working end-to-end pipeline f
 
 ## Decisions
 
+- **2026-06-03** — COSZO-VM expansion: a dedicated machine for COSZO instrument data; the current VM kept for PREST / VEL3D / SCPR; other-instrument cron jobs on a separate VM. Per-instrument metadata to be driven from a shared parameter spreadsheet (Mika) instead of hand-built parameter files.
+- **2026-05-27** — EarthScope channel list finalized (GSSM / SCPR / current-meter naming as LE/MO/MY/ME engineering codes; location codes flexible). COSZO data flow locked as **NetCDF-first → MiniSEED**. Ring-server submission via the existing config; notify Tim Ronan on new stations/channels. Axial SCPR pushes raw (non-calculated) values only.
+- **2026-05-18** — SAC meeting: **six-node network** (3 new margin sites + a shelf seismometer, plus existing Slope Base / Hydrate Ridge); **late-August 11-day cruise**. Send all data including non-Tier-1 to EarthScope. Calibrated pressure served as a downloadable **Python package**, not an EarthScope-derived product. Fall-2026 in-person SAC for upscoping.
 - **2026-05-07** — Website nav restructured: `Home | Science | Infrastructure | Data | People | Outreach | Early Warning`. `data-products.html → data.html`. Five new pages built (`science`, `publications`, `sites`, `hydrate-ridge`, `slope-base`, `axial-seamount`). Old `motivation.html` / `scientific-objectives.html` kept unlinked-from-nav so external links don't 404.
 - **2026-05-05** — Uncertainty separated into four categories: σ_lag (CCF pick) / σ_model (residual vs smoothed) / drift magnitude (NOT a σ — report as relative %) / non-linearity (sub-hour piece; needs leave-one-out test). σ_total = √(σ_lag² + σ_model²); median 0.077 s, p90 0.108 s, worst 0.170 s.
 - **2026-05-04** — Picker-quantum staircase resolved via two-site fix: (a) `model_segments` in `chronos/scripts/filter_and_triggers.py` replaces each inter-trigger Δt segment with robust per-segment model (24 h rolling robust median + 6 h MA for drift segments, robust median for flat segments below 0.05 s/day slope); (b) `chronfix/correct.py::_resample` snaps within-½-sample boundary values onto the grid to stop `np.interp` returning NaN (was silently dropping ~7,800 corrected hours). Station-agnostic; trigger boundaries define segments.
@@ -66,6 +69,11 @@ Chronos (detection) + Chronfix (correction) form a working end-to-end pipeline f
 
 ## Recent activity
 
+- **06-05** — Started the Optical-sensing-conference (Kona) abstract from William's older COSZO abstract; sent the Bransfield ML catalog to Dax.
+- **06-04** — William meeting: chronfix website fixes (8 Hz rationale, dt CSV, EarthScope-pull code), sub-sample correlation via Fourier interpolation, hand-pick-vs-ML catalog comparison; Fibre-sensing-workshop abstract scoped.
+- **06-02 / 06-03** — Priorities set with William (current-meter upload, VM upgrade with Ken, cron update, Axial acoustic-ranging paper resubmit); monthly-report group status + COSZO-VM-expansion plan (meet Mika 06-04).
+- **05-27** — EarthScope channel list finalized; NetCDF→MiniSEED flow confirmed; huddle test underway (2 of 5 seismometers running).
+- **05-18** — SAC meeting (six-node network, late-August cruise, EarthScope data decisions, calibration-package direction).
 - **05-12** — RAG chat infrastructure refined (model selector, BYOK Claude support pushed to pages-repo). Vault notes back-annotated for SeisFix → chronos rename.
 - **05-07** — Website restructure first pass: nav rebuilt, Science / Sites / Data sections, data rename, 5 new pages.
 - **05-05** — Uncertainty diagnostic added to chronos (`scripts/uncertainty.py`); per-segment statistics, parabolic CCF-fit σ_lag, robust σ_model.
@@ -132,6 +140,11 @@ Chronos (detection) + Chronfix (correction) form a working end-to-end pipeline f
 
 ## Timeline
 
+- **2026-06-05** — Optical-sensing-conference (Kona) abstract started; Bransfield ML catalog sent to Dax.
+- **2026-06-04** — William meeting: chronfix website + sub-sample correlation + catalog-comparison scope; Fibre-sensing abstract.
+- **2026-06-02 / 06-03** — Priorities + monthly-report status; COSZO-VM-expansion plan.
+- **2026-05-27** — EarthScope channel list finalized; NetCDF→MiniSEED; huddle test (2/5 seismometers).
+- **2026-05-18** — Science Advisory Committee meeting (six-node network, late-August cruise).
 - **2026-05-12** — Vault back-annotations for SeisFix → chronos rename; ongoing pages-repo work.
 - **2026-05-07** — Website restructure first pass (nav, Science, Sites, Data rename); 6 pages built.
 - **2026-05-05** — Uncertainty diagnostic added to chronos (`scripts/uncertainty.py`); chronfix commits `54b0d3c` / `f229708` / `7ee4750` / `fadd968`. Chronos `8801abf` / `03f37aa`.
