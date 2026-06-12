@@ -1745,72 +1745,44 @@ main      { animation: fadeUp 0.38s ease 0.13s both; }
 .direction-card {
   background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
   padding: 16px 16px 14px;
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; flex-direction: column; gap: 10px;
   transition: border-color 0.15s;
 }
 .direction-card:hover { border-color: var(--border-2); }
-.direction-pairs {
-  display: flex; align-items: stretch; gap: 10px;
+.direction-badges {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  font-family: var(--font-mono); font-size: 10px;
 }
-.direction-pill {
-  flex: 1; min-width: 0;
-  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-  padding: 10px 12px;
-  display: flex; flex-direction: column; gap: 4px;
+.direction-badge {
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 2px 9px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
 }
-.direction-pill-head {
-  display: flex; align-items: center; gap: 8px;
-}
-.direction-pill-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.direction-pill-kind {
-  font-family: var(--font-mono); font-size: 9.5px;
-  color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase;
-}
-.direction-pill-label {
-  color: var(--text); font-size: 14px; font-weight: 500;
-  word-wrap: break-word;
-}
-.direction-pill-projects {
-  display: flex; gap: 5px; flex-wrap: wrap;
+.direction-badge.is-type-cross-project { color: var(--accent); border-color: var(--accent-dim); }
+.direction-badge.is-status-new { color: var(--text); background: var(--bg3); }
+.direction-proj {
+  display: inline-flex; align-items: center; gap: 5px;
   font-family: var(--font-mono); font-size: 10px; color: var(--muted);
 }
-.direction-pill-proj {
-  display: inline-flex; align-items: center; gap: 4px;
-}
-.direction-pill-proj-dot { width: 5px; height: 5px; border-radius: 50%; }
-.direction-arrow {
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-3);
-  font-family: var(--font-mono); font-size: 18px;
-  width: 16px; flex-shrink: 0;
-}
-.direction-score {
-  display: flex; align-items: center; gap: 10px;
-  font-family: var(--font-mono); font-size: 11px; color: var(--muted);
-}
-.direction-score-bar {
-  flex: 1; height: 4px; border-radius: 2px;
-  background: var(--bg3); overflow: hidden;
-}
-.direction-score-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+.direction-proj-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.direction-card-title {
+  color: var(--text); font-size: 15px; font-weight: 600; line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 .direction-rationale {
   color: var(--text); font-size: 13px; line-height: 1.6;
   font-family: var(--font-sans);
 }
-.direction-rationale.is-missing {
-  color: var(--text-3); font-style: italic;
-}
-.direction-meta {
+.direction-grounding {
   display: flex; gap: 12px; flex-wrap: wrap;
   font-family: var(--font-mono); font-size: 10.5px; color: var(--muted);
   border-top: 1px dashed var(--border); padding-top: 10px;
 }
-.direction-meta-badge.is-cross { color: var(--accent); }
+.direction-ground-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  cursor: pointer;
+}
+.direction-ground-link:hover { color: var(--accent); }
 .directions-empty {
   text-align: center; color: var(--muted);
   font-family: var(--font-mono); font-size: 13px;
@@ -4145,7 +4117,9 @@ function closeGraphSide() {
 }
 
 // ── Directions view ───────────────────────────────────────────────────────
-let __directionsData = null;            // { predictions, graph, generatedAt }
+// Data comes from public/directions.json, written by the cranium-updater
+// agent from the per-project cranium files (not by the RAG indexer).
+let __directionsData = null;            // { directions, generatedAt }
 let __directionsState = { filter: 'all' };
 
 async function loadDirectionsData() {
@@ -4163,70 +4137,47 @@ function setDirectionFilter(f) {
   renderDirections();
 }
 
-function renderDirectionCard(pred) {
-  const srcColor = conceptKindColor(pred.source.kind);
-  const tgtColor = conceptKindColor(pred.target.kind);
-  const srcProjects = (pred.source.projects || []).map((p) => `
-    <span class="direction-pill-proj">
-      <span class="direction-pill-proj-dot" style="background:${projectDotColor(p)}"></span>${escHtml(p)}
+function renderDirectionCard(dir) {
+  const projBadges = (dir.projects || []).map((p) => `
+    <span class="direction-proj">
+      <span class="direction-proj-dot" style="background:${projectDotColor(p)}"></span>${escHtml(p)}
     </span>`).join('');
-  const tgtProjects = (pred.target.projects || []).map((p) => `
-    <span class="direction-pill-proj">
-      <span class="direction-pill-proj-dot" style="background:${projectDotColor(p)}"></span>${escHtml(p)}
-    </span>`).join('');
-  const scorePct = Math.max(0, Math.min(1, pred.score)) * 100;
-  const rationale = pred.rationale && pred.rationale.trim()
-    ? `<div class="direction-rationale">${escHtml(pred.rationale)}</div>`
-    : `<div class="direction-rationale is-missing">No rationale generated.</div>`;
-  const crossBadge = pred.crossProject
-    ? `<span class="direction-meta-badge is-cross">cross-project</span>`
-    : `<span class="direction-meta-badge">same project</span>`;
+  const typeBadge = dir.type
+    ? `<span class="direction-badge is-type-${escHtml(dir.type)}">${escHtml(dir.type.replace(/-/g, ' '))}</span>`
+    : '';
+  const since = dir.status !== 'new' && dir.firstProposed ? ` · since ${escHtml(dir.firstProposed)}` : '';
+  const statusBadge = dir.status
+    ? `<span class="direction-badge is-status-${escHtml(dir.status)}">${escHtml(dir.status)}${since}</span>`
+    : '';
+  const grounding = (dir.grounding || []).map((g) => {
+    const proj = String(g.project || '').replace(/'/g, "\\'");
+    const note = String(g.note || '').replace(/'/g, "\\'");
+    return `
+    <span class="direction-ground-link" onclick="openNoteFromConcepts('${proj}','${note}')">
+      <span class="direction-proj-dot" style="background:${projectDotColor(g.project)}"></span>${escHtml(String(g.note || '').replace(/\.md$/, ''))}
+    </span>`;
+  }).join('');
   return `
     <div class="direction-card">
-      <div class="direction-pairs">
-        <div class="direction-pill">
-          <div class="direction-pill-head">
-            <span class="direction-pill-dot" style="background:${srcColor}"></span>
-            <span class="direction-pill-kind">${escHtml(pred.source.kind)}</span>
-          </div>
-          <div class="direction-pill-label">${escHtml(pred.source.display)}</div>
-          <div class="direction-pill-projects">${srcProjects}</div>
-        </div>
-        <div class="direction-arrow">⟶</div>
-        <div class="direction-pill">
-          <div class="direction-pill-head">
-            <span class="direction-pill-dot" style="background:${tgtColor}"></span>
-            <span class="direction-pill-kind">${escHtml(pred.target.kind)}</span>
-          </div>
-          <div class="direction-pill-label">${escHtml(pred.target.display)}</div>
-          <div class="direction-pill-projects">${tgtProjects}</div>
-        </div>
-      </div>
-      <div class="direction-score">
-        <div class="direction-score-bar"><div class="direction-score-fill" style="width:${scorePct.toFixed(1)}%"></div></div>
-        <span>score ${pred.score.toFixed(3)}</span>
-      </div>
-      ${rationale}
-      <div class="direction-meta">
-        <span class="direction-meta-badge">sim ${(pred.semanticSim ?? 0).toFixed(3)}</span>
-        <span class="direction-meta-badge">${pred.sharedNeighbors} shared neighbors</span>
-        ${crossBadge}
-      </div>
+      <div class="direction-badges">${typeBadge}${statusBadge}${projBadges}</div>
+      <div class="direction-card-title">${escHtml(dir.title || '')}</div>
+      <div class="direction-rationale">${escHtml(dir.rationale || '')}</div>
+      ${grounding ? `<div class="direction-grounding">${grounding}</div>` : ''}
     </div>`;
 }
 
 function renderDirections() {
   const host = document.getElementById('directions-render');
   if (!host || !__directionsData) return;
-  const all = __directionsData.predictions || [];
+  const all = __directionsData.directions || [];
   const filter = __directionsState.filter;
-  const filtered = all.filter((p) => {
-    if (filter === 'cross') return p.crossProject;
-    if (filter === 'rationale') return p.rationale && p.rationale.trim();
+  const filtered = all.filter((d) => {
+    if (filter === 'cross') return d.type === 'cross-project';
+    if (filter === 'new') return d.status === 'new';
     return true;
   });
   if (!filtered.length) {
-    host.innerHTML = `<div class="directions-empty">No predictions match this filter.</div>`;
+    host.innerHTML = `<div class="directions-empty">No directions match this filter.</div>`;
     return;
   }
   host.innerHTML = `<div class="direction-grid">${filtered.map(renderDirectionCard).join('')}</div>`;
@@ -4242,14 +4193,14 @@ async function showDirections() {
       <div class="directions-head">
         <div>
           <div class="directions-title">Research Directions</div>
-          <div class="directions-sub">Predicted unexplored connections</div>
+          <div class="directions-sub">Grounded in the project craniums</div>
         </div>
         <div class="directions-meta" id="directions-meta">loading…</div>
       </div>
       <div class="directions-controls">
-        <button class="direction-filter active" data-filter="all"       onclick="setDirectionFilter('all')">All</button>
-        <button class="direction-filter"        data-filter="cross"     onclick="setDirectionFilter('cross')">Cross-project</button>
-        <button class="direction-filter"        data-filter="rationale" onclick="setDirectionFilter('rationale')">With rationale</button>
+        <button class="direction-filter active" data-filter="all"   onclick="setDirectionFilter('all')">All</button>
+        <button class="direction-filter"        data-filter="cross" onclick="setDirectionFilter('cross')">Cross-project</button>
+        <button class="direction-filter"        data-filter="new"   onclick="setDirectionFilter('new')">New</button>
       </div>
       <div id="directions-render"></div>
     </div>`;
@@ -4259,19 +4210,18 @@ async function showDirections() {
   } catch (err) {
     document.getElementById('directions-render').innerHTML =
       `<div class="directions-empty">Couldn't load directions: ${escHtml(err.message)}.<br>` +
-      `Run <code>npm run index</code> to generate <code>public/directions.json</code>.</div>`;
+      `Directions are generated during cranium updates.</div>`;
     document.getElementById('directions-meta').textContent = 'unavailable';
     document.getElementById('status-text').textContent = 'Directions unavailable';
     return;
   }
 
-  const preds = __directionsData.predictions || [];
+  const dirs = __directionsData.directions || [];
   const when = __directionsData.generatedAt
     ? new Date(__directionsData.generatedAt).toISOString().slice(0, 10) : '';
-  const nodes = __directionsData.graph?.nodeCount ?? 0;
   document.getElementById('directions-meta').textContent =
-    `${preds.length} predictions · ${nodes} concepts${when ? ' · ' + when : ''}`;
-  document.getElementById('status-text').textContent = `${preds.length} predictions`;
+    `${dirs.length} directions${when ? ' · updated ' + when : ''}`;
+  document.getElementById('status-text').textContent = `${dirs.length} directions`;
 
   renderDirections();
 }

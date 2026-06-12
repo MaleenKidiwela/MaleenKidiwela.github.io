@@ -1,1 +1,160 @@
-{"generatedAt":"2026-06-12T00:20:20.999Z","graph":{"nodeCount":1241,"edgeCount":0},"predictions":[{"source":{"id":"quantities:method","display":"method","kind":"quantity","projects":["Earthnote"]},"target":{"id":"methods:unit conversion","display":"unit conversion","kind":"method","projects":["COSZO"]},"score":0.672,"semanticSim":0.919,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"method\" (quantity) from Earthnote with"},{"source":{"id":"datasets:csv","display":"CSV","kind":"dataset","projects":["COSZO"]},"target":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"score":0.671,"semanticSim":0.917,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"CSV\" (referring to specific data files)"},{"source":{"id":"methods:picking","display":"picking","kind":"method","projects":["BransfieldEQ"]},"target":{"id":"quantities:p picks","display":"P picks","kind":"quantity","projects":["COSZO"]},"score":0.671,"semanticSim":0.916,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining the automated \"picking\" method from BransfieldEQ"},{"source":{"id":"instruments:a0a","display":"A0A","kind":"instrument","projects":["COSZO"]},"target":{"id":"quantities:instrument","display":"instrument","kind":"quantity","projects":["Earthnote"]},"score":0.671,"semanticSim":0.916,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"A0A\" (a specific seafloor"},{"source":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"target":{"id":"datasets:repository","display":"repository","kind":"dataset","projects":["COSZO"]},"score":0.671,"semanticSim":0.917,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining the concept of \"dataset\" as a quantifiable entity"},{"source":{"id":"methods:applying thresholds","display":"applying thresholds","kind":"method","projects":["BransfieldEQ"]},"target":{"id":"quantities:qc threshold","display":"QC threshold","kind":"quantity","projects":["Earthnote"]},"score":0.67,"semanticSim":0.915,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"applying thresholds\" with \"QC threshold"},{"source":{"id":"instruments:current meter","display":"current meter","kind":"instrument","projects":["COSZO"]},"target":{"id":"quantities:current meter data","display":"current meter data","kind":"quantity","projects":["Earthnote"]},"score":0.669,"semanticSim":0.912,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"current meter\" (the instrument) with \""},{"source":{"id":"datasets:netcdf","display":"NetCDF","kind":"dataset","projects":["COSZO"]},"target":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"score":0.669,"semanticSim":0.911,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"NetCDF\" (the specific data format used for"},{"source":{"id":"datasets:netcdfs","display":"NetCDFs","kind":"dataset","projects":["COSZO"]},"target":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"score":0.669,"semanticSim":0.911,"sharedNeighbors":0,"crossProject":true,"rationale":"The connection between NetCDFs as a specific data"},{"source":{"id":"datasets:iris","display":"IRIS","kind":"dataset","projects":["COSZO"]},"target":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"score":0.668,"semanticSim":0.909,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"IRIS\" (as a specific geophysical data"},{"source":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"target":{"id":"datasets:derived data products","display":"derived data products","kind":"dataset","projects":["COSZO"]},"score":0.668,"semanticSim":0.908,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining the quantitative analysis of \"dataset\" types"},{"source":{"id":"methods:instance","display":"instance","kind":"method","projects":["BransfieldEQ"]},"target":{"id":"quantities:method","display":"method","kind":"quantity","projects":["Earthnote"]},"score":0.668,"semanticSim":0.91,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"instance\" (method) from Bransfield"},{"source":{"id":"instruments:realtime seedlink server","display":"realtime seedlink server","kind":"instrument","projects":["Earthnote"]},"target":{"id":"methods:seedlink","display":"SeedLink","kind":"method","projects":["COSZO"]},"score":0.668,"semanticSim":0.909,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining a \"realtime SeedLink server\" (Concept A"},{"source":{"id":"instruments:seismometer","display":"seismometer","kind":"instrument","projects":["COSZO"]},"target":{"id":"quantities:instrument","display":"instrument","kind":"quantity","projects":["Earthnote"]},"score":0.667,"semanticSim":0.906,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"seismometer\" with \"instrument\""},{"source":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"target":{"id":"datasets:notes","display":"notes","kind":"dataset","projects":["COSZO"]},"score":0.667,"semanticSim":0.906,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining the concept of \"dataset\" as a quantifiable entity with"},{"source":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"target":{"id":"datasets:seismometer data","display":"seismometer data","kind":"dataset","projects":["COSZO"]},"score":0.667,"semanticSim":0.906,"sharedNeighbors":0,"crossProject":true,"rationale":"Treating \"seismometer data\" as a quantifiable \""},{"source":{"id":"quantities:gemini embedding (768-dim)","display":"Gemini embedding (768-dim)","kind":"quantity","projects":["Earthnote"]},"target":{"id":"methods:gemini embeddings","display":"Gemini embeddings","kind":"method","projects":["COSZO"]},"score":0.667,"semanticSim":0.905,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining the specific 768-dimensional Gemini embeddings from"},{"source":{"id":"quantities:method","display":"method","kind":"quantity","projects":["Earthnote"]},"target":{"id":"methods:processing data","display":"processing data","kind":"method","projects":["COSZO"]},"score":0.667,"semanticSim":0.904,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"method\" (as a quantifiable entity) with"},{"source":{"id":"datasets:earthscope","display":"EarthScope","kind":"dataset","projects":["COSZO"]},"target":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"score":0.666,"semanticSim":0.904,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining \"EarthScope\" as a critical data repository"},{"source":{"id":"methods:picking","display":"picking","kind":"method","projects":["BransfieldEQ"]},"target":{"id":"quantities:s picks","display":"S picks","kind":"quantity","projects":["COSZO"]},"score":0.666,"semanticSim":0.902,"sharedNeighbors":0,"crossProject":true,"rationale":"Combining the automated \"picking\" methodology developed for Brans"},{"source":{"id":"instruments:broadband seismometer","display":"broadband seismometer","kind":"instrument","projects":["Earthnote"]},"target":{"id":"datasets:seismometer data","display":"seismometer data","kind":"dataset","projects":["COSZO"]},"score":0.666,"semanticSim":0.904,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"target":{"id":"datasets:historical dataset","display":"historical dataset","kind":"dataset","projects":["COSZO"]},"score":0.666,"semanticSim":0.901,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"quantities:instrument","display":"instrument","kind":"quantity","projects":["Earthnote"]},"target":{"id":"instruments:land stations","display":"land stations","kind":"instrument","projects":["BransfieldEQ"]},"score":0.666,"semanticSim":0.902,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"quantities:instrument","display":"instrument","kind":"quantity","projects":["Earthnote"]},"target":{"id":"instruments:seismometers","display":"seismometers","kind":"instrument","projects":["COSZO"]},"score":0.666,"semanticSim":0.902,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"quantities:measurements","display":"measurements","kind":"quantity","projects":["Earthnote"]},"target":{"id":"methods:unit conversion","display":"unit conversion","kind":"method","projects":["COSZO"]},"score":0.666,"semanticSim":0.902,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"datasets:ooi","display":"OOI","kind":"dataset","projects":["COSZO"]},"target":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"score":0.665,"semanticSim":0.899,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"datasets:netcdf files","display":"NetCDF files","kind":"dataset","projects":["COSZO"]},"target":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"score":0.665,"semanticSim":0.899,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"quantities:dataset","display":"dataset","kind":"quantity","projects":["Earthnote"]},"target":{"id":"datasets:earthscope archive","display":"EarthScope archive","kind":"dataset","projects":["COSZO"]},"score":0.665,"semanticSim":0.9,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"methods:download waveforms","display":"download waveforms","kind":"method","projects":["BransfieldEQ"]},"target":{"id":"datasets:seismic data","display":"seismic data","kind":"dataset","projects":["COSZO"]},"score":0.665,"semanticSim":0.9,"sharedNeighbors":0,"crossProject":true,"rationale":null},{"source":{"id":"instruments:gemini 2.5 flash","display":"Gemini 2.5 Flash","kind":"instrument","projects":["Earthnote"]},"target":{"id":"quantities:gemini 2.5 flash output","display":"Gemini 2.5 Flash output","kind":"quantity","projects":["COSZO"]},"score":0.665,"semanticSim":0.899,"sharedNeighbors":0,"crossProject":true,"rationale":null}]}
+{
+  "generatedAt": "2026-06-12T13:30:00-07:00",
+  "directions": [
+    {
+      "id": "chronos-clock-qc-for-bransfield-obs",
+      "title": "Run chronos ambient-noise clock-drift QC across the Bransfield ZX OBS array",
+      "type": "cross-project",
+      "projects": ["COSZO", "BransfieldEQ"],
+      "rationale": "BRA05's clock was fixed with a single hand-derived −0.167 s offset, and the precision of GrowClust/hypoDD relative relocations is ultimately limited by inter-station timing. Chronos already detects sub-sample clock drift from ambient-noise cross-correlations on OBS pairs; running it across the 15-station ZX array would either validate the catalog's timing or produce per-station drift curves to apply before the mid-July paper.",
+      "grounding": [
+        { "project": "BransfieldEQ", "note": "05-11-26 Notes.md" },
+        { "project": "COSZO", "note": "HYS14 — Correction Method V2.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "dvv-on-corrected-hys14",
+      "title": "Measure dv/v on the timing-corrected HYS14/HYS12 records — offshore Cascadia's first single-station dv/v points",
+      "type": "cross-project",
+      "projects": ["Earthnote", "COSZO"],
+      "rationale": "Earthnote's pipeline is validated onshore across 110 broadband stations, but its scientific target — Cascadia slow slip — is best sensed offshore. COSZO just produced four years of clock-corrected HYS12/HYS14 data, and clock drift is exactly the error that corrupts dv/v. The corrected records are both a unique validation set for chronfix and the first offshore extension of the PNW monitoring map.",
+      "grounding": [
+        { "project": "COSZO", "note": "05-05-26 Notes.md" },
+        { "project": "Earthnote", "note": "Phase 2.0.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "bransfield-ml-stack-for-coszo-network",
+      "title": "Port the Bransfield Stage-1 picking and association stack to the COSZO six-node network before deployment",
+      "type": "cross-project",
+      "projects": ["BransfieldEQ", "COSZO"],
+      "rationale": "COSZO deploys a six-node OBS network on the late-August cruise. BransfieldEQ already has an end-to-end OBS pipeline — PhaseNet instance @ 0.1 plus OBSTransformer picking, PyOcto association, NLLoc/GrowClust relocation — tuned specifically on ocean-bottom data. Standing it up against the new network's station geometry now means a working catalog in the first weeks of data rather than a year later.",
+      "grounding": [
+        { "project": "BransfieldEQ", "note": "05-11-26 Notes.md" },
+        { "project": "COSZO", "note": "05-18-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "handpick-vs-ml-catalog-paper",
+      "title": "Formalize the hand-pick vs ML catalog comparison into a methods result",
+      "type": "extension",
+      "projects": ["BransfieldEQ", "COSZO"],
+      "rationale": "William asked for a hand-pick-vs-ML comparison, and Bransfield has the rare ingredients: 58,630 manual picks across 6,970 ground-truth events plus a full-year ML catalog from the same instruments. A station-by-station pick-residual and detection-completeness comparison is simultaneously a paper section and the calibration the ML catalog needs — and the catalog is already in Dax's hands.",
+      "grounding": [
+        { "project": "COSZO", "note": "06-04-26 Notes.md" },
+        { "project": "BransfieldEQ", "note": "05-19-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "orca-swarm-dvv",
+      "title": "Coda-wave dv/v around the Orca swarm using the Bransfield OBS year",
+      "type": "cross-project",
+      "projects": ["Earthnote", "BransfieldEQ"],
+      "rationale": "The relocated catalog shows a verified swarm onset on Jan 17–18 2019 and structural features (dike, magma chamber, asymmetric rifting). Applying Earthnote's single-station dv/v recipe to the same OBS records would test whether the swarm was accompanied by measurable velocity change — a volcanic-unrest result that combines both projects' tooling on data already in hand.",
+      "grounding": [
+        { "project": "BransfieldEQ", "note": "05-15-26 Notes.md" },
+        { "project": "Earthnote", "note": "Phase 2.0.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "tremormetry-offshore-cascadia",
+      "title": "Plan tremormetry station–LFE-family geometry for the six-node offshore network",
+      "type": "extension",
+      "projects": ["Earthnote", "COSZO"],
+      "rationale": "Tremormetry images δβ/β on the plate interface from LFE-family codas, but the current stations (UW.HDW, UW.GNW) are onshore, with limited updip sensitivity. The late-August COSZO margin sites will sit directly above the locked zone. Working through the 06-04/06-05 sensitivity-kernel theory for those geometries now tells us whether usable kernels exist before any data arrives — and could shape station placement priorities.",
+      "grounding": [
+        { "project": "Earthnote", "note": "06-04-26 Notes.md" },
+        { "project": "COSZO", "note": "05-18-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "obs-denoiser-on-huddle-test",
+      "title": "Evaluate the OBS-domain DeepDenoiser fine-tune on COSZO huddle-test data",
+      "type": "cross-project",
+      "projects": ["BransfieldEQ", "COSZO"],
+      "rationale": "The OBS denoiser fine-tune was built for Bransfield's noise environment and its value is still gated on the held-out August 2019 evaluation. The COSZO huddle test produces collocated broadband records — ideal for measuring what the denoiser does to identical real signals before trusting it on margin OBS data. The result feeds both projects' pipelines.",
+      "grounding": [
+        { "project": "BransfieldEQ", "note": "05-09-26 Notes.md" },
+        { "project": "COSZO", "note": "05-27-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "phase24-band-coda-sweep",
+      "title": "Execute the Phase 2.4 frequency-band × coda-window sweep on the Tier-A pool",
+      "type": "open-question",
+      "projects": ["Earthnote"],
+      "rationale": "The sweep has been scoped since April but never executed, and two open key questions hang on it: which band/coda combination maximizes correlation per station, and whether pos/neg coda sides reveal source asymmetry. With Phase 3.1 running at scale, sweeping the ~7 genuinely-usable hourly stations is cheap and would lock per-station configs before multi-year production.",
+      "grounding": [
+        { "project": "Earthnote", "note": "dvv_hyperparameter_sweep.md" },
+        { "project": "Earthnote", "note": "Phase 2.0.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "subhour-drift-loo-test",
+      "title": "Implement the leave-one-out / even-odd-hour test to bound sub-hour clock interpolation error",
+      "type": "open-question",
+      "projects": ["COSZO"],
+      "rationale": "It is the remaining unquantified term in the chronos uncertainty budget: σ_lag and σ_model are measured, sub-hour non-linearity is not. The test was proposed in the 05-05 uncertainty work and is a contained, station-agnostic addition that would complete the error model before the toolchain ships as a standalone package.",
+      "grounding": [
+        { "project": "COSZO", "note": "05-05-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "pressure-current-meter-coherence",
+      "title": "Quantify pressure vs current-meter coherence at collocated COSZO nodes",
+      "type": "extension",
+      "projects": ["COSZO"],
+      "rationale": "The 06-11 action list asks for a pressure/current-meter comparison and east-node distance checks. Going one step further — a transfer-function and coherence analysis between collocated sensors — would separate oceanographic signal from instrument effects in the tidal-pressure product, directly serving the calibrated-pressure Python package decided at the SAC meeting.",
+      "grounding": [
+        { "project": "Earthnote", "note": "06-11-26 Notes.md" },
+        { "project": "COSZO", "note": "06-09-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "wiener-denoise-for-chronos-ccfs",
+      "title": "Test Earthnote's Wiener soft-threshold denoise on chronos inter-station CCFs",
+      "type": "cross-project",
+      "projects": ["Earthnote", "COSZO"],
+      "rationale": "Phase 3.1's year-scale finding is that Wiener denoising dominates (95% of stations). Chronos's weakest case is low-SNR inter-station pairs — HYS14–HYSB1 needed a band change to 0.1–0.3 Hz to survive. Applying the same effective-K Wiener gate to chronos CCFs could recover the 1–3 Hz band on long baselines and tighten σ_lag.",
+      "grounding": [
+        { "project": "Earthnote", "note": "05-22-26 Notes.md" },
+        { "project": "COSZO", "note": "05-04-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "per-era-referencing-for-coszo-timeseries",
+      "title": "Adopt tremormetry's per-era referencing for COSZO long timeseries spanning instrument swaps",
+      "type": "cross-project",
+      "projects": ["Earthnote", "COSZO"],
+      "rationale": "Tremormetry's hardest-won lesson was that sensor and sample-rate changes create fake dv/v steps unless references are rebuilt per era — the HDW 2023 'jump' was an EHZ→HHZ artifact. COSZO's multi-year OOI records span exactly such instrument changes, and any derived product that references across an era boundary inherits the same class of artifact. Auditing era boundaries across the COSZO station set is cheap insurance.",
+      "grounding": [
+        { "project": "Earthnote", "note": "05-29-26 Notes.md" },
+        { "project": "COSZO", "note": "05-04-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-06-12"
+    }
+  ]
+}
