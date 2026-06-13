@@ -52,6 +52,8 @@ Phase 2/2.1/2.2 pilot iterations ran on the 29-station January 2020 pool at 2–
 
 ## Recent activity
 
+- **06-11** — Action list (rough note, largely observatory logistics): send the abstract to coauthors (Zoe to review); website feedback loop with Deb starts Monday; pressure-vs-current-meter data comparison, huddle tests, east current-meter distance/location checks, realtime SeedLink server (then email Helen); GNSS-A processing thread is ad hoc — David suggests Yoichiro.
+- **06-10** — Visited Paroscientific; meeting with Jerry Paros.
 - **06-04 / 06-05** — Coda-wave sensitivity-kernel theory for deep repeating sources (LFE) + surface receivers, then fault-plane δβ/β tomography from many LFE-family/station pairs — the tremormetry inverse-problem foundation.
 - **06-01** — Designed the notes-app **Research Directions** feature (temporal concept-graph + heuristic link prediction, adapting Marwitz et al. 2026 for cross-project suggestions).
 - **05-29** — **Tremormetry**: per-station LFE-coda dv/v workflow on UW.HDW + UW.GNW; GPU discovery + matched filter; per-era referencing (HDW 2017 rise real, 2023 jump = EHZ→HHZ artifact).

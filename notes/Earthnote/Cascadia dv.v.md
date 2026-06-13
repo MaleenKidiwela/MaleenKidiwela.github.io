@@ -57,3 +57,5 @@ Two adjacent threads also live here. [[Earthnote/05-21-26 Notes]] scopes the **P
 - [[06-01-26 Notes]] — Research Directions feature for the notes app (concept-graph link prediction)
 - [[06-04-26 Notes]] — coda-wave sensitivity kernel (deep source / surface receiver) theory
 - [[06-05-26 Notes]] — fault-plane δβ/β tomography from LFE-family/station coda pairs
+- [[06-10-26 Notes]] — Paroscientific visit; meeting with Jerry Paros
+- [[06-11-26 Notes]] — action list: abstract to coauthors (Zoe to review), website feedback with Deb, observatory follow-ups, GNSS-A processing thread
