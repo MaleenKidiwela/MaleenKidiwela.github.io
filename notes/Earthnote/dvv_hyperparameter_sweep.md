@@ -78,13 +78,13 @@ Plus:
 
 ## Files (in `Earthnote/scripts/dvv_sweep/`)
 
-- [[scripts/dvv_sweep/sweep_config.yaml]] — parameter grid
-- [[scripts/dvv_sweep/run_sweep.py]] — driver: expand grid, dispatch, collect
-- [[scripts/dvv_sweep/dvv_core.py]] — single-combo measurement (bandpass → window → stretching + MWCS)
-- [[scripts/dvv_sweep/channel_grouping.py]] — pair-averaging logic
-- [[scripts/dvv_sweep/io_utils.py]] — load stacks from ASDF, write Parquet shards
-- [[scripts/dvv_sweep/merge_results.py]] — concat shards → single results table
-- [[scripts/dvv_sweep/submit_hpc.sh]] — SLURM/MPI wrapper for the backend
+* scripts/dvv_sweep/sweep_config.yaml — parameter grid
+- scripts/dvv_sweep/run_sweep.py — driver: expand grid, dispatch, collect
+- scripts/dvv_sweep/dvv_core.py — single-combo measurement (bandpass → window → stretching + MWCS)
+- scripts/dvv_sweep/channel_grouping.py — pair-averaging logic
+- scripts/dvv_sweep/io_utils.py — load stacks from ASDF, write Parquet shards
+- scripts/dvv_sweep/merge_results.py — concat shards → single results table
+- scripts/dvv_sweep/submit_hpc.sh — SLURM/MPI wrapper for the backend
 
 ---
 
