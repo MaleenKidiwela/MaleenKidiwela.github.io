@@ -24,6 +24,7 @@ silently break the map.
 | `service` | 0–10 |
 | `taste` | 0–10 |
 | `would_return` | 0–10 |
+| `expense_worth` | 0–10 — value for money |
 | `notes` | Free-text review, shown in the marker popup (quote if it contains commas) |
 
 Leave any score blank for places not yet rated — they show up gray as

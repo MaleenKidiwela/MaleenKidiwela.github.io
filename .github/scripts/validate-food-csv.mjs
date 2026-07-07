@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 
 const path = process.argv[2] ?? 'food/restaurants.csv';
 const REQUIRED = ['name', 'cuisine', 'address', 'lat', 'lng',
-  'ambience', 'can_i_eat', 'service', 'taste', 'would_return', 'notes'];
-const SCORES = ['ambience', 'can_i_eat', 'service', 'taste', 'would_return'];
+  'ambience', 'can_i_eat', 'service', 'taste', 'would_return', 'expense_worth', 'notes'];
+const SCORES = ['ambience', 'can_i_eat', 'service', 'taste', 'would_return', 'expense_worth'];
 
 // Same quoted-field CSV parsing rules as the page itself.
 function parseCSV(text) {
