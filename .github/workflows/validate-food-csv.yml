@@ -1,0 +1,32 @@
+name: Validate food review CSV
+
+# The Pages deploy workflow already publishes every push to main, so the
+# spreadsheet goes live automatically. This workflow just fails loudly if
+# an edit to restaurants.csv would break the /food map (bad header, missing
+# name, out-of-range score, or coordinates outside the Puget Sound area).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'food/restaurants.csv'
+      - '.github/workflows/validate-food-csv.yml'
+  pull_request:
+    paths:
+      - 'food/restaurants.csv'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate restaurants.csv
+        run: node .github/scripts/validate-food-csv.mjs food/restaurants.csv

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Survey — Maleen Kidiwela</title>
+  <meta name="description" content="A quiet ledger of Seattle restaurants, ranked on ambience, allergy-safety, service, taste, and return-worthiness." />
+  <meta name="theme-color" content="#FBFBFA" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <style>
+    :root {
+      --canvas:      #FBFBFA;
+      --surface:     #FFFFFF;
+      --ink:         #111111;
+      --ink-2:       #2F3437;
+      --muted:       #787774;
+      --faint:       #A8A6A0;
+      --line:        #EAEAEA;
+      --line-soft:   rgba(0, 0, 0, 0.05);
+
+      /* score bands — muted pastel chip + paired text/marker ink */
+      --red-bg:      #FDEBEC;  --red-fg:    #9F2F2D;
+      --yellow-bg:   #FBF3DB;  --yellow-fg: #956400;
+      --blue-bg:     #E1F3FE;  --blue-fg:   #1F6C9F;
+      --green-bg:    #EDF3EC;  --green-fg:  #346538;
+      --na-fg:       #C9C6BE;
+
+      --serif: 'Newsreader', 'Lyon Text', 'New York', Georgia, serif;
+      --sans:  'SF Pro Display', 'Geist', 'Helvetica Neue', system-ui, sans-serif;
+      --mono:  'JetBrains Mono', 'Geist Mono', 'SF Mono', ui-monospace, monospace;
+
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --header-h: 76px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+    button { font: inherit; cursor: pointer; background: none; border: 0; color: inherit; }
+    input { font: inherit; color: inherit; }
+
+    body {
+      background: var(--canvas);
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      overflow: hidden;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* one quiet ambient light, fixed, imperceptibly slow */
+    .ambient {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 60% 45% at 22% 8%, rgba(180, 160, 120, 0.05), transparent 70%);
+      animation: drift 26s ease-in-out infinite alternate;
+    }
+    @keyframes drift { to { transform: translate(3%, 2%); } }
+
+    /* ================= header ================= */
+    .hd {
+      height: var(--header-h);
+      flex: 0 0 auto;
+      display: flex; align-items: center; gap: 2rem;
+      padding: 0 clamp(1.25rem, 3vw, 2.5rem);
+      border-bottom: 1px solid var(--line);
+      background: var(--canvas);
+      position: relative; z-index: 500;
+    }
+    .hd-back {
+      font-family: var(--mono); font-size: .68rem; letter-spacing: .05em;
+      color: var(--muted); white-space: nowrap;
+      display: flex; align-items: center; gap: .5rem;
+      transition: color .2s var(--ease);
+    }
+    .hd-back:hover { color: var(--ink); }
+    .hd-back svg { width: 12px; height: 12px; }
+
+    .hd-title {
+      font-family: var(--serif); font-weight: 500;
+      font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+      letter-spacing: -0.02em; line-height: 1.1;
+      color: var(--ink); white-space: nowrap;
+    }
+    .hd-title em { font-style: italic; font-weight: 400; color: var(--muted); }
+
+    .hd-count {
+      font-family: var(--mono); font-size: .68rem; color: var(--faint);
+      white-space: nowrap; margin-left: .25rem; padding-top: .3rem;
+    }
+
+    .hd-spacer { flex: 1; }
+
+    .hd-legend {
+      display: flex; align-items: center; gap: 1.1rem;
+      font-family: var(--mono); font-size: .62rem; letter-spacing: .06em;
+      color: var(--muted); text-transform: uppercase;
+    }
+    .hd-legend span { display: flex; align-items: center; gap: .4rem; white-space: nowrap; }
+    .hd-legend i { width: 8px; height: 8px; border-radius: 50%; }
+    @media (max-width: 960px) { .hd-legend { display: none; } }
+
+    /* ================= layout ================= */
+    .main { flex: 1; display: flex; min-height: 0; position: relative; z-index: 1; }
+
+    .panel {
+      width: clamp(340px, 30vw, 440px);
+      flex: 0 0 auto;
+      display: flex; flex-direction: column;
+      border-right: 1px solid var(--line);
+      background: var(--surface);
+      min-height: 0;
+    }
+
+    .controls {
+      padding: 1.4rem 1.6rem 1.1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .search {
+      display: flex; align-items: center; gap: .6rem;
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 .55rem;
+      margin-bottom: 1.15rem;
+      transition: border-color .25s var(--ease);
+    }
+    .search:focus-within { border-color: var(--ink-2); }
+    .search svg { width: 13px; height: 13px; color: var(--faint); flex: 0 0 auto; }
+    .search input {
+      flex: 1; border: 0; outline: 0; background: transparent;
+      font-size: .88rem; min-width: 0; color: var(--ink);
+    }
+    .search input::placeholder { color: var(--faint); }
+
+    .sort-label {
+      font-family: var(--mono); font-size: .6rem; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: .55rem;
+    }
+    .sorts { display: flex; flex-wrap: wrap; gap: .3rem; }
+    .sort {
+      font-size: .74rem; font-weight: 500; letter-spacing: .01em;
+      padding: .26rem .62rem;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      color: var(--muted);
+      transition: color .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
+    }
+    .sort:hover { color: var(--ink); }
+    .sort.on {
+      color: var(--ink); border-color: var(--line);
+      background: var(--canvas);
+    }
+    .sort:active { transform: scale(0.98); }
+
+    /* ================= ranking list ================= */
+    .list { flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 2.2rem 1fr auto;
+      gap: .3rem .85rem;
+      align-items: baseline;
+      padding: .95rem 1.6rem .95rem 1.25rem;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      position: relative;
+      transition: background .2s var(--ease);
+      animation: rise .6s var(--ease) both;
+      animation-delay: calc(var(--i) * 26ms);
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+    @media (prefers-reduced-motion: reduce) { .row { animation: none; } .ambient { animation: none; } }
+
+    .row:hover { background: var(--canvas); }
+    .row.sel { background: var(--canvas); }
+    .row.sel::before {
+      content: ''; position: absolute; left: 0; top: -1px; bottom: -1px; width: 2px;
+      background: var(--ink);
+    }
+
+    .rank {
+      font-family: var(--mono); font-size: .7rem; color: var(--faint);
+      text-align: right; font-variant-numeric: tabular-nums;
+      align-self: center;
+    }
+
+    .name { min-width: 0; }
+    .name h3 {
+      font-family: var(--serif); font-weight: 500; font-size: 1.02rem;
+      letter-spacing: -0.01em; line-height: 1.25; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .name p {
+      font-size: .72rem; color: var(--muted); letter-spacing: .01em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .chip {
+      font-family: var(--mono); font-size: .74rem; font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      padding: .14rem .5rem;
+      border-radius: 9999px;
+      align-self: center;
+      min-width: 2.9rem; text-align: center;
+    }
+    .chip.na {
+      background: transparent; color: var(--faint);
+      border: 1px solid var(--line);
+      font-size: .6rem; letter-spacing: .08em; text-transform: uppercase;
+    }
+
+    .meters {
+      grid-column: 2 / 4;
+      display: flex; gap: .85rem; flex-wrap: wrap;
+      font-family: var(--mono); font-size: .56rem; letter-spacing: .04em;
+      color: var(--faint);
+    }
+    .meters span { display: flex; align-items: center; gap: .32rem; }
+    .meters i {
+      display: block; width: 24px; height: 2px;
+      background: var(--line); position: relative; overflow: hidden;
+    }
+    .meters i b { position: absolute; inset: 0; right: auto; background: var(--ink-2); }
+
+    .empty {
+      padding: 4rem 2rem; text-align: center;
+      font-family: var(--serif); font-style: italic; font-size: .95rem;
+      color: var(--muted);
+    }
+
+    /* ================= map ================= */
+    .map-wrap { flex: 1; position: relative; min-width: 0; background: var(--canvas); }
+    #map { position: absolute; inset: 0; z-index: 1; background: var(--canvas); }
+    .leaflet-container { font-family: var(--sans); }
+    .leaflet-control-zoom a {
+      background: var(--surface) !important; color: var(--ink-2) !important;
+      border-color: var(--line) !important;
+    }
+
+    .stn { background: transparent; border: 0; }
+    .stn i {
+      display: block; width: 100%; height: 100%;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      transition: transform .2s var(--ease), box-shadow .2s var(--ease);
+    }
+    .stn:hover i, .stn.sel i { transform: scale(1.3); }
+    .stn.sel i { box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.10), 0 1px 3px rgba(0,0,0,.12); }
+
+    /* popup — a small white card, hairline border, whisper of shadow */
+    .leaflet-popup-content-wrapper {
+      background: var(--surface); color: var(--ink-2);
+      border-radius: 8px; border: 1px solid var(--line);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .leaflet-popup-tip { background: var(--surface); box-shadow: none; border: 1px solid var(--line); }
+    .leaflet-popup-content { margin: 1rem 1.1rem; line-height: 1.5; }
+    .pp h3 { font-family: var(--serif); font-weight: 500; font-size: 1.05rem; letter-spacing: -0.01em; color: var(--ink); }
+    .pp .pp-sub { font-size: .72rem; color: var(--muted); margin: .1rem 0 .65rem; }
+    .pp .pp-overall {
+      display: flex; align-items: baseline; gap: .5rem; margin-bottom: .6rem;
+      font-family: var(--mono); font-size: .62rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .pp .pp-overall b { font-size: 1.05rem; font-weight: 500; letter-spacing: 0; }
+    .pp table { border-collapse: collapse; width: 100%; font-size: .74rem; }
+    .pp td { padding: .16rem 0; color: var(--muted); border-bottom: 1px solid var(--line-soft); }
+    .pp tr:last-child td { border-bottom: 0; }
+    .pp td:last-child { text-align: right; font-family: var(--mono); color: var(--ink-2); }
+    .pp .pp-notes {
+      margin-top: .6rem; padding-top: .55rem; border-top: 1px solid var(--line);
+      font-family: var(--serif); font-style: italic; font-size: .82rem; color: var(--ink-2);
+    }
+
+    .status {
+      position: absolute; z-index: 450; left: 50%; top: 1.1rem; transform: translateX(-50%);
+      background: var(--surface); color: var(--ink-2);
+      border: 1px solid var(--line);
+      font-family: var(--mono); font-size: .68rem;
+      padding: .4rem .9rem; border-radius: 6px;
+      opacity: 0; pointer-events: none; transition: opacity .3s var(--ease);
+    }
+    .status.show { opacity: 1; }
+
+    /* ================= mobile ================= */
+    @media (max-width: 760px) {
+      body { overflow: auto; height: auto; }
+      .main { flex-direction: column; }
+      .map-wrap { height: 46dvh; flex: 0 0 auto; order: -1; }
+      #map { position: relative; height: 100%; }
+      .panel { width: 100%; border-right: 0; border-top: 1px solid var(--line); }
+      .list { overflow: visible; }
+      .hd { gap: 1.1rem; }
+      .hd-count { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <header class="hd">
+    <a class="hd-back" href="../">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Home
+    </a>
+    <span class="hd-title">The Food Survey <em>— Seattle</em></span>
+    <span class="hd-count" id="count"></span>
+    <div class="hd-spacer"></div>
+    <div class="hd-legend">
+      <span><i style="background:var(--red-fg)"></i>Below 5</span>
+      <span><i style="background:var(--yellow-fg)"></i>5 to 7</span>
+      <span><i style="background:var(--blue-fg)"></i>7 to 8.5</span>
+      <span><i style="background:var(--green-fg)"></i>Above 8.5</span>
+      <span><i style="background:var(--na-fg)"></i>Unrated</span>
+    </div>
+  </header>
+
+  <main class="main">
+    <aside class="panel">
+      <div class="controls">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="search" id="q" placeholder="Search the survey" autocomplete="off" />
+        </label>
+        <div class="sort-label">Rank by</div>
+        <div class="sorts" id="sorts"></div>
+      </div>
+      <ul class="list" id="list"></ul>
+    </aside>
+
+    <div class="map-wrap">
+      <div id="map" role="application" aria-label="Map of reviewed restaurants"></div>
+      <div class="status" id="status"></div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+  (function () {
+    'use strict';
+
+    /* ---- criteria ---- */
+    const CRITERIA = [
+      { key: 'taste',        label: 'Taste',      short: 'TST' },
+      { key: 'ambience',     label: 'Ambience',   short: 'AMB' },
+      { key: 'can_i_eat',    label: 'Can I Eat',  short: 'EAT' },
+      { key: 'service',      label: 'Service',    short: 'SVC' },
+      { key: 'would_return', label: 'Return',     short: 'RTN' },
+    ];
+    const SORTS = [{ key: 'overall', label: 'Overall' }].concat(
+      CRITERIA.map(c => ({ key: c.key, label: c.label })));
+
+    /* ---- tiny CSV parser (handles quoted fields, CRLF) ---- */
+    function parseCSV(text) {
+      const rows = []; let row = [], field = '', inQ = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQ) {
+          if (ch === '"') {
+            if (text[i + 1] === '"') { field += '"'; i++; }
+            else inQ = false;
+          } else field += ch;
+        } else if (ch === '"') inQ = true;
+        else if (ch === ',') { row.push(field); field = ''; }
+        else if (ch === '\n' || ch === '\r') {
+          if (ch === '\r' && text[i + 1] === '\n') i++;
+          row.push(field); field = '';
+          if (row.length > 1 || row[0] !== '') rows.push(row);
+          row = [];
+        } else field += ch;
+      }
+      if (field !== '' || row.length) { row.push(field); if (row.length > 1 || row[0] !== '') rows.push(row); }
+      return rows;
+    }
+
+    function num(v) {
+      if (v == null) return null;
+      const t = String(v).trim();
+      if (t === '') return null;
+      const n = Number(t);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    /* ---- scoring ---- */
+    function overall(r) {
+      const vals = CRITERIA.map(c => r[c.key]).filter(v => v != null);
+      if (!vals.length) return null;
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    }
+    const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    function band(s) {
+      if (s == null) return { fg: css('--na-fg'), bg: 'transparent' };
+      if (s < 5)   return { fg: css('--red-fg'),    bg: css('--red-bg') };
+      if (s < 7)   return { fg: css('--yellow-fg'), bg: css('--yellow-bg') };
+      if (s < 8.5) return { fg: css('--blue-fg'),   bg: css('--blue-bg') };
+      return { fg: css('--green-fg'), bg: css('--green-bg') };
+    }
+    const fmt = s => s == null ? '·' : (Math.round(s * 10) / 10).toFixed(1);
+
+    /* ---- state ---- */
+    let places = [], markers = new Map(), selected = null;
+    let sortKey = 'overall', query = '';
+
+    /* ---- map ---- */
+    const map = L.map('map', { zoomControl: false, attributionControl: true })
+      .setView([47.6553, -122.3035], 12);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd', maxZoom: 20,
+    }).addTo(map);
+
+    const els = {
+      list: document.getElementById('list'),
+      sorts: document.getElementById('sorts'),
+      q: document.getElementById('q'),
+      count: document.getElementById('count'),
+      status: document.getElementById('status'),
+    };
+
+    /* ---- sort buttons ---- */
+    SORTS.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'sort' + (s.key === sortKey ? ' on' : '');
+      b.textContent = s.label;
+      b.dataset.key = s.key;
+      b.addEventListener('click', () => {
+        sortKey = s.key;
+        els.sorts.querySelectorAll('.sort').forEach(x => x.classList.toggle('on', x.dataset.key === sortKey));
+        render();
+      });
+      els.sorts.appendChild(b);
+    });
+
+    els.q.addEventListener('input', () => { query = els.q.value.trim().toLowerCase(); render(); });
+
+    function statusMsg(msg) {
+      els.status.textContent = msg;
+      els.status.classList.add('show');
+      clearTimeout(statusMsg.t);
+      statusMsg.t = setTimeout(() => els.status.classList.remove('show'), 4000);
+    }
+
+    /* ---- selection sync ---- */
+    function select(p, { fly = false, scroll = false } = {}) {
+      selected = p;
+      document.querySelectorAll('.row.sel').forEach(x => x.classList.remove('sel'));
+      document.querySelectorAll('.stn.sel').forEach(x => x.classList.remove('sel'));
+      if (!p) return;
+      const row = els.list.querySelector(`[data-id="${p.id}"]`);
+      if (row) { row.classList.add('sel'); if (scroll) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+      const m = markers.get(p.id);
+      if (m) {
+        const el = m.getElement(); if (el) el.classList.add('sel');
+        if (fly) map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 14), { duration: 0.7 });
+        m.openPopup();
+      }
+    }
+
+    /* ---- popup ---- */
+    function popupHTML(p) {
+      const ov = overall(p);
+      const rows = CRITERIA.map(c =>
+        `<tr><td>${c.label}</td><td>${fmt(p[c.key])}</td></tr>`).join('');
+      return `<div class="pp">
+        <h3>${esc(p.name)}</h3>
+        <div class="pp-sub">${esc(p.cuisine || '')}${p.address ? ' · ' + esc(p.address) : ''}</div>
+        <div class="pp-overall">Overall <b style="color:${band(ov).fg}">${ov == null ? 'unrated' : fmt(ov)}</b></div>
+        <table>${rows}</table>
+        ${p.notes ? `<div class="pp-notes">${esc(p.notes)}</div>` : ''}
+      </div>`;
+    }
+    function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+    /* ---- render ---- */
+    function render() {
+      const val = p => sortKey === 'overall' ? overall(p) : p[sortKey];
+      const visible = places
+        .filter(p => !query ||
+          (p.name + ' ' + (p.cuisine || '') + ' ' + (p.notes || '')).toLowerCase().includes(query))
+        .slice()
+        .sort((a, b) => {
+          const va = val(a), vb = val(b);
+          if (va == null && vb == null) return a.name.localeCompare(b.name);
+          if (va == null) return 1;
+          if (vb == null) return -1;
+          return vb - va || a.name.localeCompare(b.name);
+        });
+
+      els.list.innerHTML = '';
+      const visIds = new Set(visible.map(p => p.id));
+      markers.forEach((m, id) => {
+        const on = visIds.has(id);
+        if (on && !map.hasLayer(m)) m.addTo(map);
+        if (!on && map.hasLayer(m)) map.removeLayer(m);
+      });
+
+      if (!visible.length) {
+        els.list.innerHTML = '<li class="empty">Nothing matches — the survey continues.</li>';
+        return;
+      }
+
+      let rank = 0;
+      visible.forEach((p, i) => {
+        const v = val(p);
+        rank++;
+        const li = document.createElement('li');
+        li.className = 'row' + (selected && selected.id === p.id ? ' sel' : '');
+        li.dataset.id = p.id;
+        li.style.setProperty('--i', Math.min(i, 16));
+        const b = band(v);
+        const meters = CRITERIA.map(c => {
+          const s = p[c.key];
+          return `<span title="${c.label}: ${fmt(s)}">${c.short}<i><b style="width:${s == null ? 0 : s * 10}%"></b></i></span>`;
+        }).join('');
+        li.innerHTML = `
+          <div class="rank">${v == null ? '—' : String(rank).padStart(2, '0')}</div>
+          <div class="name"><h3>${esc(p.name)}</h3><p>${esc(p.cuisine || '')}</p></div>
+          <div class="chip${v == null ? ' na' : ''}" style="${v == null ? '' : `background:${b.bg};color:${b.fg}`}">${v == null ? 'Unrated' : fmt(v)}</div>
+          <div class="meters">${meters}</div>`;
+        li.addEventListener('click', () => select(p, { fly: true }));
+        els.list.appendChild(li);
+      });
+
+      const rated = places.filter(p => overall(p) != null).length;
+      els.count.textContent = `${rated} rated of ${places.length}`;
+    }
+
+    /* ---- markers ---- */
+    function buildMarkers() {
+      markers.forEach(m => map.removeLayer(m));
+      markers = new Map();
+      const pts = [];
+      places.forEach(p => {
+        if (p.lat == null || p.lng == null) return;
+        pts.push([p.lat, p.lng]);
+        const ov = overall(p);
+        const size = ov == null ? 11 : 11 + ov * 0.9;
+        const icon = L.divIcon({
+          className: 'stn',
+          iconSize: [size, size],
+          html: `<i style="background:${band(ov).fg}"></i>`,
+        });
+        const m = L.marker([p.lat, p.lng], { icon, title: p.name })
+          .bindPopup(popupHTML(p), { maxWidth: 280 });
+        m.on('click', () => select(p, { scroll: true }));
+        markers.set(p.id, m);
+      });
+      if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.08));
+    }
+
+    /* ---- load ---- */
+    fetch('restaurants.csv', { cache: 'no-cache' })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(text => {
+        const rows = parseCSV(text);
+        if (rows.length < 2) throw new Error('empty CSV');
+        const head = rows[0].map(h => h.trim().toLowerCase());
+        const idx = k => head.indexOf(k);
+        places = rows.slice(1).map((r, i) => {
+          const get = k => { const j = idx(k); return j >= 0 ? (r[j] || '').trim() : ''; };
+          const p = {
+            id: i,
+            name: get('name'),
+            cuisine: get('cuisine'),
+            address: get('address'),
+            notes: get('notes'),
+            lat: num(get('lat')),
+            lng: num(get('lng')),
+          };
+          CRITERIA.forEach(c => { p[c.key] = num(get(c.key)); });
+          return p;
+        }).filter(p => p.name);
+        buildMarkers();
+        render();
+      })
+      .catch(err => {
+        statusMsg('Could not load restaurants.csv — ' + err.message);
+        els.list.innerHTML = '<li class="empty">restaurants.csv failed to load.</li>';
+      });
+  })();
+  </script>
+</body>
+</html>
