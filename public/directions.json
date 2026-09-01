@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-06-12T13:30:00-07:00",
+  "generatedAt": "2026-08-31T12:00:00-07:00",
   "directions": [
     {
       "id": "chronos-clock-qc-for-bransfield-obs",
       "title": "Run chronos ambient-noise clock-drift QC across the Bransfield ZX OBS array",
       "type": "cross-project",
       "projects": ["COSZO", "BransfieldEQ"],
-      "rationale": "BRA05's clock was fixed with a single hand-derived −0.167 s offset, and the precision of GrowClust/hypoDD relative relocations is ultimately limited by inter-station timing. Chronos already detects sub-sample clock drift from ambient-noise cross-correlations on OBS pairs; running it across the 15-station ZX array would either validate the catalog's timing or produce per-station drift curves to apply before the mid-July paper.",
+      "rationale": "BRA05's clock was fixed with a single hand-derived −0.167 s offset, and the precision of GrowClust/hypoDD relative relocations is ultimately limited by inter-station timing. Chronos already detects sub-sample clock drift from ambient-noise cross-correlations on OBS pairs; running it across the 15-station ZX array would either validate the catalog's timing or produce per-station drift curves to apply before the earthquake-location paper.",
       "grounding": [
         { "project": "BransfieldEQ", "note": "05-11-26 Notes.md" },
         { "project": "COSZO", "note": "HYS14 — Correction Method V2.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
@@ -19,25 +19,25 @@
       "title": "Measure dv/v on the timing-corrected HYS14/HYS12 records — offshore Cascadia's first single-station dv/v points",
       "type": "cross-project",
       "projects": ["Earthnote", "COSZO"],
-      "rationale": "Earthnote's pipeline is validated onshore across 110 broadband stations, but its scientific target — Cascadia slow slip — is best sensed offshore. COSZO just produced four years of clock-corrected HYS12/HYS14 data, and clock drift is exactly the error that corrupts dv/v. The corrected records are both a unique validation set for chronfix and the first offshore extension of the PNW monitoring map.",
+      "rationale": "Earthnote's pipeline is validated onshore across 110 broadband stations, but its scientific target — Cascadia slow slip — is best sensed offshore. COSZO has four years of clock-corrected HYS12/HYS14 data, and clock drift is exactly the error that corrupts dv/v. The corrected records are both a unique validation set for chronfix and the first offshore extension of the PNW monitoring map — especially valuable now that the installation cruise slipped to 2027 and no new offshore seismic data will arrive this year.",
       "grounding": [
         { "project": "COSZO", "note": "05-05-26 Notes.md" },
         { "project": "Earthnote", "note": "Phase 2.0.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
       "id": "bransfield-ml-stack-for-coszo-network",
-      "title": "Port the Bransfield Stage-1 picking and association stack to the COSZO six-node network before deployment",
+      "title": "Port the Bransfield OBS picking/association/location stack to the COSZO network geometry during the cruise-postponement window",
       "type": "cross-project",
       "projects": ["BransfieldEQ", "COSZO"],
-      "rationale": "COSZO deploys a six-node OBS network on the late-August cruise. BransfieldEQ already has an end-to-end OBS pipeline — PhaseNet instance @ 0.1 plus OBSTransformer picking, PyOcto association, NLLoc/GrowClust relocation — tuned specifically on ocean-bottom data. Standing it up against the new network's station geometry now means a working catalog in the first weeks of data rather than a year later.",
+      "rationale": "The COSZO installation cruise was postponed to 2027 (Revelle repairs), so there is now a full year before six-node margin data arrives — time to port and de-risk rather than scramble. BransfieldEQ has an end-to-end OBS pipeline (PhaseNet instance @ 0.1 + OBSTransformer picking, PyOcto association, NLLoc/GrowClust relocation) tuned on ocean-bottom data; standing it up against the finalized COSZO site geometry (CZSHF/CZOFF/CZOSH/CZMID plus Slope Base / Southern Hydrate Ridge) and validating on huddle-test and synthetic events means a working catalog in the first weeks of real data.",
       "grounding": [
         { "project": "BransfieldEQ", "note": "05-11-26 Notes.md" },
-        { "project": "COSZO", "note": "05-18-26 Notes.md" }
+        { "project": "COSZO", "note": "08-26-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "updated",
       "firstProposed": "2026-06-12"
     },
     {
@@ -45,38 +45,39 @@
       "title": "Formalize the hand-pick vs ML catalog comparison into a methods result",
       "type": "extension",
       "projects": ["BransfieldEQ", "COSZO"],
-      "rationale": "William asked for a hand-pick-vs-ML comparison, and Bransfield has the rare ingredients: 58,630 manual picks across 6,970 ground-truth events plus a full-year ML catalog from the same instruments. A station-by-station pick-residual and detection-completeness comparison is simultaneously a paper section and the calibration the ML catalog needs — and the catalog is already in Dax's hands.",
+      "rationale": "William asked for a hand-pick-vs-ML comparison, and Bransfield has the rare ingredients: 58,630 manual picks across 6,970 ground-truth events plus a full-year ML catalog from the same instruments. A station-by-station pick-residual and detection-completeness comparison is simultaneously a paper section and the calibration the ML catalog needs — and with the project restarted (08-27) around polarity picking, it is a natural first deliverable back to William.",
       "grounding": [
         { "project": "COSZO", "note": "06-04-26 Notes.md" },
         { "project": "BransfieldEQ", "note": "05-19-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
       "id": "orca-swarm-dvv",
-      "title": "Coda-wave dv/v around the Orca swarm using the Bransfield OBS year",
+      "title": "Combine the relocated Orca swarm catalog with coda-wave dv/v on the Bransfield OBS year",
       "type": "cross-project",
       "projects": ["Earthnote", "BransfieldEQ"],
-      "rationale": "The relocated catalog shows a verified swarm onset on Jan 17–18 2019 and structural features (dike, magma chamber, asymmetric rifting). Applying Earthnote's single-station dv/v recipe to the same OBS records would test whether the swarm was accompanied by measurable velocity change — a volcanic-unrest result that combines both projects' tooling on data already in hand.",
+      "rationale": "Both the Bransfield restart (08-27) and William's 08-25 direction now converge on the Orca submarine-volcano earthquakes, and the relocated catalog already shows a verified Jan 17–18 2019 swarm onset with structural features (dike, magma chamber, asymmetric rifting). Applying Earthnote's single-station dv/v recipe to the same OBS records tests whether the swarm was accompanied by measurable velocity change — a volcanic-unrest result that pairs the fresh relocated catalog with dv/v tooling on data already in hand.",
       "grounding": [
         { "project": "BransfieldEQ", "note": "05-15-26 Notes.md" },
+        { "project": "BransfieldEQ", "note": "08-27-26 Notes.md" },
         { "project": "Earthnote", "note": "Phase 2.0.md" }
       ],
-      "status": "new",
+      "status": "updated",
       "firstProposed": "2026-06-12"
     },
     {
       "id": "tremormetry-offshore-cascadia",
-      "title": "Plan tremormetry station–LFE-family geometry for the six-node offshore network",
+      "title": "Use the mature 4-D δβ/β inversion + checkerboard tooling to quantify what offshore COSZO stations would add to interface resolvability",
       "type": "extension",
       "projects": ["Earthnote", "COSZO"],
-      "rationale": "Tremormetry images δβ/β on the plate interface from LFE-family codas, but the current stations (UW.HDW, UW.GNW) are onshore, with limited updip sensitivity. The late-August COSZO margin sites will sit directly above the locked zone. Working through the 06-04/06-05 sensitivity-kernel theory for those geometries now tells us whether usable kernels exist before any data arrives — and could shape station placement priorities.",
+      "rationale": "Tremormetry has scaled from two onshore stations to a 4-D δβ/β inversion over 12,703 LFE families / 187 stations, with checkerboard tests showing ~70–140 km resolution that is noise-limited, not geometry-limited. The postponed COSZO margin sites will eventually sit above the locked/transition zone; feeding candidate offshore station geometries into the existing checkerboard machinery now would forecast exactly how much deep-fault resolvability they add — turning station-placement into a quantitative, resolution-driven argument before 2027 deployment.",
       "grounding": [
-        { "project": "Earthnote", "note": "06-04-26 Notes.md" },
+        { "project": "Earthnote", "note": "07-21-26 Notes.md" },
         { "project": "COSZO", "note": "05-18-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "updated",
       "firstProposed": "2026-06-12"
     },
     {
@@ -84,12 +85,12 @@
       "title": "Evaluate the OBS-domain DeepDenoiser fine-tune on COSZO huddle-test data",
       "type": "cross-project",
       "projects": ["BransfieldEQ", "COSZO"],
-      "rationale": "The OBS denoiser fine-tune was built for Bransfield's noise environment and its value is still gated on the held-out August 2019 evaluation. The COSZO huddle test produces collocated broadband records — ideal for measuring what the denoiser does to identical real signals before trusting it on margin OBS data. The result feeds both projects' pipelines.",
+      "rationale": "The OBS denoiser fine-tune was built for Bransfield's noise environment and its value is still gated on the held-out August 2019 evaluation. The COSZO huddle test — now active with interns — produces collocated broadband records ideal for measuring what the denoiser does to identical real signals before trusting it on margin OBS data. The result feeds both projects' pipelines.",
       "grounding": [
         { "project": "BransfieldEQ", "note": "05-09-26 Notes.md" },
         { "project": "COSZO", "note": "05-27-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
@@ -102,7 +103,7 @@
         { "project": "Earthnote", "note": "dvv_hyperparameter_sweep.md" },
         { "project": "Earthnote", "note": "Phase 2.0.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
@@ -114,7 +115,7 @@
       "grounding": [
         { "project": "COSZO", "note": "05-05-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
@@ -122,12 +123,12 @@
       "title": "Quantify pressure vs current-meter coherence at collocated COSZO nodes",
       "type": "extension",
       "projects": ["COSZO"],
-      "rationale": "The 06-11 action list asks for a pressure/current-meter comparison and east-node distance checks. Going one step further — a transfer-function and coherence analysis between collocated sensors — would separate oceanographic signal from instrument effects in the tidal-pressure product, directly serving the calibrated-pressure Python package decided at the SAC meeting.",
+      "rationale": "The 06-11 action list asks for a pressure/current-meter comparison and east-node distance checks, and interns are now exploring a month of tidal-seafloor-pressure and current-meter data. A transfer-function and coherence analysis between collocated sensors would separate oceanographic signal from instrument effects in the tidal-pressure product, directly serving the calibrated-pressure Python package.",
       "grounding": [
         { "project": "Earthnote", "note": "06-11-26 Notes.md" },
         { "project": "COSZO", "note": "06-09-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
@@ -140,7 +141,7 @@
         { "project": "Earthnote", "note": "05-22-26 Notes.md" },
         { "project": "COSZO", "note": "05-04-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
     },
     {
@@ -148,13 +149,52 @@
       "title": "Adopt tremormetry's per-era referencing for COSZO long timeseries spanning instrument swaps",
       "type": "cross-project",
       "projects": ["Earthnote", "COSZO"],
-      "rationale": "Tremormetry's hardest-won lesson was that sensor and sample-rate changes create fake dv/v steps unless references are rebuilt per era — the HDW 2023 'jump' was an EHZ→HHZ artifact. COSZO's multi-year OOI records span exactly such instrument changes, and any derived product that references across an era boundary inherits the same class of artifact. Auditing era boundaries across the COSZO station set is cheap insurance.",
+      "rationale": "Tremormetry's hardest-won lesson was that sensor and sample-rate changes create fake dv/v steps unless references are rebuilt per era — the HDW 2023 'jump' was an EHZ→HHZ artifact, and the 4-D inversion now encodes a per-family/instrument-era offset to fix exactly this. COSZO's multi-year OOI records span such instrument changes; any derived product referencing across an era boundary inherits the same artifact. Auditing era boundaries across the COSZO station set is cheap insurance.",
       "grounding": [
         { "project": "Earthnote", "note": "05-29-26 Notes.md" },
         { "project": "COSZO", "note": "05-04-26 Notes.md" }
       ],
-      "status": "new",
+      "status": "carried",
       "firstProposed": "2026-06-12"
+    },
+    {
+      "id": "lfe-fingerprint-for-bransfield-discrimination",
+      "title": "Port Earthnote's SNR-independent LFE waveform fingerprint to Bransfield Stage-2 tectonic-vs-icequake discrimination",
+      "type": "cross-project",
+      "projects": ["Earthnote", "BransfieldEQ"],
+      "rationale": "Earthnote built a supervised 23-feature waveform-character classifier (spectral slope, S-polarization, band fractions, envelope shape) that separates LFEs from noise and from earthquakes/blasts at ~0.97 AUC, is SNR-independent, and transfers across stations without retraining. BransfieldEQ's Stage 2 still needs a multi-class tectonic-vs-icequake discriminator; the same hand-crafted-feature-plus-autoencoder recipe is a ready-made, physically interpretable starting point for cryoseismic vs tectonic separation on the 3-component OBS data — reusing tooling instead of building a classifier from scratch.",
+      "grounding": [
+        { "project": "Earthnote", "note": "06-15-26 Notes.md" },
+        { "project": "BransfieldEQ", "note": "02-discrimination.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-08-31"
+    },
+    {
+      "id": "gps-slip-stress-vs-dvv",
+      "title": "Complete the GPS-slip → strain → stress comparison against the 4-D δβ/β field to test whether slow slip drives deep dv/v",
+      "type": "open-question",
+      "projects": ["Earthnote"],
+      "rationale": "The tremormetry program now produces a 4-D deep δβ/β movie, and the 08-19 review added a track that turns Gualandi's daily GPS slip inversion into a 31-day-smoothed strain/stress field on the same interface. Closing the loop — correlating slow-slip-driven Coulomb/stress changes against the inverted velocity-change field over ETS cycles — is the science payoff that would tell whether the deep dv/v signal is a stress proxy, and it directly exercises the adversarial-review agenda (data-gap handling, resolution-over-time, L-curve regularization).",
+      "grounding": [
+        { "project": "Earthnote", "note": "08-19-26 Notes.md" },
+        { "project": "Earthnote", "note": "07-21-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-08-31"
+    },
+    {
+      "id": "ai-qaqc-dashboard-coszo",
+      "title": "Build the commissioning-phase AI QA/QC dashboard: daily timing notifications + hourly spectrograms + autoencoder anomaly flags",
+      "type": "cross-project",
+      "projects": ["COSZO", "Earthnote"],
+      "rationale": "The 07-23 operations meeting committed COSZO to hybrid AI + crowdsourced QA/QC for ~450 EarthScope channels with no funded manual review, calling specifically for daily timing-issue notifications and hourly spectrograms to spot 'wonky' data. Chronos already emits daily per-station timing metrics, and Earthnote's CC.SHRK autoencoder-fingerprinting demonstrated unsupervised anomaly clustering on continuous data. Combining them into a single dashboard (timing alerts + spectrogram tiles + autoencoder outlier flags, linked from EarthScope metadata to the COSZO site) is a concrete build that satisfies the commissioning plan and could anchor the planned NSF OOI+AI proposal.",
+      "grounding": [
+        { "project": "COSZO", "note": "07-23-26 Notes.md" },
+        { "project": "Earthnote", "note": "05-22-26 Notes.md" }
+      ],
+      "status": "new",
+      "firstProposed": "2026-08-31"
     }
   ]
 }

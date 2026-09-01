@@ -30,6 +30,7 @@ Anchor note for the Bransfield EQ project. End-to-end ML-assisted earthquake wor
 - [[05-18-26 Notes]] — **NLLoc absolute relocation** end-to-end: extended 38-station Python velocity grid, rotation/datum bugs fixed; v2 catalog 31,515 ev, HQ 7,272; hybrid HypoDD+NLLoc catalog
 - [[05-19-26 Notes]] — hand-picking workflow + **seismologist-pick skill**; empirical **Vp/Vs = 1.78** confirmed (106k S/P pairs); reliable-subset tiers; 2.10 artifacts deleted
 - [[05-20-26 Notes]] — **meeting with Marine**: prioritize the EQ-location paper (mid-July target); ELEP ensemble picking → fine-tune local PhaseNet; try GrowClust 3D / GraphDD; polarity picker; defer tremor
+- [[08-27-26 Notes]] — **project restart** after a hiatus: review prior results and apply Maochuan Zhang's polarity-picking code to the catalog (Stage 5 kickoff); update to William next Tuesday
 
 ## Code
 Methodology lives in this vault. Implementation lives at `~/Documents/bransfield-eq/` (see `PROJECT_PLAN` → "Repo / pipeline layout").

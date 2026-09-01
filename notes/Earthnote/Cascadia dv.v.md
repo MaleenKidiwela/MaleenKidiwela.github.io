@@ -12,6 +12,8 @@ Phase 2.1 matured into **Phase 3.1** production ([[05-22-26 Notes]]): a band-agn
 
 A second dv/v track opened with **tremormetry** ([[05-29-26 Notes]]): a reusable per-station LFE-coda-wave-interferometry workflow (PNSN-catalog-driven discovery → GPU matched filter → daily stacks → coda dv/v), run on UW.HDW and UW.GNW, with per-era referencing to separate real velocity change from instrument-swap artifacts. The theory is worked out in two companion derivations — [[06-04-26 Notes]] gives the coda-wave sensitivity kernel for a deep repeating source (LFE) and a surface receiver, and [[06-05-26 Notes]] assembles many LFE-family/station pairs into a fault-plane δβ/β tomography.
 
+That workflow was then hardened and scaled. [[06-12-26 Notes]] re-audits the envelope-peak discovery recipe and its blind spots, motivating a supervised **LFE fingerprint** in [[06-15-26 Notes]] — 23 hand-crafted spectral/envelope/polarization features (detailed in [[06-18-26 Notes]]) trained on the Lin (2023) catalog, separating LFEs from noise and from earthquakes/blasts at ~0.97 AUC, SNR-independent and autoencoder-confirmed. [[06-24-26 Notes]] scopes an LFE catalog + dashboard, and [[07-08-26 Notes]] / [[07-09-26 Notes]] converge on a refined nine-stage per-station pipeline (a three-lane NET/GPU/CPU conveyor) that scales across boreholes and validates the fingerprint cross-station against Lin (B926: 99 % of 530 families real). The program then culminates in a **4-D δβ/β inversion** on the plate interface: [[07-21-26 Notes]] frames it (12,703 families / 187 stations; checkerboard ~70–140 km, noise-limited), [[07-22-26 Notes]] and [[07-24-26 Notes]] refine the method (2-month smoothing, no shallow-cell exclusion), and [[08-19-26 Notes]] / [[08-20-26 Notes]] / [[08-21-26 Notes]] run the adversarial review — data-gap handling, per-pair reference offsets solved inside the space–time system (fixed-effects demean), a GPS-slip→strain→stress comparison track (Gualandi), and the full ~30 M-measurement × 6,354-day × 188-station solve. A separate adjacent thread, [[08-11-26 Notes]], is the Landslides **CSSI** NSF project (petascale SAR + EarthScope data hub, agentic workflows).
+
 Two adjacent threads also live here. [[Earthnote/05-21-26 Notes]] scopes the **Pacific Northwest digital twin** (`earthnote-worldview`) after a meeting with Ryan Delaney about his Salish Sea Digital Cousin — a multi-agent Cesium globe + observability + geocompute build with a strict observed-vs-forecast contract. [[06-01-26 Notes]] designs the **Research Directions** feature for the notes app (a temporal concept-graph + link-prediction adaptation of Marwitz et al. 2026 for cross-project suggestions). And the [[Canada Impact+ Proposal]] reframes the Earthnote dv/v pipeline as a Canadian clean-tech application (geothermal / CCS / helium monitoring in the Williston Basin), anchored to this note.
 
 ## Topics
@@ -59,3 +61,16 @@ Two adjacent threads also live here. [[Earthnote/05-21-26 Notes]] scopes the **P
 - [[06-05-26 Notes]] — fault-plane δβ/β tomography from LFE-family/station coda pairs
 - [[06-10-26 Notes]] — Paroscientific visit; meeting with Jerry Paros
 - [[06-11-26 Notes]] — action list: abstract to coauthors (Zoe to review), website feedback with Deb, observatory follow-ups, GNSS-A processing thread
+- [[06-12-26 Notes]] — tremormetry methodology re-audit; envelope-peak discovery recipe + critique
+- [[06-15-26 Notes]] — LFE fingerprint (second discovery route): 23-feature classifier on the Lin (2023) catalog
+- [[06-18-26 Notes]] — the LFE picker's 23 hand-crafted features (spectral / envelope / polarization)
+- [[06-24-26 Notes]] — LFE catalog + dashboard scoping; unique-LFE association
+- [[07-08-26 Notes]] — full per-station tremormetry pipeline (Stages 0–8)
+- [[07-09-26 Notes]] — refined 9-stage pipeline (3-lane conveyor); B926 families validated vs Lin
+- [[07-21-26 Notes]] — 4-D δβ/β inversion framed (12,703 families / 187 stations)
+- [[07-22-26 Notes]] — inversion method clarifications (monthly stack, 2-month smoothing)
+- [[07-24-26 Notes]] — early-coda sensitivity; stop excluding shallow (<30 km) cells
+- [[08-11-26 Notes]] — Landslides CSSI NSF project meeting (adjacent)
+- [[08-19-26 Notes]] — adversarial review of the 4-D inversion; GPS-slip→strain→stress track
+- [[08-20-26 Notes]] — inversion diagnostics; per-pair offset solved inside the inversion
+- [[08-21-26 Notes]] — plain-language 4-D inversion summary; ~30 M-measurement solve
