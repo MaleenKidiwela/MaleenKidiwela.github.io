@@ -135,6 +135,7 @@ a.chip:hover{background:var(--q-bg)}
 .o .k span+span::before{content:"·";margin:0 6px;color:var(--muted)}
 .o .k .at{color:var(--ink)}
 .o .k .mt{color:var(--q);border:1px solid var(--q);border-radius:3px;padding:0 4px}
+.vsp{margin:4px 0 22px}.vsp h3{font:700 15px "Bricolage Grotesque",sans-serif;margin:0 0 4px}.vsp p{margin:0 0 8px;color:var(--muted);font-size:13px;max-width:70ch}.vsp .why{display:block;color:var(--muted);font-size:12px}
 .tmap{margin:4px 0 22px}
 .tmap h3{font:700 15px "Bricolage Grotesque",sans-serif;margin:0 0 4px}
 .tmap p{margin:0 0 8px;color:var(--muted);font-size:13px;max-width:70ch}
@@ -225,11 +226,12 @@ footer{margin-top:16px;color:var(--muted);font-size:13px;max-width:80ch}
 </div>
 
 <script>
-const UPDATED="2026-09-30";
+const UPDATED="2026-10-01";
 const SECTIONS=[
 {id:"bostock",group:"A",title:"Bostock et al. (2012), southern Vancouver Island",s:"ok",
  paper:{families:130,located:130,note:"2015 public catalogue (2012 paper: 140)"},
  ours:{real:115,distinct:115,located:115,model:"Bostock's published hypocentres"},
+ vsp:[{"k": "same", "step": "Autocorrelation window", "paper": "6 s, 0.5 s lag", "ours": "6 s", "why": "", "log": "notes/CATALOGUE_SUMMARY.md §2"},{"k": "same", "step": "Detection rule", "paper": "per-component sum, 8×MAD", "ours": "per-component sum, 8×MAD", "why": "", "log": "notes/CATALOGUE_SUMMARY.md §2"},{"k": "changed", "step": "Band", "paper": "1–10 Hz (2012)", "ours": "1–8 Hz", "why": "taken from Bostock 2015's templates", "log": "lfe_array_discovery/results/REPRO_BOSTOCK.md §0"},{"k": "changed", "step": "Sample rate", "paper": "40 samples/s", "ours": "20 samples/s", "why": "shared 20 Hz cache", "log": "k_common.py:28"},{"k": "changed", "step": "Stations", "paper": "7–8 named anchors", "ours": "15 stations; only 5 of his anchors (KELB, PFB missing)", "why": "adding 4 sites lifted true pairs 8.4 → 12.9 %", "log": "notes/CATALOGUE_SUMMARY.md §2"},{"k": "changed", "step": "Grouping", "paper": "hierarchical clustering", "ours": "connected components, families kept apart by location, no merge", "why": "no merge rule told same from neighbouring families (cc 0.072 vs 0.060)", "log": "notes/CATALOGUE_SUMMARY.md §2"},{"k": "changed", "step": "Iterations", "paper": "5", "ours": "3", "why": "", "log": "notes/CATALOGUE_SUMMARY.md §2"},{"k": "added", "step": "Declustering", "paper": "not stated", "ours": "4 s", "why": "from Bostock 2015", "log": "notes/CATALOGUE_SUMMARY.md §2"},{"k": "added", "step": "Catalogue times", "paper": "whole seconds", "ours": "sub-second times recovered from stacks", "why": "scoring only", "log": "lfe_array_discovery/results/REPRO_BOSTOCK.md"}],
  cats:[
   {name:"S. Vancouver Island (Bostock)",ext:{s:"ok",label:"done",note:"v1.1, 2014-01 → 2026-09"},next:"Front estimator v2 (parked)"}],
  sum:"Bostock 2015's public 130-family catalogue lets us score event by event. We rediscovered his families blind on the 2005 POLARIS array, then carried 115 of them to 2026 on permanent stations.",
@@ -568,6 +570,7 @@ const SECTIONS=[
 {id:"royer",group:"A",title:"Royer & Bostock (2014), Washington and northern Vancouver Island",s:"ok",
  paper:{families:223,located:223,note:"122 NW + 54 SW + 47 NVI, digitized from figures"},
  ours:{real:241,distinct:227,located:240,model:"Hyp2000, GSC 1-D"},
+ vsp:[{"k": "same", "step": "Recipe", "paper": "15 s, 40 samples/s, 7 named stations, all episodes, hierarchical clustering, growth, Hyp2000 + hypoDD", "ours": "the same, rebuilt line by line", "why": "earlier runs had used Bostock's 6 s / 20 samples/s settings: 0 Royer matches", "log": "lfe_array_discovery/results/ab_royer/METHOD_FROM_PAPER.md"},{"k": "same", "step": "Threshold", "paper": "8×MAD", "ours": "8×MAD over each window's own series", "why": "our first reading (the hour's series) was wrong", "log": "notes/2026-09-25_Notes.md"},{"k": "added", "step": "Velocity model", "paper": "not named", "ours": "GSC 1-D, digitized from Savard's thesis", "why": "NVI depths then fall in Royer's band", "log": "lfe_array_discovery/results/ab_royer/AB_ROYER_LOG.md"},{"k": "added", "step": "Gap guard, overlap cull", "paper": "not stated", "ours": "gap guard; strict overlap cull", "why": "correlations > 1 on dead channels; cull let pairs share windows (SW 7,981 detections)", "log": "lfe_array_discovery/results/WA_BUG_AUDIT.md"},{"k": "added", "step": "Burst muting", "paper": "none", "ours": "mute windows where one station is 15× its norm with quiet neighbours; notch tones", "why": "most families were single-station bursts", "log": "notes/2026-09-25_Notes.md"},{"k": "added", "step": "Duplicates", "paper": "not stated", "ours": "merged by the Royer group's 10 %-shared rule", "why": "", "log": ""},{"k": "added", "step": "Extra runs", "paper": "one run", "ours": "±15 s lag runs; union of five runs; copies removed by waveform + station-timing test", "why": "NW +6, SW +27, NVI +4 families", "log": ""},{"k": "added", "step": "Real vs noise", "paper": "not needed", "ours": "site-count score: ≥3 separate sites with a sharp 2–8 Hz arrival", "why": "checked against eye labels; used in every region since", "log": ""},{"k": "result", "step": "Families", "paper": "NW 122 · SW 54 · NVI 47", "ours": "NW 141 · SW 81 · NVI 19", "why": "", "log": ""}],
  cats:[
   {name:"Royer NW Washington",tree:"rnwp",paper:{families:122,located:122},ours:{real:141,distinct:129,located:140,model:"Hyp2000, GSC 1-D"},ext:{s:"rdy",label:"ready",note:"method fixed; 140 of 141 have a permanent carrier"},next:"Template post-2014 stations, scan to 2026"},
   {name:"Royer SW Washington",tree:"rsw",paper:{families:54,located:54},ours:{real:81,distinct:79,located:81,model:"Hyp2000, GSC 1-D (USGS v1.7 column)"},ext:{s:"part",label:"partial",note:"73 detectable; few repeats but reliable (precision 0.84, confidence 0.89); stacks weak"},next:"Production chain + newer stations; field deployment if still too few"},
@@ -794,6 +797,7 @@ const SECTIONS=[
 {id:"chestler",group:"A",title:"Chestler & Creager (2017), Olympic Peninsula",s:"ok",
  paper:{families:43,located:43,note:"57 → 43 families from 32,387 LFEs; no catalogue"},
  ours:{real:131,distinct:121,located:97,model:"Hyp2000, USGS CVM v1.7 NW"},
+ vsp:[{"k": "same", "step": "Arm B front end", "paper": "18×MAD beam peaks, cross-array stack, 15 s autocorrelation, 45×MAD", "ours": "the same", "why": "scrambled control: 50 families, none with 2+ sites", "log": ""},{"k": "changed", "step": "Arm A", "paper": "—", "ours": "our own: each 1-km array averaged into one site", "why": "not his recipe; run alongside", "log": ""},{"k": "changed", "step": "Location", "paper": "3-D Preston grid search + double difference", "ours": "Hyp2000, USGS CVM v1.7 NW, free depth", "why": "beat GSC against his coordinates", "log": ""},{"k": "added", "step": "Health mask", "paper": "none", "ours": "per-hour health mask, quiet hours screened for earthquakes", "why": "", "log": ""},{"k": "added", "step": "Real vs noise", "paper": "not needed", "ours": "site-count score (2–8 Hz)", "why": "", "log": ""},{"k": "fix", "step": "Filter slip", "paper": "—", "ours": "2–8 Hz filter designed for 40 samples/s run on 20 → 1–4 Hz; re-scored at 2–8 Hz", "why": "Arm A 53 → 62 real", "log": ""},{"k": "result", "step": "Families", "paper": "57 → 43", "ours": "Arm A 84 real · Arm B 47 new", "why": "", "log": ""}],
  cats:[
   {name:"Olympic Arm A (array beams)",tree:"cc",paper:{families:43,located:43},ours:{real:84,distinct:75,located:54,model:"Hyp2000, USGS v1.7 NW"},ext:{s:"part",label:"partial",note:"confidence 0.90 picks real repeats from noisy candidates; new-station templates 0.85; stacks weak"},next:"Scan with NW: confident repeats + new stations"},
   {name:"Olympic Arm B (Chestler's chain)",tree:"cc",paper:{families:43,located:43},ours:{real:47,distinct:46,located:43,model:"Hyp2000, USGS v1.7 NW"},ext:{s:"part",label:"partial",note:"confidence 0.82; only 45 % of stations templated; stacks weak"},next:"Follow with stronger neighbours (member probability)"}],
@@ -891,6 +895,7 @@ const SECTIONS=[
 {id:"south",group:"A",title:"Ducellier & Creager (2022), southern Cascadia",s:"ok",
  paper:{families:66,located:66,note:"Plourde 2015 locations (34 sites)"},
  ours:{real:66,distinct:66,located:66,model:"Plourde 2015 (published)"},
+ vsp:[{"k": "same", "step": "Recipe", "paper": "his code, 66 templates, stations, 1.5–9 Hz, 20 Hz, response removed", "ours": "the same", "why": "", "log": ""},{"k": "changed", "step": "MAD block", "paper": "1 hour", "ours": "12 h at first, then his hourly MAD", "why": "adopted in the fixed re-run", "log": ""},{"k": "same", "step": "Catalogue rule", "paper": "cc × live channels per family", "ours": "the same", "why": "his rule recall 0.968", "log": ""},{"k": "added", "step": "Extension", "paper": "—", "ours": "rebuilt templates for new station epochs (mostly the 2011 digital switch)", "why": "", "log": ""},{"k": "fix", "step": "GPU data loss", "paper": "—", "ours": "cuFFT plan cache filled the pool, 69 % of station-days lost; CPU fallback", "why": "June 2009 now 0.964 / 0.959", "log": "lfe_south/results/duc_fix/DIAGNOSIS.md"},{"k": "result", "step": "Reproduction", "paper": "66 families", "ours": "recall 0.836, 63 of 66 families", "why": "", "log": ""}],
  cats:[
   {name:"S. Cascadia (Ducellier)",ext:{s:"run",label:"re-scanning to 2012-07",note:"silent data-loss bug found and fixed (June 2009 now matches him 0.96/0.96); ~10 h, no downloads"},next:"Finish the monthly scan to 2026"}],
  sum:"66 families (Plourde 2015 seeds) run through 2004–2011 on permanent and FAME stations. Code, templates and both catalogues are released, so this is scored event by event.",
@@ -942,8 +947,9 @@ const SECTIONS=[
 {id:"shelly",group:"A",title:"Shelly et al. (2025), Mendocino triple junction",s:"ok",
  paper:{families:27,located:27,note:"61,441 detections 2018–2024"},
  ours:{real:27,distinct:27,located:27,model:"his published (MEN model)"},
+ vsp:[{"k": "same", "step": "Recipe (Text S1)", "paper": "2–9 Hz, 6 s, 17 stations, 100 strongest → best 50 (±0.1 s), 8×MAD per day + floor 2.75, 9×MAD final", "ours": "the same", "why": "", "log": "notes/shelly_sources/Shelly2025_GRL_SI.txt"},{"k": "changed", "step": "Templates", "paper": "not released", "ours": "built from his times; station offsets from automatic S picks (25 % of the envelope peak)", "why": "old energy-lag offsets: 91 of 270 off by >1.5 s", "log": "lfe_south/results/SH_V3_LOG.md"},{"k": "added", "step": "Data guards", "paper": "not stated", "ours": "gap guard, dead-channel floor, burst mute, line notch", "why": "BRIC, RVIT, KCR, KSM: 6 % of family-days made 98.5 % of detections", "log": ""},{"k": "fix", "step": "Our bugs", "paper": "—", "ours": "zero-filled gaps (cc 2.4e15); moveouts ignored; recall scored over unrun days", "why": "", "log": ""},{"k": "fix", "step": "Stations", "paper": "17", "ours": "first runs had only 13 of 17 (4 never downloaded, my error); all 17 in v3b", "why": "26 of 27 families gained recall", "log": "lfe_south/results/SH_V3B_LOG.md"},{"k": "added", "step": "Extension", "paper": "—", "ours": "KMR re-templated after its 2025 and 2026 sensor swaps", "why": "no rate step at either swap", "log": ""},{"k": "result", "step": "Reproduction", "paper": "61,441 detections", "ours": "recall 0.68, precision 0.78 (any family)", "why": "", "log": ""}],
  cats:[
-  {name:"Mendocino (Shelly)",ext:{s:"ok",label:"extended to 2026-09",note:"forward done: join 0.92, per-family r 0.87; backward (2008–17) halted for storage"},next:"Cut windows + delete list; confidence per repeat"}],
+  {name:"Mendocino (Shelly)",ext:{s:"ok",label:"extended to 2026-09",note:"forward done: join 0.92, per-family r 0.87; per-repeat confidence AUC 0.88; windows cut; backward halted"},next:"Approve raw delete (455 GB + 298 GB cache)"}],
  sum:"27 families at 22–29 km, 61,441 detections 2018–2024; times and locations released, no templates. Reproduced at his threshold: recall 0.68, precision 0.78 (any family).",
  trees:[{id:"sh",
  goal:["Reproduce Shelly's detections","Build templates from his times, then match his 61,441 detections"],
@@ -1034,16 +1040,25 @@ const SECTIONS=[
    {s:"ok",chosen:1,date:"09-30",h:"Same sensor as in his template years",r:"Six detection stations qualify (KMPB, KMR, B049, B932–934); a two-station set (KMPB, KMR) reaches their older sensors.",n:"6 of 17 stations",log:"lfe_south/results/sh_back/BACK_SECTION.md"}]},
  {id:"shx-q5",q:"Backward check BK1: do six stations still find his events?",o:[
    {s:"ok",chosen:1,date:"09-30",h:"BK1 on 385 held-out days",r:"85 % of our detections are his events; we find 31 % of his. Passes the ≥0.5 gate. Two stations alone: precision 0.98, recall 0.03.",n:"precision 0.855 · recall 0.309",log:"lfe_south/results/sh_back/BK1_GATE.txt"}]},
+ {id:"shx-q7",q:"How sure is each forward repeat?",why:"single repeats need a confidence before the raw data can go; his catalogue is the known answer.",
+  tests:[{s:"ok",h:"Held-out 2024 days (34)",n:"AUC 0.87 same family · 0.87 any",log:"lfe_south/results/SH_CONF_RESULTS.md §2"},
+   {s:"ok",h:"Forward overlap 2023-12 → 2024-11 (244 days)",n:"AUC 0.88 / 0.88 · peak height alone 0.73 / 0.76",log:"lfe_south/results/SH_CONF_RESULTS.md §2"},
+   {s:"ok",h:"Calibration",n:"slope 0.96–1.06 · matched/ΣP 0.93–0.97",log:"lfe_south/results/SH_CONF_RESULTS.md §3"},
+   {s:"ok",h:"Scrambled control",n:"P(same) > 0.5: 0 % control vs 19 % data",log:"lfe_south/results/SH_CONF_RESULTS.md §3"},
+   {s:"part",h:"PNET adds little here",n:"ΔAUC +0.002 same · +0.03 any (fine-tune val 0.69 → 0.88)",log:"lfe_south/results/SH_CONF_RESULTS.md §4"},
+   {s:"ok",h:"Rates 2024-12 → 2026-09 vs his join year",n:"median 1.12× (0.96–1.25); join year already 1.42× his 2018–24 mean",log:"lfe_south/results/SH_CONF_RESULTS.md §5"}],o:[
+   {s:"ok",chosen:1,date:"10-01",h:"Washington design, fitted on his catalogue",r:"Gradient boosting + isotonic calibration on 132 strict 2018–23 test days, out-of-fold by day; build days flagged and kept out. P for all 332,662 candidates, saved with every per-station feature.",n:"27,348 expected same-family repeats vs 25,448 by his rules",log:"lfe_south/results/cut/sh_ext/conf_P_by_det_id.parquet"}]},
  {id:"shx-q6",q:"Scan 2008–2017 (BK2)?",o:[
    {s:"dead",date:"09-30",h:"BK2 scan 2008–2017 — halted",r:"Halted by the user to save storage (~460 GB raw + ~370 GB cache). BK1 result kept; can resume, ideally streaming month by month.",n:"halted before download",log:"lfe_south/results/SH_BACK_HALTED"}]}],
  end:{s:"ok",h:"Extended 2018 → 2026-09 (forward done); backward halted",r:"Forward scan done 09-30 (join 0.92, per-family r 0.87). Backward check passed (0.855 / 0.309) but the 2008–2017 scan is halted for storage."},
- next:[{s:"run",h:"Cut repeat windows, then raw delete list",r:"−15…+30 s around every candidate on every station; delete list for the user to approve.",n:"running"},
-       {s:"plan",h:"Per-repeat confidence against his catalogue",r:"Same design as Washington; his catalogue is the known answer."},
+ next:[{s:"ok",h:"Cut repeat windows, then raw delete list",r:"11.6 M windows, 8.0 GB (from 521 GB); delete list ready: 455 GB raw + 298 GB cache, 10 Ducellier stations kept. Waiting for the user to approve.",n:"verify 20/20 · stack cc 0.962"},
+       {s:"ok",h:"Per-repeat confidence against his catalogue",r:"Done 10-01 (Q7): AUC 0.87–0.88 on unseen days, calibrated, scrambled control 0 %.",n:"P joined to the cut windows"},
        {s:"plan",h:"Drop KMR after 2025-09",r:"Its re-built templates are poor (0.13)."}]}]},
 
 {id:"oregon",group:"A",title:"Thomas & Bostock (2015), central Oregon",s:"ok",
  paper:{families:18,located:13,note:"over 15,000 detections, Aug–Sep 2009"},
  ours:{real:30,distinct:30,located:6,model:"Hyp2000, USGS Oregon"},
+ vsp:[{"k": "same", "step": "Detector", "paper": "cross-station method (Savard & Bostock) on ALP0, ALS0, BWO0; all high-gain stations", "ours": "the same, from the paper and Savard's code", "why": "plain autocorrelation found nothing, as the paper says", "log": ""},{"k": "same", "step": "Rules", "paper": "≥100 detections in 3 days; ≤10 % shared within 5 s; 46-day scan", "ours": "the same", "why": "", "log": ""},{"k": "added", "step": "Unstated choices", "paper": "—", "ours": "20 choices fixed before running; 2 code bugs fixed (hour-relative time, day-end memory)", "why": "", "log": ""},{"k": "changed", "step": "Location", "paper": "HYPOINVERSE, two 1-D models; most depths fixed", "ours": "Hyp2000, USGS Oregon model, depth fixed to the interface", "why": "", "log": ""},{"k": "added", "step": "Duplicates", "paper": "—", "ours": "waveform + station-timing test on pairs", "why": "only ~2 stations per pair, so provisional", "log": ""},{"k": "result", "step": "Families", "paper": "18 · 13 located", "ours": "26 + 4 candidates · 6 located", "why": "2009 had only 3–4 good stations", "log": ""}],
  cats:[
   {name:"Central Oregon (Thomas & Bostock)",ext:{s:"dead",label:"not started",note:"only COR carries 2 families"},next:"Keep-all-templates test"}],
  sum:"18 families (over 15,000 detections, Aug–Sep 2009), 13 located, on stations ~30 km apart. Ours: 26 families + 4 candidates, 6 located; the rest keep approximate positions near the seed stations.",
@@ -1334,6 +1349,11 @@ SECTIONS.forEach(S=>S.trees.forEach(t=>{
 })();
 
 const chipsFeeds=o=>(o.feeds||[]).map(f=>{const L=QLAB[f];return L?`<a class="chip" href="#${f}" data-go="${f}">→ used in: ${esc(L.tree)} Q${L.n}</a>`:"";}).join("");
+function vspHTML(R){
+  const L={same:["as paper","ok"],changed:["changed","part"],added:["added","plan"],fix:["our fix","bad"],result:["result","rdy"]};
+  const rows=R.map(r=>{const l=L[r.k]||[r.k,"plan"];return `<tr><td><span class="xs ${l[1]}">${l[0]}</span></td><td>${esc(r.step)}</td><td>${esc(r.paper)}</td><td>${esc(r.ours)}${r.why?`<span class="why">${esc(r.why)}</span>`:""}${r.log?`<span class="log">${esc(r.log)}</span>`:""}</td></tr>`;}).join("");
+  return `<div class="vsp"><h3>Changes from the paper</h3><p>What we kept, what we changed, and what we added to make it work.</p><div class="tw"><table class="bt"><thead><tr><th></th><th>Step</th><th>Paper</th><th>Ours, and why</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
 function tmapHTML(M){
   const ql=id=>{const L=QLAB[id];return L?`<a href="#${id}" data-go="${id}">Q${L.n}</a>`:"";};
   const rows=M.rows.map(r=>`<tr><td><span class="xs ${XS[norm(r.s)]||"plan"}">${esc(r.name)}</span></td><td>${esc(r.asked)}</td><td class="mono">${esc(r.result)}</td><td>${esc(r.decision)}</td><td>${ql(r.q)}</td><td>${(r.fed||[]).map(ql).join(" ")||"—"}</td></tr>`).join("");
@@ -1429,6 +1449,7 @@ SECTIONS.forEach(S=>{
   const d=document.createElement("details");d.className="sec";d.id=S.id;
   const saved=store.get(SK+"open-"+S.id); d.open=saved===null?(S.id==="ext"):!!saved;
   let h=`<summary><span class="st">${esc(S.title)}</span><span class="pill ${norm(S.s)}">${esc(pillOf(S))}</span><span class="sm">${esc(S.sum)}</span></summary><div class="body">`;
+  if(S.vsp)h+=vspHTML(S.vsp);
   if(S.tmap)h+=tmapHTML(S.tmap);
   S.trees.forEach(t=>h+=treeHTML(S,t));
   (S.boxes||[]).forEach(b=>{h+=`<div class="box"><h3>${esc(b.h)}</h3><div class="next">${b.o.map(o=>card(o,"")).join("")}</div></div>`;});
